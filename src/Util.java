@@ -21,7 +21,7 @@ public class Util {
 	public String runCommand(String command) {
 		String output = null;
 		// ProcessBuilder does not read spaces hence need to do this
-		String str[] = command.split(" ");
+		String[] str = command.split(" ");
 		List<String> commands = new ArrayList<>(Arrays.asList(str));
 		try {
 			ProcessBuilder pb = new ProcessBuilder(commands).redirectErrorStream(true);
@@ -39,10 +39,7 @@ public class Util {
 			e.printStackTrace();
 		}
 
-		if (output == null)
-			return "";
-		else
-			return output.trim();
+		return output.trim();
 	}
 
 	public String runCommand(List<String> command) {
@@ -64,10 +61,7 @@ public class Util {
 			e.printStackTrace();
 		}
 
-		if (output == null)
-			return "";
-		else
-			return output.trim();
+		return output.trim();
 	}
 
 	public ArrayList<String> getConnectedDevices() {
@@ -160,15 +154,11 @@ public class Util {
 
 	public boolean checkIfInstalled(String ID) {
 		String installedPackage = getSafePathPackage(ID);
-		if (installedPackage.equals("com.smithmicro.tmobile.familymode.test")
+		return installedPackage.equals("com.smithmicro.tmobile.familymode.test")
 				|| installedPackage.equals("com.smithmicro.att.securefamily")
 				|| installedPackage.equals("com.att.securefamilycompanion")
 				|| installedPackage.equals("com.smithmicro.safepath.family")
-				|| installedPackage.equals("com.smithmicro.safepath.family.child")) {
-			return true;
-		} else {
-			return false;
-		}
+				|| installedPackage.equals("com.smithmicro.safepath.family.child");
 	}
 
 	public boolean uninstallApp(String ID, String appPackage) {
