@@ -290,11 +290,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		int j = 0;
 		while (j < output1.size()) {
+			System.out.println(output1);
+			System.out.println(output1.size());
 			if (command1.checkIfInstalled(output1.get(j))) {
 				uninstallAllButton.setEnabled(true);
+				break;
 			}
 			j++;
-			break;
 		}
 
 		staticPane = new StaticPane();
