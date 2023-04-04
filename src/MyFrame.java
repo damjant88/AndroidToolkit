@@ -66,7 +66,7 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 	ArrayList<UninstallAppButtons> uninstallAppButtons = new ArrayList<>();
 	ArrayList<RadioButtons> radioButtons = new ArrayList<>();
 	ArrayList<WifiDebugButtons> wifiDebugButtons = new ArrayList<>();
-	
+
 	public MyFrame() {
 
 		File logs = new File("C:/AdbToolkit/logs");
@@ -143,18 +143,20 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 
 		// Creating SaveSPLogsButtons ArrayList using position and dimensions
 		saveLogsButton1 = new SaveSPLogsButtons(200, 160, 95, 30);
+		saveLogsButton1.addActionListener(new SaveLogsButton1Listener());
 		saveSPLogsButtons.add(saveLogsButton1);
 		saveLogsButton2 = new SaveSPLogsButtons(410, 160, 95, 30);
+		saveLogsButton2.addActionListener(new SaveLogsButton2Listener());
 		saveSPLogsButtons.add(saveLogsButton2);
 		saveLogsButton3 = new SaveSPLogsButtons(620, 160, 95, 30);
+		saveLogsButton3.addActionListener(new SaveLogsButton3Listener());
 		saveSPLogsButtons.add(saveLogsButton3);
 		saveLogsButton4 = new SaveSPLogsButtons(830, 160, 95, 30);
+		saveLogsButton4.addActionListener(new SaveLogsButton4Listener());
 		saveSPLogsButtons.add(saveLogsButton4);
 		for (SaveSPLogsButtons saveLogsButton : saveSPLogsButtons) {
-			saveLogsButton.addActionListener(this);
 			this.add(saveLogsButton);
 		}
-
 		// Creating EnableFirebaseButtons ArrayList using position and dimensions
 		enableFirebase1 = new EnableFirebaseButtons(200, 220, 95, 30);
 		enableFirebaseButtons.add(enableFirebase1);
@@ -185,15 +187,18 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 
 		// Creating TakeScreenshotButtons ArrayList using position and dimensions
 		takeScreenshotButton1 = new TakeScreenshotButtons(310, 190, 90, 30);
+		takeScreenshotButton1.addActionListener(new TakeScreenshotButton1Listener());
 		takeScreenshotButtons.add(takeScreenshotButton1);
 		takeScreenshotButton2 = new TakeScreenshotButtons(520, 190, 90, 30);
+		takeScreenshotButton2.addActionListener(new TakeScreenshotButton2Listener());
 		takeScreenshotButtons.add(takeScreenshotButton2);
 		takeScreenshotButton3 = new TakeScreenshotButtons(730, 190, 90, 30);
+		takeScreenshotButton3.addActionListener(new TakeScreenshotButton3Listener());
 		takeScreenshotButtons.add(takeScreenshotButton3);
 		takeScreenshotButton4 = new TakeScreenshotButtons(940, 190, 90, 30);
+		takeScreenshotButton4.addActionListener(new TakeScreenshotButton4Listener());
 		takeScreenshotButtons.add(takeScreenshotButton4);
 		for (TakeScreenshotButtons screenshotButton : takeScreenshotButtons) {
-			screenshotButton.addActionListener(this);
 			this.add(screenshotButton);
 		}
 
@@ -228,15 +233,18 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 
 		// Creating WifiDebugButtons ArrayList using position and dimensions
 		wifiDebug1 = new WifiDebugButtons(310, 160, 90, 30);
+		wifiDebug1.addActionListener(new WifiDebug1Listener());
 		wifiDebugButtons.add(wifiDebug1);
 		wifiDebug2 = new WifiDebugButtons(520, 160, 90, 30);
+		wifiDebug2.addActionListener(new WifiDebug2Listener());
 		wifiDebugButtons.add(wifiDebug2);
 		wifiDebug3 = new WifiDebugButtons(730, 160, 90, 30);
+		wifiDebug3.addActionListener(new WifiDebug3Listener());
 		wifiDebugButtons.add(wifiDebug3);
 		wifiDebug4 = new WifiDebugButtons(940, 160, 90, 30);
+		wifiDebug1.addActionListener(new WifiDebug4Listener());
 		wifiDebugButtons.add(wifiDebug4);
 		for (WifiDebugButtons wifiButton : wifiDebugButtons) {
-			wifiButton.addActionListener(this);
 			this.add(wifiButton);
 		}
 
@@ -291,7 +299,7 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 		this.add(devicesButton);
 
 		fileButton = new FileButton("Select Build");
-		fileButton.addActionListener(this);
+		fileButton.addActionListener(new FileButtonListener());
 		this.add(fileButton);
 		
 		progressBar = new ProgressBar();
@@ -839,208 +847,6 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 				}
 			}
 
-		} else if (e.getSource() == fileButton) {
-			JFileChooser fileChooser = new JFileChooser(
-					"C:\\Users\\dtomic\\OneDrive - Smith Micro Software\\SP7\\Master builds\\");
-			int response = fileChooser.showOpenDialog(null);
-			if (response == JFileChooser.APPROVE_OPTION) {
-				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				fileTextField.setText(file.getName());
-				if (radio1.isSelected() || radio2.isSelected() || radio3.isSelected() || radio4.isSelected()) {
-					installButton.setEnabled(true);
-				}
-				progressBar.setBackground(new Color(238, 238, 238));
-				progressBar.setString("Waiting for build...");
-			}
-
-		} else if (e.getSource() == saveLogsButton1) {
-			if (!command1.checkIfInstalled(output1.get(0))) {
-				JOptionPane.showMessageDialog(this, "App is not installed!", "Safe Path Logs",
-						JOptionPane.ERROR_MESSAGE);
-			} else {
-				JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
-				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				int response = fileChooser.showSaveDialog(null);
-				if (response == JFileChooser.APPROVE_OPTION) {
-					file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-					output1 = command1.getConnectedDevices();
-					command1.saveLogs(output1.get(0), file.getAbsolutePath());
-					JOptionPane.showMessageDialog(this, "Safe Path logs saved!", "Safe Path Logs",
-							JOptionPane.INFORMATION_MESSAGE);
-				}
-			}
-
-		} else if (e.getSource() == saveLogsButton2) {
-			if (!command1.checkIfInstalled(output1.get(1))) {
-				JOptionPane.showMessageDialog(this, "App is not installed!", "Safe Path Logs",
-						JOptionPane.ERROR_MESSAGE);
-			} else {
-				JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
-				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				int response = fileChooser.showSaveDialog(null);
-				if (response == JFileChooser.APPROVE_OPTION) {
-					file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-					output1 = command1.getConnectedDevices();
-					command1.saveLogs(output1.get(1), file.getAbsolutePath());
-					JOptionPane.showMessageDialog(this, "Safe Path logs saved!", "Safe Path Logs",
-							JOptionPane.INFORMATION_MESSAGE);
-				}
-			}
-
-		} else if (e.getSource() == saveLogsButton3) {
-			if (!command1.checkIfInstalled(output1.get(2))) {
-				JOptionPane.showMessageDialog(this, "App is not installed!", "Safe Path Logs",
-						JOptionPane.ERROR_MESSAGE);
-			} else {
-				JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
-				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				int response = fileChooser.showSaveDialog(null);
-				if (response == JFileChooser.APPROVE_OPTION) {
-					file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-					output1 = command1.getConnectedDevices();
-					command1.saveLogs(output1.get(2), file.getAbsolutePath());
-					JOptionPane.showMessageDialog(this, "Safe Path logs saved!", "Safe Path Logs",
-							JOptionPane.INFORMATION_MESSAGE);
-				}
-			}
-
-		} else if (e.getSource() == saveLogsButton4) {
-			if (!command1.checkIfInstalled(output1.get(3))) {
-				JOptionPane.showMessageDialog(this, "App is not installed!", "Safe Path Logs",
-						JOptionPane.ERROR_MESSAGE);
-			} else {
-				JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
-				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-				int response = fileChooser.showSaveDialog(null);
-				if (response == JFileChooser.APPROVE_OPTION) {
-					file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-					output1 = command1.getConnectedDevices();
-					command1.saveLogs(output1.get(3), file.getAbsolutePath());
-					JOptionPane.showMessageDialog(this, "Safe Path logs saved!", "Safe Path Logs",
-							JOptionPane.INFORMATION_MESSAGE);
-				}
-			}
-
-		} else if (e.getSource() == takeScreenshotButton1) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(0), "sdcard/", "screenshot.png");
-			File device1 = new File("C:/AdbToolkit/Screenshots/Device1");
-			if (!device1.exists()){
-				device1.mkdirs();
-			}
-			command1.pullFile(output1.get(0), output, "C:/AdbToolkit/Screenshots/Device1");
-			JOptionPane.showMessageDialog(this,
-					"Device1 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device1",
-					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
-
-		} else if (e.getSource() == takeScreenshotButton2) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(1), "sdcard/", "screenshot.png");
-			File device2 = new File("C:/AdbToolkit/Screenshots/Device2");
-			if (!device2.exists()){
-				device2.mkdirs();
-			}
-			command1.pullFile(output1.get(1), output, "C:/AdbToolkit/Screenshots/Device2");
-			JOptionPane.showMessageDialog(this,
-					"Device2 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device2",
-					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
-
-		} else if (e.getSource() == takeScreenshotButton3) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(2), "sdcard/", "screenshot.png");
-			File device3 = new File("C:/AdbToolkit/Screenshots/Device3");
-			if (!device3.exists()){
-				device3.mkdirs();
-			}
-			command1.pullFile(output1.get(2), output, "C:/AdbToolkit/Screenshots/Device3");
-			JOptionPane.showMessageDialog(this,
-					"Device3 screenshot captured!" + "\n" + "Location: C:/AdbToolkit_Screenshots/Device3",
-					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
-
-		} else if (e.getSource() == takeScreenshotButton4) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(3), "sdcard/", "screenshot.png");
-			File device4 = new File("C:/AdbToolkit/Screenshots/Device4");
-			if (!device4.exists()){
-				device4.mkdirs();
-			}
-			command1.pullFile(output1.get(3), output, "C:/AdbToolkit/Screenshots/Device4");
-			JOptionPane.showMessageDialog(this,
-					"Device4 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device4",
-					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
-
-		} else if (e.getSource() == wifiDebug1) {
-			if (!output1.get(0).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(0), ips.get(0));
-				JOptionPane.showMessageDialog(this,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
-				wifiDebug4.setText("Disable WiFi");
-				devicesButton.doClick(200);
-			} else {
-				command1.stopWifiDebugging(output1.get(0), ips.get(0));
-				JOptionPane.showMessageDialog(this, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
-						JOptionPane.INFORMATION_MESSAGE);
-				devicesButton.doClick(100);
-			}
-
-		} else if (e.getSource() == wifiDebug2) {
-			if (!output1.get(1).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(1), ips.get(1));
-				JOptionPane.showMessageDialog(this,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
-				wifiDebug4.setText("Disable WiFi");
-				devicesButton.doClick(200);
-			} else {
-				command1.stopWifiDebugging(output1.get(1), ips.get(1));
-				JOptionPane.showMessageDialog(this, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
-						JOptionPane.INFORMATION_MESSAGE);
-				devicesButton.doClick(100);
-			}
-
-		} else if (e.getSource() == wifiDebug3) {
-			if (!output1.get(2).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(2), ips.get(2));
-				JOptionPane.showMessageDialog(this,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
-				wifiDebug4.setText("Disable WiFi");
-				devicesButton.doClick(200);
-			} else {
-				command1.stopWifiDebugging(output1.get(2), ips.get(2));
-				JOptionPane.showMessageDialog(this, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
-						JOptionPane.INFORMATION_MESSAGE);
-				devicesButton.doClick(100);
-			}
-
-		} else if (e.getSource() == wifiDebug4) {
-			if (!output1.get(3).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(3), ips.get(3));
-				JOptionPane.showMessageDialog(this,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
-				wifiDebug4.setText("Disable WiFi");
-				devicesButton.doClick(200);
-			} else {
-				command1.stopWifiDebugging(output1.get(3), ips.get(3));
-				JOptionPane.showMessageDialog(this, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
-						JOptionPane.INFORMATION_MESSAGE);
-				devicesButton.doClick(100);
-			}
-
 		} else if (e.getSource() == enableFirebase1) {
 			output1 = command1.getConnectedDevices();
 			command1.enableAnalyticsDebug(output1.get(0), command1.getSafePathPackage(output1.get(0)));
@@ -1219,6 +1025,229 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 				}
 				progressBar.setIndeterminate(false);
 				devicesButton.doClick();
+			}
+		}
+	}
+	class FileButtonListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+
+			JFileChooser fileChooser = new JFileChooser(
+					"C:\\Users\\dtomic\\OneDrive - Smith Micro Software\\SP7\\Master builds\\");
+			int response = fileChooser.showOpenDialog(null);
+			if (response == JFileChooser.APPROVE_OPTION) {
+				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				fileTextField.setText(file.getName());
+				if (radio1.isSelected() || radio2.isSelected() || radio3.isSelected() || radio4.isSelected()) {
+					installButton.setEnabled(true);
+				}
+				progressBar.setBackground(new Color(238, 238, 238));
+				progressBar.setString("Waiting for build...");
+			}
+		}
+	}
+	class SaveLogsButton1Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int response = fileChooser.showSaveDialog(null);
+			if (response == JFileChooser.APPROVE_OPTION) {
+				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				output1 = command1.getConnectedDevices();
+				command1.saveLogs(output1.get(0), file.getAbsolutePath());
+				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class SaveLogsButton2Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int response = fileChooser.showSaveDialog(null);
+			if (response == JFileChooser.APPROVE_OPTION) {
+				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				output1 = command1.getConnectedDevices();
+				command1.saveLogs(output1.get(1), file.getAbsolutePath());
+				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class SaveLogsButton3Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int response = fileChooser.showSaveDialog(null);
+			if (response == JFileChooser.APPROVE_OPTION) {
+				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				output1 = command1.getConnectedDevices();
+				command1.saveLogs(output1.get(2), file.getAbsolutePath());
+				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class SaveLogsButton4Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int response = fileChooser.showSaveDialog(null);
+			if (response == JFileChooser.APPROVE_OPTION) {
+				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				output1 = command1.getConnectedDevices();
+				command1.saveLogs(output1.get(3), file.getAbsolutePath());
+				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class TakeScreenshotButton1Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			String output = command1.takeScreenshot(output1.get(0), "sdcard/", "screenshot.png");
+			File device1 = new File("C:/AdbToolkit/Screenshots/Device1");
+			if (!device1.exists()) {
+				device1.mkdirs();
+			}
+			command1.pullFile(output1.get(0), output, "C:/AdbToolkit/Screenshots/Device1");
+			JOptionPane.showMessageDialog(null,
+					"Device1 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device1",
+					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+	class TakeScreenshotButton2Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			String output = command1.takeScreenshot(output1.get(1), "sdcard/", "screenshot.png");
+			File device2 = new File("C:/AdbToolkit/Screenshots/Device2");
+			if (!device2.exists()) {
+				device2.mkdirs();
+			}
+			command1.pullFile(output1.get(1), output, "C:/AdbToolkit/Screenshots/Device2");
+			JOptionPane.showMessageDialog(null,
+					"Device2 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device2",
+					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
+
+		}
+	}
+	class TakeScreenshotButton3Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			String output = command1.takeScreenshot(output1.get(2), "sdcard/", "screenshot.png");
+			File device3 = new File("C:/AdbToolkit/Screenshots/Device3");
+			if (!device3.exists()) {
+				device3.mkdirs();
+			}
+			command1.pullFile(output1.get(2), output, "C:/AdbToolkit/Screenshots/Device3");
+			JOptionPane.showMessageDialog(null,
+					"Device3 screenshot captured!" + "\n" + "Location: C:/AdbToolkit_Screenshots/Device3",
+					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+	class TakeScreenshotButton4Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			String output = command1.takeScreenshot(output1.get(3), "sdcard/", "screenshot.png");
+			File device4 = new File("C:/AdbToolkit/Screenshots/Device4");
+			if (!device4.exists()) {
+				device4.mkdirs();
+			}
+			command1.pullFile(output1.get(3), output, "C:/AdbToolkit/Screenshots/Device4");
+			JOptionPane.showMessageDialog(null,
+					"Device4 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device4",
+					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
+		}
+	}
+	class WifiDebug1Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!output1.get(0).endsWith(":5555")) {
+				command1.startWifiDebugging(output1.get(0), ips.get(0));
+				JOptionPane.showMessageDialog(null,
+						"""
+								Debugging over WiFi is enabled!
+								If prompted on the device, allow wireless debugging on specific wifi network.
+								You may disconnect USB cable from this device.""",
+						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				wifiDebug4.setText("Disable WiFi");
+				devicesButton.doClick(200);
+			} else {
+				command1.stopWifiDebugging(output1.get(0), ips.get(0));
+				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
+				devicesButton.doClick(100);
+			}
+		}
+	}
+	class WifiDebug2Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!output1.get(1).endsWith(":5555")) {
+				command1.startWifiDebugging(output1.get(1), ips.get(1));
+				JOptionPane.showMessageDialog(null,
+						"""
+								Debugging over WiFi is enabled!
+								If prompted on the device, allow wireless debugging on specific wifi network.
+								You may disconnect USB cable from this device.""",
+						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				wifiDebug4.setText("Disable WiFi");
+				devicesButton.doClick(200);
+			} else {
+				command1.stopWifiDebugging(output1.get(1), ips.get(1));
+				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
+				devicesButton.doClick(100);
+			}
+		}
+	}
+	class WifiDebug3Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!output1.get(2).endsWith(":5555")) {
+				command1.startWifiDebugging(output1.get(2), ips.get(2));
+				JOptionPane.showMessageDialog(null,
+						"""
+								Debugging over WiFi is enabled!
+								If prompted on the device, allow wireless debugging on specific wifi network.
+								You may disconnect USB cable from this device.""",
+						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				wifiDebug4.setText("Disable WiFi");
+				devicesButton.doClick(200);
+			} else {
+				command1.stopWifiDebugging(output1.get(2), ips.get(2));
+				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
+				devicesButton.doClick(100);
+			}
+		}
+	}
+	class WifiDebug4Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!output1.get(3).endsWith(":5555")) {
+				command1.startWifiDebugging(output1.get(3), ips.get(3));
+				JOptionPane.showMessageDialog(null,
+						"""
+								Debugging over WiFi is enabled!
+								If prompted on the device, allow wireless debugging on specific wifi network.
+								You may disconnect USB cable from this device.""",
+						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				wifiDebug4.setText("Disable WiFi");
+				devicesButton.doClick(200);
+			} else {
+				command1.stopWifiDebugging(output1.get(3), ips.get(3));
+				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
+				devicesButton.doClick(100);
 			}
 		}
 	}
