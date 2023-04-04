@@ -29,7 +29,7 @@ import Buttons.UninstallAppButtons;
 import Buttons.WifiDebugButtons;
 import Buttons.RadioButtons;
 
-public class MyFrame extends JFrame implements ActionListener, PropertyChangeListener {
+public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	Util command1 = new Util();
 	ArrayList<String> output1 = command1.getConnectedDevices();
@@ -159,29 +159,35 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 		}
 		// Creating EnableFirebaseButtons ArrayList using position and dimensions
 		enableFirebase1 = new EnableFirebaseButtons(200, 220, 95, 30);
+		enableFirebase1.addActionListener(new EnableFirebase1Listener());
 		enableFirebaseButtons.add(enableFirebase1);
 		enableFirebase2 = new EnableFirebaseButtons(410, 220, 95, 30);
+		enableFirebase2.addActionListener(new EnableFirebase2Listener());
 		enableFirebaseButtons.add(enableFirebase2);
 		enableFirebase3 = new EnableFirebaseButtons(620, 220, 95, 30);
+		enableFirebase3.addActionListener(new EnableFirebase3Listener());
 		enableFirebaseButtons.add(enableFirebase3);
 		enableFirebase4 = new EnableFirebaseButtons(830, 220, 95, 30);
+		enableFirebase4.addActionListener(new EnableFirebase4Listener());
 		enableFirebaseButtons.add(enableFirebase4);
 		for (EnableFirebaseButtons firebaseButton : enableFirebaseButtons) {
-			firebaseButton.addActionListener(this);
 			this.add(firebaseButton);
 		}
 
 		// Creating RebootButtons ArrayList using position and dimensions
 		reboot1 = new RebootButtons(200, 190, 95, 30);
+		reboot1.addActionListener(new Reboot1Listener());
 		rebootButtons.add(reboot1);
 		reboot2 = new RebootButtons(410, 190, 95, 30);
+		reboot2.addActionListener(new Reboot2Listener());
 		rebootButtons.add(reboot2);
 		reboot3 = new RebootButtons(620, 190, 95, 30);
+		reboot3.addActionListener(new Reboot3Listener());
 		rebootButtons.add(reboot3);
 		reboot4 = new RebootButtons(830, 190, 95, 30);
+		reboot4.addActionListener(new Reboot4Listener());
 		rebootButtons.add(reboot4);
 		for (RebootButtons rebootButton : rebootButtons) {
-			rebootButton.addActionListener(this);
 			this.add(rebootButton);
 		}
 
@@ -204,15 +210,18 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 
 		// Creating UninstallAppButtons ArrayList using position and dimensions
 		uninstallApp1 = new UninstallAppButtons(310, 220, 90, 30);
+		uninstallApp1.addActionListener(new UninstallApp1Listener());
 		uninstallAppButtons.add(uninstallApp1);
 		uninstallApp2 = new UninstallAppButtons(520, 220, 90, 30);
+		uninstallApp2.addActionListener(new UninstallApp2Listener());
 		uninstallAppButtons.add(uninstallApp2);
 		uninstallApp3 = new UninstallAppButtons(730, 220, 90, 30);
+		uninstallApp3.addActionListener(new UninstallApp3Listener());
 		uninstallAppButtons.add(uninstallApp3);
 		uninstallApp4 = new UninstallAppButtons(940, 220, 90, 30);
+		uninstallApp4.addActionListener(new UninstallApp4Listener());
 		uninstallAppButtons.add(uninstallApp4);
 		for (UninstallAppButtons uninstallButton : uninstallAppButtons) {
-			uninstallButton.addActionListener(this);
 			this.add(uninstallButton);
 		}
 		
@@ -227,7 +236,7 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 		radio4 = new RadioButtons("Device 4", 830, 20, 75, 15);
 		radioButtons.add(radio4);
 		for (RadioButtons radiobutton : radioButtons) {
-			radiobutton.addActionListener(this);
+//			radiobutton.addActionListener(this);
 			this.add(radiobutton);
 		}
 
@@ -242,7 +251,7 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 		wifiDebug3.addActionListener(new WifiDebug3Listener());
 		wifiDebugButtons.add(wifiDebug3);
 		wifiDebug4 = new WifiDebugButtons(940, 160, 90, 30);
-		wifiDebug1.addActionListener(new WifiDebug4Listener());
+		wifiDebug4.addActionListener(new WifiDebug4Listener());
 		wifiDebugButtons.add(wifiDebug4);
 		for (WifiDebugButtons wifiButton : wifiDebugButtons) {
 			this.add(wifiButton);
@@ -272,11 +281,11 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 		}
 
 		installButton = new InstallButton("Install");
-		installButton.addActionListener(this);
+		installButton.addActionListener(new InstallButtonListener());
 		this.add(installButton);
 
 		uninstallAllButton = new UninstallAllButton("Uninstall All");
-		uninstallAllButton.addActionListener(this);
+		uninstallAllButton.addActionListener(new UninstAllButtonListener());
 		this.add(uninstallAllButton);
 
 		int j = 0;
@@ -295,7 +304,7 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 		this.add(fileTextField);
 
 		devicesButton = new DevicesButton(buttonIcon);
-		devicesButton.addActionListener(this);
+		devicesButton.addActionListener(new DevicesButtonListener());
 		this.add(devicesButton);
 
 		fileButton = new FileButton("Select Build");
@@ -546,12 +555,9 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 				device4TextPane.setVisible(true);
 				takeScreenshotButton4.setVisible(true);
 			}
-
 		}
-
 		this.setVisible(true);
 	}
-
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if ("progress".equals(evt.getPropertyName())) {
@@ -560,50 +566,38 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 			progressBar.setValue(progress);
 		}
 	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-
-		if (e.getSource() == devicesButton) {
-			
+	class DevicesButtonListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
 			for (DeviceTextPanes deviceTextPane : deviceTextPanes) {
 				deviceTextPane.setVisible(false);
 			}
-
 			for (RadioButtons radiobutton : radioButtons) {
 				radiobutton.setVisible(false);
 			}
-
 			for (SaveSPLogsButtons saveLogsButton : saveSPLogsButtons) {
 				saveLogsButton.setVisible(false);
 			}
-			
 			for (TakeScreenshotButtons screenshotButton : takeScreenshotButtons) {
 				screenshotButton.setVisible(false);
 			}
-
 			for (WifiDebugButtons wifiButton : wifiDebugButtons) {
 				wifiButton.setVisible(false);
 			}
-
 			for (EnableFirebaseButtons firebaseButton : enableFirebaseButtons) {
 				firebaseButton.setVisible(false);
 				firebaseButton.setEnabled(false);
 			}
-
 			for (UninstallAppButtons uninstallButton : uninstallAppButtons) {
 				uninstallButton.setVisible(false);
 				uninstallButton.setEnabled(false);
 			}
-
 			for (RebootButtons rebootButton : rebootButtons) {
 				rebootButton.setVisible(false);
 			}
-
 			for (LogoIconLabels IconLabel : logoIconLabels) {
 				IconLabel.setVisible(false);
 			}
-
 			output1.clear();
 			ips.clear();
 			output1 = command1.getConnectedDevices();
@@ -612,7 +606,7 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 			}
 
 			for (int i = 0; i < output1.size(); i++) {
-				
+
 				if (i == 0) {
 
 					radio1.setSelected(true);
@@ -846,160 +840,19 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 					takeScreenshotButton4.setVisible(true);
 				}
 			}
-
-		} else if (e.getSource() == enableFirebase1) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(0), command1.getSafePathPackage(output1.get(0)));
-			if (command1.checkIfInstalled(output1.get(0))) {
-				JOptionPane.showMessageDialog(this,
-						"Firebase Debugging enabled!" + "\n"
-								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
-						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
-			}
-
-		} else if (e.getSource() == enableFirebase2) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(1), command1.getSafePathPackage(output1.get(1)));
-			if (command1.checkIfInstalled(output1.get(1))) {
-				JOptionPane.showMessageDialog(this,
-						"Firebase Debugging enabled!" + "\n"
-								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
-						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
-			}
-
-		} else if (e.getSource() == enableFirebase3) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(2), command1.getSafePathPackage(output1.get(2)));
-			if (command1.checkIfInstalled(output1.get(2))) {
-				JOptionPane.showMessageDialog(this,
-						"Firebase Debugging enabled!" + "\n"
-								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
-						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
-			}
-
-		} else if (e.getSource() == enableFirebase4) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(3), command1.getSafePathPackage(output1.get(3)));
-			if (command1.checkIfInstalled(output1.get(3))) {
-				JOptionPane.showMessageDialog(this,
-						"Firebase Debugging enabled!" + "\n"
-								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
-						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
-			}
-
-		} else if (e.getSource() == reboot1) {
-			command1.reboot(output1.get(0));
-
-		} else if (e.getSource() == reboot2) {
-			command1.reboot(output1.get(1));
-
-		} else if (e.getSource() == reboot3) {
-			command1.reboot(output1.get(2));
-
-		} else if (e.getSource() == reboot4) {
-			command1.reboot(output1.get(3));
-
-		} else if (e.getSource() == uninstallApp1) {
-			command1.uninstallApp(output1.get(0), command1.getSafePathPackage(output1.get(0)));
-			JOptionPane.showMessageDialog(this, "App is uninstalled!", "Enable WiFi Debugging.",
-					JOptionPane.INFORMATION_MESSAGE);
-			saveLogsButton1.setEnabled(false);
-			devicesButton.doClick();
-
-		} else if (e.getSource() == uninstallApp2) {
-			command1.uninstallApp(output1.get(1), command1.getSafePathPackage(output1.get(1)));
-			JOptionPane.showMessageDialog(this, "App is uninstalled!", "Enable WiFi Debugging.",
-					JOptionPane.INFORMATION_MESSAGE);
-			saveLogsButton2.setEnabled(false);
-			devicesButton.doClick();
-
-		} else if (e.getSource() == uninstallApp3) {
-			command1.uninstallApp(output1.get(2), command1.getSafePathPackage(output1.get(2)));
-			JOptionPane.showMessageDialog(this, "App is uninstalled!", "Enable WiFi Debugging.",
-					JOptionPane.INFORMATION_MESSAGE);
-			saveLogsButton3.setEnabled(false);
-			devicesButton.doClick();
-
-		} else if (e.getSource() == uninstallApp4) {
-			command1.uninstallApp(output1.get(3), command1.getSafePathPackage(output1.get(3)));
-			JOptionPane.showMessageDialog(this, "App is uninstalled!", "Enable WiFi Debugging.",
-					JOptionPane.INFORMATION_MESSAGE);
-			saveLogsButton4.setEnabled(false);
-			devicesButton.doClick();
-
-		} else if (e.getSource() == installButton) {
-			output1 = command1.getConnectedDevices();
-			progressBar.setString("Installing...");
-			progressBar.setIndeterminate(true);
-			progressBar.setBackground(new Color(238, 238, 238));
-			installButton.setEnabled(false);
-
-			if (radio1.isSelected() && output1.size() > 0) {
-				radio1State = true;
-				Task task1 = new Task("adb -s " + output1.get(0) + " install " + "\"" + file.getAbsolutePath() + "\"");
-				task1.addPropertyChangeListener(this);
-				task1.execute();
-			} else {
-				radio1State = false;
-			}
-
-			if (radio2.isSelected() && output1.size() > 1) {
-				radio2State = true;
-				Task task2 = new Task("adb -s " + output1.get(1) + " install " + "\"" + file.getAbsolutePath() + "\"");
-				task2.addPropertyChangeListener(this);
-				task2.execute();
-			} else {
-				radio2State = false;
-			}
-			if (radio3.isSelected() && output1.size() > 2) {
-				radio3State = true;
-				Task task3 = new Task("adb -s " + output1.get(2) + " install " + "\"" + file.getAbsolutePath() + "\"");
-				task3.addPropertyChangeListener(this);
-				task3.execute();
-			} else {
-				radio3State = false;
-			}
-			if (radio4.isSelected() && output1.size() > 3) {
-				radio4State = true;
-				Task task4 = new Task("adb -s " + output1.get(3) + " install " + "\"" + file.getAbsolutePath() + "\"");
-				task4.addPropertyChangeListener(this);
-				task4.execute();
-			} else {
-				radio1State = false;
-			}
-			uninstallAllButton.setEnabled(true);
-
-		} else if (e.getSource() == uninstallAllButton) {
-			output1 = command1.getConnectedDevices();
-			progressBar.setString("Uninstalling...");
-			progressBar.setIndeterminate(true);
-			progressBar.setBackground(new Color(238, 238, 238));
-			uninstallAllButton.setEnabled(false);
-			int i = 0;
-			Task[] task = new Task[4];
-			while (i < output1.size()) {
-				task[i] = new Task("adb -s " + output1.get(i) + " shell pm uninstall "
-						+ command1.getSafePathPackage(output1.get(i)));
-				task[i].addPropertyChangeListener(this);
-				task[i].execute();
-				i++;
-			}
 		}
 	}
-
 	// Thread synchronization to determine the end of all processes
 	public void increaseCounter() {
 		synchronized (lock) {
 			counter++;
 		}
 	}
-
 	public void decreaseCounter() {
 		synchronized (lock) {
 			counter--;
 		}
 	}
-
 	class Task extends SwingWorker<Void, Void> {
 		private final String command;
 
@@ -1013,7 +866,6 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 			command1.runCommand(command);
 			return null;
 		}
-
 		@Override
 		public void done() {
 			decreaseCounter();
@@ -1028,10 +880,73 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 			}
 		}
 	}
+	class InstallButtonListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			progressBar.setString("Installing...");
+			progressBar.setIndeterminate(true);
+			progressBar.setBackground(new Color(238, 238, 238));
+			installButton.setEnabled(false);
+
+			if (radio1.isSelected() && output1.size() > 0) {
+				radio1State = true;
+				Task task1 = new Task("adb -s " + output1.get(0) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				task1.addPropertyChangeListener(null);
+				task1.execute();
+			} else {
+				radio1State = false;
+			}
+
+			if (radio2.isSelected() && output1.size() > 1) {
+				radio2State = true;
+				Task task2 = new Task("adb -s " + output1.get(1) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				task2.addPropertyChangeListener(null);
+				task2.execute();
+			} else {
+				radio2State = false;
+			}
+			if (radio3.isSelected() && output1.size() > 2) {
+				radio3State = true;
+				Task task3 = new Task("adb -s " + output1.get(2) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				task3.addPropertyChangeListener(null);
+				task3.execute();
+			} else {
+				radio3State = false;
+			}
+			if (radio4.isSelected() && output1.size() > 3) {
+				radio4State = true;
+				Task task4 = new Task("adb -s " + output1.get(3) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				task4.addPropertyChangeListener(null);
+				task4.execute();
+			} else {
+				radio1State = false;
+			}
+			uninstallAllButton.setEnabled(true);
+		}
+	}
+	class UninstAllButtonListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			progressBar.setString("Uninstalling...");
+			progressBar.setIndeterminate(true);
+			progressBar.setBackground(new Color(238, 238, 238));
+			uninstallAllButton.setEnabled(false);
+			int i = 0;
+			Task[] task = new Task[4];
+			while (i < output1.size()) {
+				task[i] = new Task("adb -s " + output1.get(i) + " shell pm uninstall "
+						+ command1.getSafePathPackage(output1.get(i)));
+				task[i].addPropertyChangeListener(null);
+				task[i].execute();
+				i++;
+			}
+		}
+	}
 	class FileButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-
 			JFileChooser fileChooser = new JFileChooser(
 					"C:\\Users\\dtomic\\OneDrive - Smith Micro Software\\SP7\\Master builds\\");
 			int response = fileChooser.showOpenDialog(null);
@@ -1134,7 +1049,6 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 			JOptionPane.showMessageDialog(null,
 					"Device2 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device2",
 					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
-
 		}
 	}
 	class TakeScreenshotButton3Listener implements ActionListener {
@@ -1233,6 +1147,7 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 	class WifiDebug4Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			System.out.println(output1);
 			if (!output1.get(3).endsWith(":5555")) {
 				command1.startWifiDebugging(output1.get(3), ips.get(3));
 				JOptionPane.showMessageDialog(null,
@@ -1249,6 +1164,122 @@ public class MyFrame extends JFrame implements ActionListener, PropertyChangeLis
 						JOptionPane.INFORMATION_MESSAGE);
 				devicesButton.doClick(100);
 			}
+		}
+	}
+	class EnableFirebase1Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			command1.enableAnalyticsDebug(output1.get(0), command1.getSafePathPackage(output1.get(0)));
+			if (command1.checkIfInstalled(output1.get(0))) {
+				JOptionPane.showMessageDialog(null,
+						"Firebase Debugging enabled!" + "\n"
+								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
+						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class EnableFirebase2Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			command1.enableAnalyticsDebug(output1.get(1), command1.getSafePathPackage(output1.get(1)));
+			if (command1.checkIfInstalled(output1.get(1))) {
+				JOptionPane.showMessageDialog(null,
+						"Firebase Debugging enabled!" + "\n"
+								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
+						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class EnableFirebase3Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			command1.enableAnalyticsDebug(output1.get(2), command1.getSafePathPackage(output1.get(2)));
+			if (command1.checkIfInstalled(output1.get(2))) {
+				JOptionPane.showMessageDialog(null,
+						"Firebase Debugging enabled!" + "\n"
+								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
+						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class EnableFirebase4Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			output1 = command1.getConnectedDevices();
+			command1.enableAnalyticsDebug(output1.get(3), command1.getSafePathPackage(output1.get(3)));
+			if (command1.checkIfInstalled(output1.get(3))) {
+				JOptionPane.showMessageDialog(null,
+						"Firebase Debugging enabled!" + "\n"
+								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
+						"Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
+			}
+		}
+	}
+	class Reboot1Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.reboot(output1.get(0));
+		}
+	}
+	class Reboot2Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.reboot(output1.get(1));
+		}
+	}
+	class Reboot3Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.reboot(output1.get(2));
+		}
+	}
+	class Reboot4Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.reboot(output1.get(3));
+		}
+	}
+	class UninstallApp1Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.uninstallApp(output1.get(0), command1.getSafePathPackage(output1.get(0)));
+			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
+					JOptionPane.INFORMATION_MESSAGE);
+			saveLogsButton1.setEnabled(false);
+			devicesButton.doClick();
+		}
+	}
+	class UninstallApp2Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.uninstallApp(output1.get(1), command1.getSafePathPackage(output1.get(1)));
+			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
+					JOptionPane.INFORMATION_MESSAGE);
+			saveLogsButton2.setEnabled(false);
+			devicesButton.doClick();
+		}
+	}
+	class UninstallApp3Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.uninstallApp(output1.get(2), command1.getSafePathPackage(output1.get(2)));
+			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
+					JOptionPane.INFORMATION_MESSAGE);
+			saveLogsButton3.setEnabled(false);
+			devicesButton.doClick();
+		}
+	}
+	class UninstallApp4Listener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			command1.uninstallApp(output1.get(3), command1.getSafePathPackage(output1.get(3)));
+			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
+					JOptionPane.INFORMATION_MESSAGE);
+			saveLogsButton4.setEnabled(false);
+			devicesButton.doClick();
 		}
 	}
 }
