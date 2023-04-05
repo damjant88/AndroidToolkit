@@ -31,8 +31,8 @@ import Buttons.RadioButtons;
 
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
-	Util command1 = new Util();
-	ArrayList<String> output1 = command1.getConnectedDevices();
+	Util utility = new Util();
+	ArrayList<String> listOfDevices = utility.getConnectedDevices();
 	private static int counter = 0;
 	private static final Object lock = new Object();
 	ArrayList<String> ips = new ArrayList<>();
@@ -81,8 +81,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		logo_product = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("product.png")));
 
 		// Get list of wlan0 IP addresses
-		for (String element : output1) {
-			ips.add(command1.getWlanIp(element));
+		for (String element : listOfDevices) {
+			ips.add(utility.getWlanIp(element));
 		}
 
 		Image image1 = buttonIcon.getImage();
@@ -246,23 +246,23 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			this.add(wifiButton);
 		}
 
-		for (String element : output1) {
-			if (output1.size() > 0) {
+		for (String element : listOfDevices) {
+			if (listOfDevices.size() > 0) {
 				if (element.endsWith(":5555")) {
 					wifiDebug1.setText("Disable WiFi");
 				}
 			}
-			if (output1.size() > 1) {
+			if (listOfDevices.size() > 1) {
 				if (element.endsWith(":5555")) {
 					wifiDebug2.setText("Disable WiFi");
 				}
 			}
-			if (output1.size() > 2) {
+			if (listOfDevices.size() > 2) {
 				if (element.endsWith(":5555")) {
 					wifiDebug3.setText("Disable WiFi");
 				}
 			}
-			if (output1.size() > 3) {
+			if (listOfDevices.size() > 3) {
 				if (element.endsWith(":5555")) {
 					wifiDebug4.setText("Disable WiFi");
 				}
@@ -278,8 +278,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.add(uninstallAllButton);
 
 		int j = 0;
-		while (j < output1.size()) {
-			if (command1.checkIfInstalled(output1.get(j))) {
+		while (j < listOfDevices.size()) {
+			if (utility.checkIfInstalled(listOfDevices.get(j))) {
 				uninstallAllButton.setEnabled(true);
 				break;
 			}
@@ -310,13 +310,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setSize(1045, 420);
 		this.setIconImage(frameIcon.getImage());
 
-		for (int i = 0; i < output1.size(); i++) {
+		for (int i = 0; i < listOfDevices.size(); i++) {
 			
 			if (i == 0) {
 				
 				radio1.setSelected(true);
 				radio1.setVisible(true);
-				switch (command1.getSafePathPackage(output1.get(0))) {
+				switch (utility.getSafePathPackage(listOfDevices.get(0))) {
 					case "com.smithmicro.tmobile.familymode.test" -> {
 						labelIcon1.setIcon(logo_tmo);
 						labelIcon1.setText("FamilyMode");
@@ -358,15 +358,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				}
 				saveLogsButton1.setVisible(true);
 				wifiDebug1.setText("WiFi Debug");
-				if (output1.get(i).endsWith(":5555")) {
+				if (listOfDevices.get(i).endsWith(":5555")) {
 					wifiDebug1.setText("Disable WiFi");
 				}
 				wifiDebug1.setVisible(true);
 				enableFirebase1.setVisible(true);
 				reboot1.setVisible(true);
-				device1TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i)) + "\n"
-						+ command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-						+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+				device1TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 				device1TextPane.setVisible(true);
 				takeScreenshotButton1.setVisible(true);
 
@@ -374,7 +374,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 				radio2.setSelected(true);
 				radio2.setVisible(true);
-				switch (command1.getSafePathPackage(output1.get(1))) {
+				switch (utility.getSafePathPackage(listOfDevices.get(1))) {
 					case "com.smithmicro.tmobile.familymode.test" -> {
 						labelIcon2.setIcon(logo_tmo);
 						labelIcon2.setText("FamilyMode");
@@ -416,15 +416,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				}
 				saveLogsButton2.setVisible(true);
 				wifiDebug2.setText("WiFi Debug");
-				if (output1.get(i).endsWith(":5555")) {
+				if (listOfDevices.get(i).endsWith(":5555")) {
 					wifiDebug2.setText("Disable WiFi");
 				}
 				wifiDebug2.setVisible(true);
 				enableFirebase2.setVisible(true);
 				reboot2.setVisible(true);
-				device2TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i)) + "\n"
-						+ command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-						+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+				device2TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 				device2TextPane.setVisible(true);
 				takeScreenshotButton2.setVisible(true);
 
@@ -432,7 +432,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 				radio3.setSelected(true);
 				radio3.setVisible(true);
-				switch (command1.getSafePathPackage(output1.get(2))) {
+				switch (utility.getSafePathPackage(listOfDevices.get(2))) {
 					case "com.smithmicro.tmobile.familymode.test" -> {
 						labelIcon3.setIcon(logo_tmo);
 						labelIcon3.setText("FamilyMode");
@@ -474,15 +474,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				}
 				saveLogsButton3.setVisible(true);
 				wifiDebug3.setText("WiFi Debug");
-				if (output1.get(i).endsWith(":5555")) {
+				if (listOfDevices.get(i).endsWith(":5555")) {
 					wifiDebug3.setText("Disable WiFi");
 				}
 				wifiDebug3.setVisible(true);
 				enableFirebase3.setVisible(true);
 				reboot3.setVisible(true);
-				device3TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i)) + "\n"
-						+ command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-						+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+				device3TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 				device3TextPane.setVisible(true);
 				takeScreenshotButton3.setVisible(true);
 
@@ -490,7 +490,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 				radio4.setSelected(true);
 				radio4.setVisible(true);
-				switch (command1.getSafePathPackage(output1.get(3))) {
+				switch (utility.getSafePathPackage(listOfDevices.get(3))) {
 					case "com.smithmicro.tmobile.familymode.test" -> {
 						labelIcon4.setIcon(logo_tmo);
 						labelIcon4.setText("FamilyMode");
@@ -532,15 +532,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				}
 				saveLogsButton4.setVisible(true);
 				wifiDebug4.setText("WiFi Debug");
-				if (output1.get(i).endsWith(":5555")) {
+				if (listOfDevices.get(i).endsWith(":5555")) {
 					wifiDebug4.setText("Disable WiFi");
 				}
 				wifiDebug4.setVisible(true);
 				enableFirebase4.setVisible(true);
 				reboot4.setVisible(true);
-				device4TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i)) + "\n"
-						+ command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-						+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+				device4TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 				device4TextPane.setVisible(true);
 				takeScreenshotButton4.setVisible(true);
 			}
@@ -587,20 +587,20 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			for (LogoIconLabels IconLabel : logoIconLabels) {
 				IconLabel.setVisible(false);
 			}
-			output1.clear();
+			listOfDevices.clear();
 			ips.clear();
-			output1 = command1.getConnectedDevices();
-			for (String element : output1) {
-				ips.add(command1.getWlanIp(element));
+			listOfDevices = utility.getConnectedDevices();
+			for (String element : listOfDevices) {
+				ips.add(utility.getWlanIp(element));
 			}
 
-			for (int i = 0; i < output1.size(); i++) {
+			for (int i = 0; i < listOfDevices.size(); i++) {
 
 				if (i == 0) {
 
 					radio1.setSelected(true);
 					radio1.setVisible(true);
-					switch (command1.getSafePathPackage(output1.get(0))) {
+					switch (utility.getSafePathPackage(listOfDevices.get(0))) {
 						case "com.smithmicro.tmobile.familymode.test" -> {
 							labelIcon1.setIcon(logo_tmo);
 							labelIcon1.setText("FamilyMode");
@@ -642,15 +642,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 					}
 					saveLogsButton1.setVisible(true);
 					wifiDebug1.setText("WiFi Debug");
-					if (output1.get(i).endsWith(":5555")) {
+					if (listOfDevices.get(i).endsWith(":5555")) {
 						wifiDebug1.setText("Disable WiFi");
 					}
 					wifiDebug1.setVisible(true);
 					enableFirebase1.setVisible(true);
 					reboot1.setVisible(true);
-					device1TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i))
-							+ "\n" + command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-							+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+					device1TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
+							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 					device1TextPane.setVisible(true);
 					takeScreenshotButton1.setVisible(true);
 
@@ -658,7 +658,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 					radio2.setSelected(true);
 					radio2.setVisible(true);
-					switch (command1.getSafePathPackage(output1.get(1))) {
+					switch (utility.getSafePathPackage(listOfDevices.get(1))) {
 						case "com.smithmicro.tmobile.familymode.test" -> {
 							labelIcon2.setIcon(logo_tmo);
 							labelIcon2.setText("FamilyMode");
@@ -700,15 +700,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 					}
 					saveLogsButton2.setVisible(true);
 					wifiDebug2.setText("WiFi Debug");
-					if (output1.get(i).endsWith(":5555")) {
+					if (listOfDevices.get(i).endsWith(":5555")) {
 						wifiDebug2.setText("Disable WiFi");
 					}
 					wifiDebug2.setVisible(true);
 					enableFirebase2.setVisible(true);
 					reboot2.setVisible(true);
-					device2TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i))
-							+ "\n" + command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-							+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+					device2TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
+							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 					device2TextPane.setVisible(true);
 					takeScreenshotButton2.setVisible(true);
 
@@ -716,7 +716,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 					radio3.setSelected(true);
 					radio3.setVisible(true);
-					switch (command1.getSafePathPackage(output1.get(2))) {
+					switch (utility.getSafePathPackage(listOfDevices.get(2))) {
 						case "com.smithmicro.tmobile.familymode.test" -> {
 							labelIcon3.setIcon(logo_tmo);
 							labelIcon3.setText("FamilyMode");
@@ -757,16 +757,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 						}
 					}
 					wifiDebug3.setText("WiFi Debug");
-					if (output1.get(i).endsWith(":5555")) {
+					if (listOfDevices.get(i).endsWith(":5555")) {
 						wifiDebug3.setText("Disable WiFi");
 					}
 					saveLogsButton3.setVisible(true);
 					wifiDebug3.setVisible(true);
 					enableFirebase3.setVisible(true);
 					reboot3.setVisible(true);
-					device3TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i))
-							+ "\n" + command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-							+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+					device3TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
+							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 					device3TextPane.setVisible(true);
 					takeScreenshotButton3.setVisible(true);
 
@@ -774,7 +774,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 					radio4.setSelected(true);
 					radio4.setVisible(true);
-					switch (command1.getSafePathPackage(output1.get(3))) {
+					switch (utility.getSafePathPackage(listOfDevices.get(3))) {
 						case "com.smithmicro.tmobile.familymode.test" -> {
 							labelIcon4.setIcon(logo_tmo);
 							labelIcon4.setText("FamilyMode");
@@ -816,15 +816,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 					}
 					saveLogsButton4.setVisible(true);
 					wifiDebug4.setText("WiFi Debug");
-					if (output1.get(i).endsWith(":5555")) {
+					if (listOfDevices.get(i).endsWith(":5555")) {
 						wifiDebug4.setText("Disable WiFi");
 					}
 					wifiDebug4.setVisible(true);
 					enableFirebase4.setVisible(true);
 					reboot4.setVisible(true);
-					device4TextPane.setText(output1.get(i) + "\n" + command1.getDeviceManufacturer(output1.get(i))
-							+ "\n" + command1.getDeviceModel(output1.get(i)) + "\n" + "Android "
-							+ command1.getDeviceOSVersion(output1.get(i)) + "\n" + ips.get(i));
+					device4TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
+							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 					device4TextPane.setVisible(true);
 					takeScreenshotButton4.setVisible(true);
 				}
@@ -835,40 +835,40 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class InstallButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
+			listOfDevices = utility.getConnectedDevices();
 			progressBar.setString("Installing...");
 			progressBar.setIndeterminate(true);
 			progressBar.setBackground(new Color(238, 238, 238));
 			installButton.setEnabled(false);
 
-			if (radio1.isSelected() && output1.size() > 0) {
+			if (radio1.isSelected() && listOfDevices.size() > 0) {
 				radio1State = true;
-				Task task1 = new Task("adb -s " + output1.get(0) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task1 = new Task("adb -s " + listOfDevices.get(0) + " install " + "\"" + file.getAbsolutePath() + "\"");
 				task1.addPropertyChangeListener(null);
 				task1.execute();
 			} else {
 				radio1State = false;
 			}
 
-			if (radio2.isSelected() && output1.size() > 1) {
+			if (radio2.isSelected() && listOfDevices.size() > 1) {
 				radio2State = true;
-				Task task2 = new Task("adb -s " + output1.get(1) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task2 = new Task("adb -s " + listOfDevices.get(1) + " install " + "\"" + file.getAbsolutePath() + "\"");
 				task2.addPropertyChangeListener(null);
 				task2.execute();
 			} else {
 				radio2State = false;
 			}
-			if (radio3.isSelected() && output1.size() > 2) {
+			if (radio3.isSelected() && listOfDevices.size() > 2) {
 				radio3State = true;
-				Task task3 = new Task("adb -s " + output1.get(2) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task3 = new Task("adb -s " + listOfDevices.get(2) + " install " + "\"" + file.getAbsolutePath() + "\"");
 				task3.addPropertyChangeListener(null);
 				task3.execute();
 			} else {
 				radio3State = false;
 			}
-			if (radio4.isSelected() && output1.size() > 3) {
+			if (radio4.isSelected() && listOfDevices.size() > 3) {
 				radio4State = true;
-				Task task4 = new Task("adb -s " + output1.get(3) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task4 = new Task("adb -s " + listOfDevices.get(3) + " install " + "\"" + file.getAbsolutePath() + "\"");
 				task4.addPropertyChangeListener(null);
 				task4.execute();
 			} else {
@@ -880,16 +880,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class UninstallAllButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
+			listOfDevices = utility.getConnectedDevices();
 			progressBar.setString("Uninstalling...");
 			progressBar.setIndeterminate(true);
 			progressBar.setBackground(new Color(238, 238, 238));
 			uninstallAllButton.setEnabled(false);
 			int i = 0;
 			Task[] task = new Task[4];
-			while (i < output1.size()) {
-				task[i] = new Task("adb -s " + output1.get(i) + " shell pm uninstall "
-						+ command1.getSafePathPackage(output1.get(i)));
+			while (i < listOfDevices.size()) {
+				task[i] = new Task("adb -s " + listOfDevices.get(i) + " shell pm uninstall "
+						+ utility.getSafePathPackage(listOfDevices.get(i)));
 				task[i].addPropertyChangeListener(null);
 				task[i].execute();
 				i++;
@@ -921,9 +921,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				output1 = command1.getConnectedDevices();
-				String appFlavour = command1.getSafePathPackage(output1.get(0));
-				command1.saveLogs(output1.get(0), appFlavour, file.getAbsolutePath());
+				listOfDevices = utility.getConnectedDevices();
+				String appFlavour = utility.getSafePathPackage(listOfDevices.get(0));
+				utility.saveLogs(listOfDevices.get(0), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -937,9 +937,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				output1 = command1.getConnectedDevices();
-				String appFlavour = command1.getSafePathPackage(output1.get(1));
-				command1.saveLogs(output1.get(1), appFlavour, file.getAbsolutePath());
+				listOfDevices = utility.getConnectedDevices();
+				String appFlavour = utility.getSafePathPackage(listOfDevices.get(1));
+				utility.saveLogs(listOfDevices.get(1), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -953,9 +953,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				output1 = command1.getConnectedDevices();
-				String appFlavour = command1.getSafePathPackage(output1.get(2));
-				command1.saveLogs(output1.get(2), appFlavour, file.getAbsolutePath());
+				listOfDevices = utility.getConnectedDevices();
+				String appFlavour = utility.getSafePathPackage(listOfDevices.get(2));
+				utility.saveLogs(listOfDevices.get(2), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -969,9 +969,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				output1 = command1.getConnectedDevices();
-				String appFlavour = command1.getSafePathPackage(output1.get(3));
-				command1.saveLogs(output1.get(3), appFlavour, file.getAbsolutePath());
+				listOfDevices = utility.getConnectedDevices();
+				String appFlavour = utility.getSafePathPackage(listOfDevices.get(3));
+				utility.saveLogs(listOfDevices.get(3), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -980,13 +980,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class TakeScreenshotButton1Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(0), "sdcard/", "screenshot.png");
+			listOfDevices = utility.getConnectedDevices();
+			String output = utility.takeScreenshot(listOfDevices.get(0), "sdcard/", "screenshot.png");
 			File device1 = new File("C:/AdbToolkit/Screenshots/Device1");
 			if (!device1.exists()) {
 				device1.mkdirs();
 			}
-			command1.pullFile(output1.get(0), output, "C:/AdbToolkit/Screenshots/Device1");
+			utility.pullFile(listOfDevices.get(0), output, "C:/AdbToolkit/Screenshots/Device1");
 			JOptionPane.showMessageDialog(null,
 					"Device1 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device1",
 					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
@@ -995,13 +995,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class TakeScreenshotButton2Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(1), "sdcard/", "screenshot.png");
+			listOfDevices = utility.getConnectedDevices();
+			String output = utility.takeScreenshot(listOfDevices.get(1), "sdcard/", "screenshot.png");
 			File device2 = new File("C:/AdbToolkit/Screenshots/Device2");
 			if (!device2.exists()) {
 				device2.mkdirs();
 			}
-			command1.pullFile(output1.get(1), output, "C:/AdbToolkit/Screenshots/Device2");
+			utility.pullFile(listOfDevices.get(1), output, "C:/AdbToolkit/Screenshots/Device2");
 			JOptionPane.showMessageDialog(null,
 					"Device2 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device2",
 					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
@@ -1010,13 +1010,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class TakeScreenshotButton3Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(2), "sdcard/", "screenshot.png");
+			listOfDevices = utility.getConnectedDevices();
+			String output = utility.takeScreenshot(listOfDevices.get(2), "sdcard/", "screenshot.png");
 			File device3 = new File("C:/AdbToolkit/Screenshots/Device3");
 			if (!device3.exists()) {
 				device3.mkdirs();
 			}
-			command1.pullFile(output1.get(2), output, "C:/AdbToolkit/Screenshots/Device3");
+			utility.pullFile(listOfDevices.get(2), output, "C:/AdbToolkit/Screenshots/Device3");
 			JOptionPane.showMessageDialog(null,
 					"Device3 screenshot captured!" + "\n" + "Location: C:/AdbToolkit_Screenshots/Device3",
 					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
@@ -1025,13 +1025,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class TakeScreenshotButton4Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			String output = command1.takeScreenshot(output1.get(3), "sdcard/", "screenshot.png");
+			listOfDevices = utility.getConnectedDevices();
+			String output = utility.takeScreenshot(listOfDevices.get(3), "sdcard/", "screenshot.png");
 			File device4 = new File("C:/AdbToolkit/Screenshots/Device4");
 			if (!device4.exists()) {
 				device4.mkdirs();
 			}
-			command1.pullFile(output1.get(3), output, "C:/AdbToolkit/Screenshots/Device4");
+			utility.pullFile(listOfDevices.get(3), output, "C:/AdbToolkit/Screenshots/Device4");
 			JOptionPane.showMessageDialog(null,
 					"Device4 screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/Device4",
 					"Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
@@ -1040,8 +1040,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class WifiDebug1Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (!output1.get(0).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(0), ips.get(0));
+			if (!listOfDevices.get(0).endsWith(":5555")) {
+				utility.startWifiDebugging(listOfDevices.get(0), ips.get(0));
 				JOptionPane.showMessageDialog(null,
 						"""
 								Debugging over WiFi is enabled!
@@ -1051,7 +1051,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {
-				command1.stopWifiDebugging(output1.get(0), ips.get(0));
+				utility.stopWifiDebugging(listOfDevices.get(0), ips.get(0));
 				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
 						JOptionPane.INFORMATION_MESSAGE);
 				devicesButton.doClick(100);
@@ -1061,8 +1061,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class WifiDebug2Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (!output1.get(1).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(1), ips.get(1));
+			if (!listOfDevices.get(1).endsWith(":5555")) {
+				utility.startWifiDebugging(listOfDevices.get(1), ips.get(1));
 				JOptionPane.showMessageDialog(null,
 						"""
 								Debugging over WiFi is enabled!
@@ -1072,7 +1072,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {
-				command1.stopWifiDebugging(output1.get(1), ips.get(1));
+				utility.stopWifiDebugging(listOfDevices.get(1), ips.get(1));
 				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
 						JOptionPane.INFORMATION_MESSAGE);
 				devicesButton.doClick(100);
@@ -1082,8 +1082,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class WifiDebug3Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			if (!output1.get(2).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(2), ips.get(2));
+			if (!listOfDevices.get(2).endsWith(":5555")) {
+				utility.startWifiDebugging(listOfDevices.get(2), ips.get(2));
 				JOptionPane.showMessageDialog(null,
 						"""
 								Debugging over WiFi is enabled!
@@ -1093,7 +1093,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {
-				command1.stopWifiDebugging(output1.get(2), ips.get(2));
+				utility.stopWifiDebugging(listOfDevices.get(2), ips.get(2));
 				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
 						JOptionPane.INFORMATION_MESSAGE);
 				devicesButton.doClick(100);
@@ -1103,9 +1103,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class WifiDebug4Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println(output1);
-			if (!output1.get(3).endsWith(":5555")) {
-				command1.startWifiDebugging(output1.get(3), ips.get(3));
+			System.out.println(listOfDevices);
+			if (!listOfDevices.get(3).endsWith(":5555")) {
+				utility.startWifiDebugging(listOfDevices.get(3), ips.get(3));
 				JOptionPane.showMessageDialog(null,
 						"""
 								Debugging over WiFi is enabled!
@@ -1115,7 +1115,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {
-				command1.stopWifiDebugging(output1.get(3), ips.get(3));
+				utility.stopWifiDebugging(listOfDevices.get(3), ips.get(3));
 				JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled!", "Disable WiFi Debugging.",
 						JOptionPane.INFORMATION_MESSAGE);
 				devicesButton.doClick(100);
@@ -1125,9 +1125,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class EnableFirebase1Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(0), command1.getSafePathPackage(output1.get(0)));
-			if (command1.checkIfInstalled(output1.get(0))) {
+			listOfDevices = utility.getConnectedDevices();
+			utility.enableAnalyticsDebug(listOfDevices.get(0), utility.getSafePathPackage(listOfDevices.get(0)));
+			if (utility.checkIfInstalled(listOfDevices.get(0))) {
 				JOptionPane.showMessageDialog(null,
 						"Firebase Debugging enabled!" + "\n"
 								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
@@ -1138,9 +1138,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class EnableFirebase2Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(1), command1.getSafePathPackage(output1.get(1)));
-			if (command1.checkIfInstalled(output1.get(1))) {
+			listOfDevices = utility.getConnectedDevices();
+			utility.enableAnalyticsDebug(listOfDevices.get(1), utility.getSafePathPackage(listOfDevices.get(1)));
+			if (utility.checkIfInstalled(listOfDevices.get(1))) {
 				JOptionPane.showMessageDialog(null,
 						"Firebase Debugging enabled!" + "\n"
 								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
@@ -1151,9 +1151,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class EnableFirebase3Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(2), command1.getSafePathPackage(output1.get(2)));
-			if (command1.checkIfInstalled(output1.get(2))) {
+			listOfDevices = utility.getConnectedDevices();
+			utility.enableAnalyticsDebug(listOfDevices.get(2), utility.getSafePathPackage(listOfDevices.get(2)));
+			if (utility.checkIfInstalled(listOfDevices.get(2))) {
 				JOptionPane.showMessageDialog(null,
 						"Firebase Debugging enabled!" + "\n"
 								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
@@ -1164,9 +1164,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class EnableFirebase4Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			output1 = command1.getConnectedDevices();
-			command1.enableAnalyticsDebug(output1.get(3), command1.getSafePathPackage(output1.get(3)));
-			if (command1.checkIfInstalled(output1.get(3))) {
+			listOfDevices = utility.getConnectedDevices();
+			utility.enableAnalyticsDebug(listOfDevices.get(3), utility.getSafePathPackage(listOfDevices.get(3)));
+			if (utility.checkIfInstalled(listOfDevices.get(3))) {
 				JOptionPane.showMessageDialog(null,
 						"Firebase Debugging enabled!" + "\n"
 								+ "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
@@ -1177,31 +1177,31 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class Reboot1Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.reboot(output1.get(0));
+			utility.reboot(listOfDevices.get(0));
 		}
 	}
 	class Reboot2Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.reboot(output1.get(1));
+			utility.reboot(listOfDevices.get(1));
 		}
 	}
 	class Reboot3Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.reboot(output1.get(2));
+			utility.reboot(listOfDevices.get(2));
 		}
 	}
 	class Reboot4Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.reboot(output1.get(3));
+			utility.reboot(listOfDevices.get(3));
 		}
 	}
 	class UninstallApp1Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.uninstallApp(output1.get(0), command1.getSafePathPackage(output1.get(0)));
+			utility.uninstallApp(listOfDevices.get(0), utility.getSafePathPackage(listOfDevices.get(0)));
 			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
 					JOptionPane.INFORMATION_MESSAGE);
 			saveLogsButton1.setEnabled(false);
@@ -1211,7 +1211,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class UninstallApp2Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.uninstallApp(output1.get(1), command1.getSafePathPackage(output1.get(1)));
+			utility.uninstallApp(listOfDevices.get(1), utility.getSafePathPackage(listOfDevices.get(1)));
 			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
 					JOptionPane.INFORMATION_MESSAGE);
 			saveLogsButton2.setEnabled(false);
@@ -1221,7 +1221,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class UninstallApp3Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.uninstallApp(output1.get(2), command1.getSafePathPackage(output1.get(2)));
+			utility.uninstallApp(listOfDevices.get(2), utility.getSafePathPackage(listOfDevices.get(2)));
 			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
 					JOptionPane.INFORMATION_MESSAGE);
 			saveLogsButton3.setEnabled(false);
@@ -1231,7 +1231,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class UninstallApp4Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			command1.uninstallApp(output1.get(3), command1.getSafePathPackage(output1.get(3)));
+			utility.uninstallApp(listOfDevices.get(3), utility.getSafePathPackage(listOfDevices.get(3)));
 			JOptionPane.showMessageDialog(null, "App is uninstalled!", "Enable WiFi Debugging.",
 					JOptionPane.INFORMATION_MESSAGE);
 			saveLogsButton4.setEnabled(false);
@@ -1259,7 +1259,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		@Override
 		public Void doInBackground() {
 			increaseCounter();
-			command1.runCommand(command);
+			utility.runCommand(command);
 			return null;
 		}
 		@Override
