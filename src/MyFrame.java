@@ -105,7 +105,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		newimg = image5.getScaledInstance(45, 45, java.awt.Image.SCALE_SMOOTH);
 		notInstalled = new ImageIcon(newimg);
 
-		// Setting the menu bar
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
 		JMenu editMenu = new JMenu("Edit");
@@ -115,7 +114,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		menuBar.add(helpMenu);
 		this.setJMenuBar(menuBar);
 
-		// Creating DeviceTextPanes ArrayList using position and dimensions
 		device1TextPane = new DeviceTextPanes(200, 50, 200, 110);
 		deviceTextPanes.add(device1TextPane);
 		device2TextPane = new DeviceTextPanes(410, 50, 200, 110);
@@ -128,7 +126,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			this.add(deviceTextPane);
 		}
 
-		// Creating LogoIcons ArrayList using default icon, position and dimensions
 		labelIcon1 = new LogoIconLabels(notInstalled, 275, 0, 122, 50);
 		logoIconLabels.add(labelIcon1);
 		labelIcon2 = new LogoIconLabels(notInstalled, 485, 0, 122, 50);
@@ -141,7 +138,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			this.add(IconLabel);
 		}
 
-		// Creating SaveSPLogsButtons ArrayList using position and dimensions
 		saveLogsButton1 = new SaveSPLogsButtons(200, 160, 95, 30);
 		saveLogsButton1.addActionListener(new SaveLogsButton1Listener());
 		saveSPLogsButtons.add(saveLogsButton1);
@@ -157,7 +153,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		for (SaveSPLogsButtons saveLogsButton : saveSPLogsButtons) {
 			this.add(saveLogsButton);
 		}
-		// Creating EnableFirebaseButtons ArrayList using position and dimensions
+
 		enableFirebase1 = new EnableFirebaseButtons(200, 220, 95, 30);
 		enableFirebase1.addActionListener(new EnableFirebase1Listener());
 		enableFirebaseButtons.add(enableFirebase1);
@@ -174,7 +170,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			this.add(firebaseButton);
 		}
 
-		// Creating RebootButtons ArrayList using position and dimensions
 		reboot1 = new RebootButtons(200, 190, 95, 30);
 		reboot1.addActionListener(new Reboot1Listener());
 		rebootButtons.add(reboot1);
@@ -191,7 +186,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			this.add(rebootButton);
 		}
 
-		// Creating TakeScreenshotButtons ArrayList using position and dimensions
 		takeScreenshotButton1 = new TakeScreenshotButtons(310, 190, 90, 30);
 		takeScreenshotButton1.addActionListener(new TakeScreenshotButton1Listener());
 		takeScreenshotButtons.add(takeScreenshotButton1);
@@ -208,7 +202,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			this.add(screenshotButton);
 		}
 
-		// Creating UninstallAppButtons ArrayList using position and dimensions
 		uninstallApp1 = new UninstallAppButtons(310, 220, 90, 30);
 		uninstallApp1.addActionListener(new UninstallApp1Listener());
 		uninstallAppButtons.add(uninstallApp1);
@@ -224,9 +217,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		for (UninstallAppButtons uninstallButton : uninstallAppButtons) {
 			this.add(uninstallButton);
 		}
-		
-		// Creating RadioButtons ArrayList using custom radio button name, position and
-		// dimensions
+
 		radio1 = new RadioButtons("Device 1", 200, 20, 75, 15);
 		radioButtons.add(radio1);
 		radio2 = new RadioButtons("Device 2", 410, 20, 75, 15);
@@ -236,11 +227,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		radio4 = new RadioButtons("Device 4", 830, 20, 75, 15);
 		radioButtons.add(radio4);
 		for (RadioButtons radiobutton : radioButtons) {
-//			radiobutton.addActionListener(this);
 			this.add(radiobutton);
 		}
 
-		// Creating WifiDebugButtons ArrayList using position and dimensions
 		wifiDebug1 = new WifiDebugButtons(310, 160, 90, 30);
 		wifiDebug1.addActionListener(new WifiDebug1Listener());
 		wifiDebugButtons.add(wifiDebug1);
@@ -285,7 +274,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.add(installButton);
 
 		uninstallAllButton = new UninstallAllButton("Uninstall All");
-		uninstallAllButton.addActionListener(new UninstAllButtonListener());
+		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
 		this.add(uninstallAllButton);
 
 		int j = 0;
@@ -842,44 +831,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 		}
 	}
-	// Thread synchronization to determine the end of all processes
-	public void increaseCounter() {
-		synchronized (lock) {
-			counter++;
-		}
-	}
-	public void decreaseCounter() {
-		synchronized (lock) {
-			counter--;
-		}
-	}
-	class Task extends SwingWorker<Void, Void> {
-		private final String command;
 
-		public Task(String command) {
-			this.command = command;
-		}
-
-		@Override
-		public Void doInBackground() {
-			increaseCounter();
-			command1.runCommand(command);
-			return null;
-		}
-		@Override
-		public void done() {
-			decreaseCounter();
-			if (counter == 0) {
-				progressBar.setString("Done!");
-				progressBar.setBackground(Color.green);
-				if (!Objects.equals(fileTextField.getText(), "")) {
-					installButton.setEnabled(true);
-				}
-				progressBar.setIndeterminate(false);
-				devicesButton.doClick();
-			}
-		}
-	}
 	class InstallButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -925,7 +877,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			uninstallAllButton.setEnabled(true);
 		}
 	}
-	class UninstAllButtonListener implements ActionListener {
+	class UninstallAllButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			output1 = command1.getConnectedDevices();
@@ -1280,6 +1232,44 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 					JOptionPane.INFORMATION_MESSAGE);
 			saveLogsButton4.setEnabled(false);
 			devicesButton.doClick();
+		}
+	}
+	// Thread synchronization to determine the end of all processes
+	public void increaseCounter() {
+		synchronized (lock) {
+			counter++;
+		}
+	}
+	public void decreaseCounter() {
+		synchronized (lock) {
+			counter--;
+		}
+	}
+	class Task extends SwingWorker<Void, Void> {
+		private final String command;
+
+		public Task(String command) {
+			this.command = command;
+		}
+
+		@Override
+		public Void doInBackground() {
+			increaseCounter();
+			command1.runCommand(command);
+			return null;
+		}
+		@Override
+		public void done() {
+			decreaseCounter();
+			if (counter == 0) {
+				progressBar.setString("Done!");
+				progressBar.setBackground(Color.green);
+				if (!Objects.equals(fileTextField.getText(), "")) {
+					installButton.setEnabled(true);
+				}
+				progressBar.setIndeterminate(false);
+				devicesButton.doClick();
+			}
 		}
 	}
 }
