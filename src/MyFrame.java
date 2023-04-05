@@ -269,11 +269,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 		}
 
-		installButton = new InstallButton("Install");
+		installButton = new InstallButton(0, 300, 100, 50);
 		installButton.addActionListener(new InstallButtonListener());
 		this.add(installButton);
 
-		uninstallAllButton = new UninstallAllButton("Uninstall All");
+		uninstallAllButton = new UninstallAllButton(0, 200, 100, 50);
 		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
 		this.add(uninstallAllButton);
 
