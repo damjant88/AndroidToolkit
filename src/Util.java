@@ -107,10 +107,10 @@ public class Util {
 		runCommand("adb -s " + ID + " install -r -d " + path);
 	}
 
-	public void saveLogs(String ID, String newFolder) {
-		runCommand("adb -s " + ID + " pull " + "sdcard/Android/data/com.smithmicro.safepath.family/files/logs/ "
+	public void saveLogs(String ID, String appFlavour, String newFolder) {
+		runCommand("adb -s " + ID + " pull " + "sdcard/Android/data/" + appFlavour + "/files/logs/ "
 				+ newFolder);
-		System.out.println("adb -s " + ID + " pull " + "sdcard/Android/data/com.smithmicro.safepath.family/files/logs/ "
+		System.out.println("adb -s " + ID + " pull " + "sdcard/Android/data/" + appFlavour + "/files/logs/ "
 				+ newFolder);
 	}
 

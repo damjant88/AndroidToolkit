@@ -922,7 +922,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				output1 = command1.getConnectedDevices();
-				command1.saveLogs(output1.get(0), file.getAbsolutePath());
+				String appFlavour = command1.getSafePathPackage(output1.get(0));
+				command1.saveLogs(output1.get(0), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -937,7 +938,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				output1 = command1.getConnectedDevices();
-				command1.saveLogs(output1.get(1), file.getAbsolutePath());
+				String appFlavour = command1.getSafePathPackage(output1.get(1));
+				command1.saveLogs(output1.get(1), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -952,7 +954,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				output1 = command1.getConnectedDevices();
-				command1.saveLogs(output1.get(2), file.getAbsolutePath());
+				String appFlavour = command1.getSafePathPackage(output1.get(2));
+				command1.saveLogs(output1.get(2), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -967,7 +970,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				output1 = command1.getConnectedDevices();
-				command1.saveLogs(output1.get(3), file.getAbsolutePath());
+				String appFlavour = command1.getSafePathPackage(output1.get(3));
+				command1.saveLogs(output1.get(3), appFlavour, file.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
