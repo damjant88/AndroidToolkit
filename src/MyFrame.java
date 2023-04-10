@@ -311,238 +311,14 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setIconImage(frameIcon.getImage());
 
 		for (int i = 0; i < listOfDevices.size(); i++) {
-			
 			if (i == 0) {
-				
-				radio1.setSelected(true);
-				radio1.setVisible(true);
-				switch (utility.getSafePathPackage(listOfDevices.get(0))) {
-					case "com.smithmicro.tmobile.familymode.test" -> {
-						labelIcon1.setIcon(logo_tmo);
-						labelIcon1.setText("FamilyMode");
-						labelIcon1.setVisible(true);
-						uninstallApp1.setEnabled(true);
-						uninstallApp1.setVisible(true);
-						enableFirebase1.setEnabled(true);
-						enableFirebase1.setVisible(true);
-						saveLogsButton1.setEnabled(true);
-					}
-					case "com.smithmicro.safepath.family" -> {
-						labelIcon1.setIcon(logo_product);
-						labelIcon1.setText("SPFamily");
-						labelIcon1.setVisible(true);
-						uninstallApp1.setEnabled(true);
-						uninstallApp1.setVisible(true);
-						enableFirebase1.setEnabled(true);
-						enableFirebase1.setVisible(true);
-						saveLogsButton1.setEnabled(true);
-					}
-					case "com.smithmicro.att.securefamily" -> {
-						labelIcon1.setIcon(logo_att);
-						labelIcon1.setText("SecureFamily");
-						labelIcon1.setVisible(true);
-						uninstallApp1.setEnabled(true);
-						uninstallApp1.setVisible(true);
-						enableFirebase1.setEnabled(true);
-						enableFirebase1.setVisible(true);
-						saveLogsButton1.setEnabled(true);
-					}
-					case "" -> {
-						labelIcon1.setIcon(notInstalled);
-						labelIcon1.setText("Not Installed");
-						labelIcon1.setVisible(true);
-						uninstallApp1.setVisible(true);
-						enableFirebase1.setVisible(true);
-						saveLogsButton1.setEnabled(false);
-					}
-				}
-				saveLogsButton1.setVisible(true);
-				wifiDebug1.setText("WiFi Debug");
-				if (listOfDevices.get(i).endsWith(":5555")) {
-					wifiDebug1.setText("Disable WiFi");
-				}
-				wifiDebug1.setVisible(true);
-				enableFirebase1.setVisible(true);
-				reboot1.setVisible(true);
-				device1TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
-						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-				device1TextPane.setVisible(true);
-				takeScreenshotButton1.setVisible(true);
-
+				setIconAndButtons1(i);
 			} else if (i == 1) {
-
-				radio2.setSelected(true);
-				radio2.setVisible(true);
-				switch (utility.getSafePathPackage(listOfDevices.get(1))) {
-					case "com.smithmicro.tmobile.familymode.test" -> {
-						labelIcon2.setIcon(logo_tmo);
-						labelIcon2.setText("FamilyMode");
-						labelIcon2.setVisible(true);
-						uninstallApp2.setEnabled(true);
-						uninstallApp2.setVisible(true);
-						enableFirebase2.setEnabled(true);
-						enableFirebase2.setVisible(true);
-						saveLogsButton2.setEnabled(true);
-					}
-					case "com.smithmicro.safepath.family" -> {
-						labelIcon2.setIcon(logo_product);
-						labelIcon2.setText("SPFamily");
-						labelIcon2.setVisible(true);
-						uninstallApp2.setEnabled(true);
-						uninstallApp2.setVisible(true);
-						enableFirebase2.setEnabled(true);
-						enableFirebase2.setVisible(true);
-						saveLogsButton2.setEnabled(true);
-					}
-					case "com.smithmicro.att.securefamily" -> {
-						labelIcon2.setIcon(logo_att);
-						labelIcon2.setText("SecureFamily");
-						labelIcon2.setVisible(true);
-						uninstallApp2.setEnabled(true);
-						uninstallApp2.setVisible(true);
-						enableFirebase2.setEnabled(true);
-						enableFirebase2.setVisible(true);
-						saveLogsButton2.setEnabled(true);
-					}
-					case "" -> {
-						labelIcon2.setIcon(notInstalled);
-						labelIcon2.setText("Not Installed");
-						labelIcon2.setVisible(true);
-						uninstallApp2.setVisible(true);
-						enableFirebase2.setVisible(true);
-						saveLogsButton2.setEnabled(false);
-					}
-				}
-				saveLogsButton2.setVisible(true);
-				wifiDebug2.setText("WiFi Debug");
-				if (listOfDevices.get(i).endsWith(":5555")) {
-					wifiDebug2.setText("Disable WiFi");
-				}
-				wifiDebug2.setVisible(true);
-				enableFirebase2.setVisible(true);
-				reboot2.setVisible(true);
-				device2TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
-						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-				device2TextPane.setVisible(true);
-				takeScreenshotButton2.setVisible(true);
-
+				setIconAndButtons2(i);
 			} else if (i == 2) {
-
-				radio3.setSelected(true);
-				radio3.setVisible(true);
-				switch (utility.getSafePathPackage(listOfDevices.get(2))) {
-					case "com.smithmicro.tmobile.familymode.test" -> {
-						labelIcon3.setIcon(logo_tmo);
-						labelIcon3.setText("FamilyMode");
-						labelIcon3.setVisible(true);
-						uninstallApp3.setEnabled(true);
-						uninstallApp3.setVisible(true);
-						enableFirebase3.setEnabled(true);
-						enableFirebase3.setVisible(true);
-						saveLogsButton3.setEnabled(true);
-					}
-					case "com.smithmicro.safepath.family" -> {
-						labelIcon3.setIcon(logo_product);
-						labelIcon3.setText("SPFamily");
-						labelIcon3.setVisible(true);
-						uninstallApp3.setEnabled(true);
-						uninstallApp3.setVisible(true);
-						enableFirebase3.setEnabled(true);
-						enableFirebase3.setVisible(true);
-						saveLogsButton3.setEnabled(true);
-					}
-					case "com.smithmicro.att.securefamily" -> {
-						labelIcon3.setIcon(logo_att);
-						labelIcon3.setText("SecureFamily");
-						labelIcon3.setVisible(true);
-						uninstallApp3.setEnabled(true);
-						uninstallApp3.setVisible(true);
-						enableFirebase3.setEnabled(true);
-						enableFirebase3.setVisible(true);
-						saveLogsButton3.setEnabled(true);
-					}
-					case "" -> {
-						labelIcon3.setIcon(notInstalled);
-						labelIcon3.setText("Not Installed");
-						labelIcon3.setVisible(true);
-						uninstallApp3.setVisible(true);
-						enableFirebase3.setVisible(true);
-						saveLogsButton3.setEnabled(false);
-					}
-				}
-				saveLogsButton3.setVisible(true);
-				wifiDebug3.setText("WiFi Debug");
-				if (listOfDevices.get(i).endsWith(":5555")) {
-					wifiDebug3.setText("Disable WiFi");
-				}
-				wifiDebug3.setVisible(true);
-				enableFirebase3.setVisible(true);
-				reboot3.setVisible(true);
-				device3TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
-						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-				device3TextPane.setVisible(true);
-				takeScreenshotButton3.setVisible(true);
-
+				setIconAndButtons3(i);
 			} else if (i == 3) {
-
-				radio4.setSelected(true);
-				radio4.setVisible(true);
-				switch (utility.getSafePathPackage(listOfDevices.get(3))) {
-					case "com.smithmicro.tmobile.familymode.test" -> {
-						labelIcon4.setIcon(logo_tmo);
-						labelIcon4.setText("FamilyMode");
-						labelIcon4.setVisible(true);
-						uninstallApp4.setEnabled(true);
-						uninstallApp4.setVisible(true);
-						enableFirebase4.setEnabled(true);
-						enableFirebase4.setVisible(true);
-						saveLogsButton4.setEnabled(true);
-					}
-					case "com.smithmicro.safepath.family" -> {
-						labelIcon4.setIcon(logo_product);
-						labelIcon4.setText("SPFamily");
-						labelIcon4.setVisible(true);
-						uninstallApp4.setEnabled(true);
-						uninstallApp4.setVisible(true);
-						enableFirebase4.setEnabled(true);
-						enableFirebase4.setVisible(true);
-						saveLogsButton4.setEnabled(true);
-					}
-					case "com.smithmicro.att.securefamily" -> {
-						labelIcon4.setIcon(logo_att);
-						labelIcon4.setText("SecureFamily");
-						labelIcon4.setVisible(true);
-						uninstallApp4.setEnabled(true);
-						uninstallApp4.setVisible(true);
-						enableFirebase4.setEnabled(true);
-						enableFirebase4.setVisible(true);
-						saveLogsButton4.setEnabled(true);
-					}
-					case "" -> {
-						labelIcon4.setIcon(notInstalled);
-						labelIcon4.setText("Not Installed");
-						labelIcon4.setVisible(true);
-						uninstallApp4.setVisible(true);
-						enableFirebase4.setVisible(true);
-						saveLogsButton4.setEnabled(false);
-					}
-				}
-				saveLogsButton4.setVisible(true);
-				wifiDebug4.setText("WiFi Debug");
-				if (listOfDevices.get(i).endsWith(":5555")) {
-					wifiDebug4.setText("Disable WiFi");
-				}
-				wifiDebug4.setVisible(true);
-				enableFirebase4.setVisible(true);
-				reboot4.setVisible(true);
-				device4TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
-						+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-						+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-				device4TextPane.setVisible(true);
-				takeScreenshotButton4.setVisible(true);
+				setIconAndButtons4(i);
 			}
 		}
 		this.setVisible(true);
@@ -597,241 +373,248 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			for (int i = 0; i < listOfDevices.size(); i++) {
 
 				if (i == 0) {
-
-					radio1.setSelected(true);
-					radio1.setVisible(true);
-					switch (utility.getSafePathPackage(listOfDevices.get(0))) {
-						case "com.smithmicro.tmobile.familymode.test" -> {
-							labelIcon1.setIcon(logo_tmo);
-							labelIcon1.setText("FamilyMode");
-							labelIcon1.setVisible(true);
-							uninstallApp1.setEnabled(true);
-							uninstallApp1.setVisible(true);
-							enableFirebase1.setEnabled(true);
-							enableFirebase1.setVisible(true);
-							saveLogsButton1.setEnabled(true);
-						}
-						case "com.smithmicro.safepath.family" -> {
-							labelIcon1.setIcon(logo_product);
-							labelIcon1.setText("SPFamily");
-							labelIcon1.setVisible(true);
-							uninstallApp1.setEnabled(true);
-							uninstallApp1.setVisible(true);
-							enableFirebase1.setEnabled(true);
-							enableFirebase1.setVisible(true);
-							saveLogsButton1.setEnabled(true);
-						}
-						case "com.smithmicro.att.securefamily" -> {
-							labelIcon1.setIcon(logo_att);
-							labelIcon1.setText("SecureFamily");
-							labelIcon1.setVisible(true);
-							uninstallApp1.setEnabled(true);
-							uninstallApp1.setVisible(true);
-							enableFirebase1.setEnabled(true);
-							enableFirebase1.setVisible(true);
-							saveLogsButton1.setEnabled(true);
-						}
-						case "" -> {
-							labelIcon1.setIcon(notInstalled);
-							labelIcon1.setText("Not Installed");
-							labelIcon1.setVisible(true);
-							uninstallApp1.setVisible(true);
-							enableFirebase1.setVisible(true);
-							saveLogsButton1.setEnabled(false);
-						}
-					}
-					saveLogsButton1.setVisible(true);
-					wifiDebug1.setText("WiFi Debug");
-					if (listOfDevices.get(i).endsWith(":5555")) {
-						wifiDebug1.setText("Disable WiFi");
-					}
-					wifiDebug1.setVisible(true);
-					enableFirebase1.setVisible(true);
-					reboot1.setVisible(true);
-					device1TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
-							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-					device1TextPane.setVisible(true);
-					takeScreenshotButton1.setVisible(true);
-
+					setIconAndButtons1(i);
 				} else if (i == 1) {
-
-					radio2.setSelected(true);
-					radio2.setVisible(true);
-					switch (utility.getSafePathPackage(listOfDevices.get(1))) {
-						case "com.smithmicro.tmobile.familymode.test" -> {
-							labelIcon2.setIcon(logo_tmo);
-							labelIcon2.setText("FamilyMode");
-							labelIcon2.setVisible(true);
-							uninstallApp2.setEnabled(true);
-							uninstallApp2.setVisible(true);
-							enableFirebase2.setEnabled(true);
-							enableFirebase2.setVisible(true);
-							saveLogsButton2.setEnabled(true);
-						}
-						case "com.smithmicro.safepath.family" -> {
-							labelIcon2.setIcon(logo_product);
-							labelIcon2.setText("SPFamily");
-							labelIcon2.setVisible(true);
-							uninstallApp2.setEnabled(true);
-							uninstallApp2.setVisible(true);
-							enableFirebase2.setEnabled(true);
-							enableFirebase2.setVisible(true);
-							saveLogsButton2.setEnabled(true);
-						}
-						case "com.smithmicro.att.securefamily" -> {
-							labelIcon2.setIcon(logo_att);
-							labelIcon2.setText("SecureFamily");
-							labelIcon2.setVisible(true);
-							uninstallApp2.setEnabled(true);
-							uninstallApp2.setVisible(true);
-							enableFirebase2.setEnabled(true);
-							enableFirebase2.setVisible(true);
-							saveLogsButton2.setEnabled(true);
-						}
-						case "" -> {
-							labelIcon2.setIcon(notInstalled);
-							labelIcon2.setText("Not Installed");
-							labelIcon2.setVisible(true);
-							uninstallApp2.setVisible(true);
-							enableFirebase2.setVisible(true);
-							saveLogsButton2.setEnabled(false);
-						}
-					}
-					saveLogsButton2.setVisible(true);
-					wifiDebug2.setText("WiFi Debug");
-					if (listOfDevices.get(i).endsWith(":5555")) {
-						wifiDebug2.setText("Disable WiFi");
-					}
-					wifiDebug2.setVisible(true);
-					enableFirebase2.setVisible(true);
-					reboot2.setVisible(true);
-					device2TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
-							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-					device2TextPane.setVisible(true);
-					takeScreenshotButton2.setVisible(true);
-
+					setIconAndButtons2(i);
 				} else if (i == 2) {
-
-					radio3.setSelected(true);
-					radio3.setVisible(true);
-					switch (utility.getSafePathPackage(listOfDevices.get(2))) {
-						case "com.smithmicro.tmobile.familymode.test" -> {
-							labelIcon3.setIcon(logo_tmo);
-							labelIcon3.setText("FamilyMode");
-							labelIcon3.setVisible(true);
-							uninstallApp3.setEnabled(true);
-							uninstallApp3.setVisible(true);
-							enableFirebase3.setEnabled(true);
-							enableFirebase3.setVisible(true);
-							saveLogsButton3.setEnabled(true);
-						}
-						case "com.smithmicro.safepath.family" -> {
-							labelIcon3.setIcon(logo_product);
-							labelIcon3.setText("SPFamily");
-							labelIcon3.setVisible(true);
-							uninstallApp3.setEnabled(true);
-							uninstallApp3.setVisible(true);
-							enableFirebase3.setEnabled(true);
-							enableFirebase3.setVisible(true);
-							saveLogsButton3.setEnabled(true);
-						}
-						case "com.smithmicro.att.securefamily" -> {
-							labelIcon3.setIcon(logo_att);
-							labelIcon3.setText("SecureFamily");
-							labelIcon3.setVisible(true);
-							uninstallApp3.setEnabled(true);
-							uninstallApp3.setVisible(true);
-							enableFirebase3.setEnabled(true);
-							enableFirebase3.setVisible(true);
-							saveLogsButton3.setEnabled(true);
-						}
-						case "" -> {
-							labelIcon3.setIcon(notInstalled);
-							labelIcon3.setText("Not Installed");
-							labelIcon3.setVisible(true);
-							uninstallApp3.setVisible(true);
-							enableFirebase3.setVisible(true);
-							saveLogsButton3.setEnabled(false);
-						}
-					}
-					wifiDebug3.setText("WiFi Debug");
-					if (listOfDevices.get(i).endsWith(":5555")) {
-						wifiDebug3.setText("Disable WiFi");
-					}
-					saveLogsButton3.setVisible(true);
-					wifiDebug3.setVisible(true);
-					enableFirebase3.setVisible(true);
-					reboot3.setVisible(true);
-					device3TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
-							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-					device3TextPane.setVisible(true);
-					takeScreenshotButton3.setVisible(true);
-
+					setIconAndButtons3(i);
 				} else if (i == 3) {
-
-					radio4.setSelected(true);
-					radio4.setVisible(true);
-					switch (utility.getSafePathPackage(listOfDevices.get(3))) {
-						case "com.smithmicro.tmobile.familymode.test" -> {
-							labelIcon4.setIcon(logo_tmo);
-							labelIcon4.setText("FamilyMode");
-							labelIcon4.setVisible(true);
-							uninstallApp4.setEnabled(true);
-							uninstallApp4.setVisible(true);
-							enableFirebase4.setEnabled(true);
-							enableFirebase4.setVisible(true);
-							saveLogsButton4.setEnabled(true);
-						}
-						case "com.smithmicro.safepath.family" -> {
-							labelIcon4.setIcon(logo_product);
-							labelIcon4.setText("SPFamily");
-							labelIcon4.setVisible(true);
-							uninstallApp4.setEnabled(true);
-							uninstallApp4.setVisible(true);
-							enableFirebase4.setEnabled(true);
-							enableFirebase4.setVisible(true);
-							saveLogsButton4.setEnabled(true);
-						}
-						case "com.smithmicro.att.securefamily" -> {
-							labelIcon4.setIcon(logo_att);
-							labelIcon4.setText("SecureFamily");
-							labelIcon4.setVisible(true);
-							uninstallApp4.setEnabled(true);
-							uninstallApp4.setVisible(true);
-							enableFirebase4.setEnabled(true);
-							enableFirebase4.setVisible(true);
-							saveLogsButton4.setEnabled(true);
-						}
-						case "" -> {
-							labelIcon4.setIcon(notInstalled);
-							labelIcon4.setText("Not Installed");
-							labelIcon4.setVisible(true);
-							uninstallApp4.setVisible(true);
-							enableFirebase4.setVisible(true);
-							saveLogsButton4.setEnabled(false);
-						}
-					}
-					saveLogsButton4.setVisible(true);
-					wifiDebug4.setText("WiFi Debug");
-					if (listOfDevices.get(i).endsWith(":5555")) {
-						wifiDebug4.setText("Disable WiFi");
-					}
-					wifiDebug4.setVisible(true);
-					enableFirebase4.setVisible(true);
-					reboot4.setVisible(true);
-					device4TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i))
-							+ "\n" + utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
-							+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
-					device4TextPane.setVisible(true);
-					takeScreenshotButton4.setVisible(true);
+					setIconAndButtons4(i);
 				}
 			}
 		}
 	}
+	private void setIconAndButtons4(int i) {
+		radio4.setSelected(true);
+		radio4.setVisible(true);
+		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
+			case "com.smithmicro.tmobile.familymode.test" -> {
+				labelIcon4.setIcon(logo_tmo);
+				labelIcon4.setText("FamilyMode");
+				labelIcon4.setVisible(true);
+				uninstallApp4.setEnabled(true);
+				uninstallApp4.setVisible(true);
+				enableFirebase4.setEnabled(true);
+				enableFirebase4.setVisible(true);
+				saveLogsButton4.setEnabled(true);
+			}
+			case "com.smithmicro.safepath.family" -> {
+				labelIcon4.setIcon(logo_product);
+				labelIcon4.setText("SPFamily");
+				labelIcon4.setVisible(true);
+				uninstallApp4.setEnabled(true);
+				uninstallApp4.setVisible(true);
+				enableFirebase4.setEnabled(true);
+				enableFirebase4.setVisible(true);
+				saveLogsButton4.setEnabled(true);
+			}
+			case "com.smithmicro.att.securefamily" -> {
+				labelIcon4.setIcon(logo_att);
+				labelIcon4.setText("SecureFamily");
+				labelIcon4.setVisible(true);
+				uninstallApp4.setEnabled(true);
+				uninstallApp4.setVisible(true);
+				enableFirebase4.setEnabled(true);
+				enableFirebase4.setVisible(true);
+				saveLogsButton4.setEnabled(true);
+			}
+			case "" -> {
+				labelIcon4.setIcon(notInstalled);
+				labelIcon4.setText("Not Installed");
+				labelIcon4.setVisible(true);
+				uninstallApp4.setVisible(true);
+				enableFirebase4.setVisible(true);
+				saveLogsButton4.setEnabled(false);
+			}
+		}
+		saveLogsButton4.setVisible(true);
+		wifiDebug4.setText("WiFi Debug");
+		if (listOfDevices.get(i).endsWith(":5555")) {
+			wifiDebug4.setText("Disable WiFi");
+		}
+		wifiDebug4.setVisible(true);
+		enableFirebase4.setVisible(true);
+		reboot4.setVisible(true);
+		device4TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+				+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
+		device4TextPane.setVisible(true);
+		takeScreenshotButton4.setVisible(true);
+	}
 
+	private void setIconAndButtons3(int i) {
+		radio3.setSelected(true);
+		radio3.setVisible(true);
+		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
+			case "com.smithmicro.tmobile.familymode.test" -> {
+				labelIcon3.setIcon(logo_tmo);
+				labelIcon3.setText("FamilyMode");
+				labelIcon3.setVisible(true);
+				uninstallApp3.setEnabled(true);
+				uninstallApp3.setVisible(true);
+				enableFirebase3.setEnabled(true);
+				enableFirebase3.setVisible(true);
+				saveLogsButton3.setEnabled(true);
+			}
+			case "com.smithmicro.safepath.family" -> {
+				labelIcon3.setIcon(logo_product);
+				labelIcon3.setText("SPFamily");
+				labelIcon3.setVisible(true);
+				uninstallApp3.setEnabled(true);
+				uninstallApp3.setVisible(true);
+				enableFirebase3.setEnabled(true);
+				enableFirebase3.setVisible(true);
+				saveLogsButton3.setEnabled(true);
+			}
+			case "com.smithmicro.att.securefamily" -> {
+				labelIcon3.setIcon(logo_att);
+				labelIcon3.setText("SecureFamily");
+				labelIcon3.setVisible(true);
+				uninstallApp3.setEnabled(true);
+				uninstallApp3.setVisible(true);
+				enableFirebase3.setEnabled(true);
+				enableFirebase3.setVisible(true);
+				saveLogsButton3.setEnabled(true);
+			}
+			case "" -> {
+				labelIcon3.setIcon(notInstalled);
+				labelIcon3.setText("Not Installed");
+				labelIcon3.setVisible(true);
+				uninstallApp3.setVisible(true);
+				enableFirebase3.setVisible(true);
+				saveLogsButton3.setEnabled(false);
+			}
+		}
+		saveLogsButton3.setVisible(true);
+		wifiDebug3.setText("WiFi Debug");
+		if (listOfDevices.get(i).endsWith(":5555")) {
+			wifiDebug3.setText("Disable WiFi");
+		}
+		wifiDebug3.setVisible(true);
+		enableFirebase3.setVisible(true);
+		reboot3.setVisible(true);
+		device3TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+				+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
+		device3TextPane.setVisible(true);
+		takeScreenshotButton3.setVisible(true);
+	}
+
+	private void setIconAndButtons2(int i) {
+		radio2.setSelected(true);
+		radio2.setVisible(true);
+		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
+			case "com.smithmicro.tmobile.familymode.test" -> {
+				labelIcon2.setIcon(logo_tmo);
+				labelIcon2.setText("FamilyMode");
+				labelIcon2.setVisible(true);
+				uninstallApp2.setEnabled(true);
+				uninstallApp2.setVisible(true);
+				enableFirebase2.setEnabled(true);
+				enableFirebase2.setVisible(true);
+				saveLogsButton2.setEnabled(true);
+			}
+			case "com.smithmicro.safepath.family" -> {
+				labelIcon2.setIcon(logo_product);
+				labelIcon2.setText("SPFamily");
+				labelIcon2.setVisible(true);
+				uninstallApp2.setEnabled(true);
+				uninstallApp2.setVisible(true);
+				enableFirebase2.setEnabled(true);
+				enableFirebase2.setVisible(true);
+				saveLogsButton2.setEnabled(true);
+			}
+			case "com.smithmicro.att.securefamily" -> {
+				labelIcon2.setIcon(logo_att);
+				labelIcon2.setText("SecureFamily");
+				labelIcon2.setVisible(true);
+				uninstallApp2.setEnabled(true);
+				uninstallApp2.setVisible(true);
+				enableFirebase2.setEnabled(true);
+				enableFirebase2.setVisible(true);
+				saveLogsButton2.setEnabled(true);
+			}
+			case "" -> {
+				labelIcon2.setIcon(notInstalled);
+				labelIcon2.setText("Not Installed");
+				labelIcon2.setVisible(true);
+				uninstallApp2.setVisible(true);
+				enableFirebase2.setVisible(true);
+				saveLogsButton2.setEnabled(false);
+			}
+		}
+		saveLogsButton2.setVisible(true);
+		wifiDebug2.setText("WiFi Debug");
+		if (listOfDevices.get(i).endsWith(":5555")) {
+			wifiDebug2.setText("Disable WiFi");
+		}
+		wifiDebug2.setVisible(true);
+		enableFirebase2.setVisible(true);
+		reboot2.setVisible(true);
+		device2TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+				+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
+		device2TextPane.setVisible(true);
+		takeScreenshotButton2.setVisible(true);
+	}
+
+	private void setIconAndButtons1(int i) {
+		radio1.setSelected(true);
+		radio1.setVisible(true);
+		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
+			case "com.smithmicro.tmobile.familymode.test" -> {
+				labelIcon1.setIcon(logo_tmo);
+				labelIcon1.setText("FamilyMode");
+				labelIcon1.setVisible(true);
+				uninstallApp1.setEnabled(true);
+				uninstallApp1.setVisible(true);
+				enableFirebase1.setEnabled(true);
+				enableFirebase1.setVisible(true);
+				saveLogsButton1.setEnabled(true);
+			}
+			case "com.smithmicro.safepath.family" -> {
+				labelIcon1.setIcon(logo_product);
+				labelIcon1.setText("SPFamily");
+				labelIcon1.setVisible(true);
+				uninstallApp1.setEnabled(true);
+				uninstallApp1.setVisible(true);
+				enableFirebase1.setEnabled(true);
+				enableFirebase1.setVisible(true);
+				saveLogsButton1.setEnabled(true);
+			}
+			case "com.smithmicro.att.securefamily" -> {
+				labelIcon1.setIcon(logo_att);
+				labelIcon1.setText("SecureFamily");
+				labelIcon1.setVisible(true);
+				uninstallApp1.setEnabled(true);
+				uninstallApp1.setVisible(true);
+				enableFirebase1.setEnabled(true);
+				enableFirebase1.setVisible(true);
+				saveLogsButton1.setEnabled(true);
+			}
+			case "" -> {
+				labelIcon1.setIcon(notInstalled);
+				labelIcon1.setText("Not Installed");
+				labelIcon1.setVisible(true);
+				uninstallApp1.setVisible(true);
+				enableFirebase1.setVisible(true);
+				saveLogsButton1.setEnabled(false);
+			}
+		}
+		saveLogsButton1.setVisible(true);
+		wifiDebug1.setText("WiFi Debug");
+		if (listOfDevices.get(i).endsWith(":5555")) {
+			wifiDebug1.setText("Disable WiFi");
+		}
+		wifiDebug1.setVisible(true);
+		enableFirebase1.setVisible(true);
+		reboot1.setVisible(true);
+		device1TextPane.setText(listOfDevices.get(i) + "\n" + utility.getDeviceManufacturer(listOfDevices.get(i)) + "\n"
+				+ utility.getDeviceModel(listOfDevices.get(i)) + "\n" + "Android "
+				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
+		device1TextPane.setVisible(true);
+		takeScreenshotButton1.setVisible(true);
+	}
 	class InstallButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
