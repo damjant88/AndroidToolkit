@@ -10,14 +10,6 @@ import java.util.stream.Collectors;
 
 public class Util {
 
-//	public String command(String command) {
-//		String output = runCommand(command);
-//		if (output == null)
-//			return "";
-//		else
-//			return output.trim();
-//	}
-
 	public String runCommand(String command) {
 		String output = null;
 		// ProcessBuilder does not read spaces hence need to do this

@@ -371,7 +371,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 
 			for (int i = 0; i < listOfDevices.size(); i++) {
-
 				if (i == 0) {
 					setIconAndButtons1(i);
 				} else if (i == 1) {
