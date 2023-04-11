@@ -439,6 +439,14 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 		device4TextPane.setVisible(true);
 		takeScreenshotButton4.setVisible(true);
+		int j = 0;
+		while (j < listOfDevices.size()) {
+			if (utility.checkIfInstalled(listOfDevices.get(j))) {
+				uninstallAllButton.setEnabled(true);
+				break;
+			}
+			j++;
+		}
 	}
 
 	private void setIconAndButtons3(int i) {
@@ -497,6 +505,14 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 		device3TextPane.setVisible(true);
 		takeScreenshotButton3.setVisible(true);
+		int j = 0;
+		while (j < listOfDevices.size()) {
+			if (utility.checkIfInstalled(listOfDevices.get(j))) {
+				uninstallAllButton.setEnabled(true);
+				break;
+			}
+			j++;
+		}
 	}
 
 	private void setIconAndButtons2(int i) {
@@ -555,6 +571,14 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 		device2TextPane.setVisible(true);
 		takeScreenshotButton2.setVisible(true);
+		int j = 0;
+		while (j < listOfDevices.size()) {
+			if (utility.checkIfInstalled(listOfDevices.get(j))) {
+				uninstallAllButton.setEnabled(true);
+				break;
+			}
+			j++;
+		}
 	}
 
 	private void setIconAndButtons1(int i) {
@@ -613,6 +637,14 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				+ utility.getDeviceOSVersion(listOfDevices.get(i)) + "\n" + ips.get(i));
 		device1TextPane.setVisible(true);
 		takeScreenshotButton1.setVisible(true);
+		int j = 0;
+		while (j < listOfDevices.size()) {
+			if (utility.checkIfInstalled(listOfDevices.get(j))) {
+				uninstallAllButton.setEnabled(true);
+				break;
+			}
+			j++;
+		}
 	}
 	class InstallButtonListener implements ActionListener {
 		@Override
