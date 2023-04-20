@@ -4,30 +4,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Objects;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JTextPane;
-import javax.swing.SwingWorker;
-import javax.swing.WindowConstants;
-import Buttons.DevicesButton;
-import Buttons.EnableFirebaseButtons;
-import Buttons.FileButton;
-import Buttons.InstallButton;
-import Buttons.RebootButtons;
-import Buttons.SaveSPLogsButtons;
-import Buttons.TakeScreenshotButtons;
-import Buttons.UninstallAllButton;
-import Buttons.UninstallAppButtons;
-import Buttons.WifiDebugButtons;
-import Buttons.RadioButtons;
+import javax.swing.*;
+
+import Buttons.*;
 
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
@@ -37,8 +19,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private static final Object lock = new Object();
 	ArrayList<String> ips = new ArrayList<>();
 	ImageIcon buttonIcon, logo_tmo, logo_att, logo_product, frameIcon, notInstalled;
-	File file = null;
-
+	File file1 = null;
+	//File file2 = null;
 	SaveSPLogsButtons saveLogsButton1, saveLogsButton2, saveLogsButton3, saveLogsButton4;
 	WifiDebugButtons wifiDebug1, wifiDebug2, wifiDebug3, wifiDebug4;
 	EnableFirebaseButtons enableFirebase1, enableFirebase2, enableFirebase3, enableFirebase4;
@@ -55,6 +37,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	ProgressBar progressBar;
 	FileTextField fileTextField;
 	DeviceTextPanes device1TextPane, device2TextPane, device3TextPane, device4TextPane;
+	DefaultBuildLocationButton defaultBuildLocationButton;
 	boolean radio1State = false, radio2State = false, radio3State = false, radio4State = false;
 	
 	ArrayList<DeviceTextPanes> deviceTextPanes = new ArrayList<>();
@@ -112,6 +95,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		menuBar.add(fileMenu);
 		menuBar.add(editMenu);
 		menuBar.add(helpMenu);
+		JMenuItem defaultBuildLocation = new JMenuItem("Set Default 'Select Build' Location");
+		editMenu.add(defaultBuildLocation);
+		defaultBuildLocation.addActionListener(new DefaultBuildLocationListener());
 		this.setJMenuBar(menuBar);
 
 		device1TextPane = new DeviceTextPanes(200, 50, 200, 110);
@@ -329,6 +315,31 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int progress = (Integer) evt.getNewValue();
 			progressBar.setIndeterminate(false);
 			progressBar.setValue(progress);
+		}
+	}
+	class DefaultBuildLocationListener implements ActionListener {
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			JFileChooser fileChooser = new JFileChooser();
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			int response = fileChooser.showOpenDialog(null);
+			File file2 = null;
+			if (response == JFileChooser.APPROVE_OPTION) {
+				file2 = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				String defaultPath = file2.getAbsolutePath();
+				System.out.println(defaultPath);
+			}
+			try {
+				FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/location.ser");
+				ObjectOutputStream os = new ObjectOutputStream(fs);
+				os.writeObject(file2);
+				os.close();
+				JOptionPane.showMessageDialog(null, "Default build location is set!" + "\n" + file2.getAbsolutePath(), "Default Build Location",
+						JOptionPane.INFORMATION_MESSAGE);
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+
 		}
 	}
 	class DevicesButtonListener implements ActionListener {
@@ -657,7 +668,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 			if (radio1.isSelected() && listOfDevices.size() > 0) {
 				radio1State = true;
-				Task task1 = new Task("adb -s " + listOfDevices.get(0) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task1 = new Task("adb -s " + listOfDevices.get(0) + " install " + "\"" + file1.getAbsolutePath() + "\"");
 				task1.addPropertyChangeListener(null);
 				task1.execute();
 			} else {
@@ -666,7 +677,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 			if (radio2.isSelected() && listOfDevices.size() > 1) {
 				radio2State = true;
-				Task task2 = new Task("adb -s " + listOfDevices.get(1) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task2 = new Task("adb -s " + listOfDevices.get(1) + " install " + "\"" + file1.getAbsolutePath() + "\"");
 				task2.addPropertyChangeListener(null);
 				task2.execute();
 			} else {
@@ -674,7 +685,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			if (radio3.isSelected() && listOfDevices.size() > 2) {
 				radio3State = true;
-				Task task3 = new Task("adb -s " + listOfDevices.get(2) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task3 = new Task("adb -s " + listOfDevices.get(2) + " install " + "\"" + file1.getAbsolutePath() + "\"");
 				task3.addPropertyChangeListener(null);
 				task3.execute();
 			} else {
@@ -682,7 +693,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			if (radio4.isSelected() && listOfDevices.size() > 3) {
 				radio4State = true;
-				Task task4 = new Task("adb -s " + listOfDevices.get(3) + " install " + "\"" + file.getAbsolutePath() + "\"");
+				Task task4 = new Task("adb -s " + listOfDevices.get(3) + " install " + "\"" + file1.getAbsolutePath() + "\"");
 				task4.addPropertyChangeListener(null);
 				task4.execute();
 			} else {
@@ -713,12 +724,18 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class FileButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JFileChooser fileChooser = new JFileChooser(
-					"C:\\Users\\dtomic\\OneDrive - Smith Micro Software\\SP7\\Master builds\\");
+			File file;
+			try {
+				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream("C:/AdbToolkit/location.ser"));
+				file = (File) objectInputStream.readObject();
+			} catch (IOException | ClassNotFoundException ex) {
+				throw new RuntimeException(ex);
+			}
+			JFileChooser fileChooser = new JFileChooser(file.getAbsolutePath());
 			int response = fileChooser.showOpenDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
-				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				fileTextField.setText(file.getName());
+				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				fileTextField.setText(file1.getName());
 				if (radio1.isSelected() || radio2.isSelected() || radio3.isSelected() || radio4.isSelected()) {
 					installButton.setEnabled(true);
 				}
@@ -734,10 +751,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
-				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				listOfDevices = utility.getConnectedDevices();
 				String appFlavour = utility.getSafePathPackage(listOfDevices.get(0));
-				utility.saveLogs(listOfDevices.get(0), appFlavour, file.getAbsolutePath());
+				utility.saveLogs(listOfDevices.get(0), appFlavour, file1.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -750,10 +767,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
-				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				listOfDevices = utility.getConnectedDevices();
 				String appFlavour = utility.getSafePathPackage(listOfDevices.get(1));
-				utility.saveLogs(listOfDevices.get(1), appFlavour, file.getAbsolutePath());
+				utility.saveLogs(listOfDevices.get(1), appFlavour, file1.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -766,10 +783,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
-				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				listOfDevices = utility.getConnectedDevices();
 				String appFlavour = utility.getSafePathPackage(listOfDevices.get(2));
-				utility.saveLogs(listOfDevices.get(2), appFlavour, file.getAbsolutePath());
+				utility.saveLogs(listOfDevices.get(2), appFlavour, file1.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}
@@ -782,10 +799,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			int response = fileChooser.showSaveDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
-				file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				listOfDevices = utility.getConnectedDevices();
 				String appFlavour = utility.getSafePathPackage(listOfDevices.get(3));
-				utility.saveLogs(listOfDevices.get(3), appFlavour, file.getAbsolutePath());
+				utility.saveLogs(listOfDevices.get(3), appFlavour, file1.getAbsolutePath());
 				JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
 						JOptionPane.INFORMATION_MESSAGE);
 			}

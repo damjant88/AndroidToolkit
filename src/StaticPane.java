@@ -1,5 +1,6 @@
 import java.awt.Color;
 import java.awt.Font;
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JTextPane;
 import javax.swing.text.SimpleAttributeSet;
@@ -11,6 +12,7 @@ public class StaticPane extends JTextPane {
 	/**
 	 * 
 	 */
+	@Serial
 	private static final long serialVersionUID = 1L;
 	SimpleAttributeSet center = new SimpleAttributeSet();
 	

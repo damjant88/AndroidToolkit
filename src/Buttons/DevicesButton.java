@@ -1,6 +1,7 @@
 package Buttons;
 import java.awt.Color;
 import java.awt.Font;
+import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -9,6 +10,7 @@ public class DevicesButton extends JButton{
 	/**
 	 * 
 	 */
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	public DevicesButton(ImageIcon buttonIcon) {

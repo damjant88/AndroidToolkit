@@ -1,11 +1,13 @@
 import java.awt.Color;
 import java.awt.Font;
+import java.io.Serial;
 import javax.swing.JProgressBar;
 
 public class ProgressBar extends JProgressBar{
 	/**
 	 * 
 	 */
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	public ProgressBar() {

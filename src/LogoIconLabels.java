@@ -1,4 +1,5 @@
 import java.awt.Font;
+import java.io.Serial;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 
@@ -6,6 +7,7 @@ public class LogoIconLabels extends JLabel{
 	/**
 	 * 
 	 */
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	// If only image icon is used to construct...
