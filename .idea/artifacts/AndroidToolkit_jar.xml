@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="AndroidToolkit:jar">
+    <output-path>$USER_HOME$/OneDrive - Smith Micro Software/Desktop</output-path>
+    <root id="archive" name="AndroidToolkit.jar">
+      <element id="module-output" name="AndroidToolkit" />
+    </root>
+  </artifact>
+</component>

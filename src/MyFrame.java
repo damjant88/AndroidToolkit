@@ -1082,11 +1082,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	}
 	class Task extends SwingWorker<Void, Void> {
 		private final String command;
-
 		public Task(String command) {
 			this.command = command;
 		}
-
 		@Override
 		public Void doInBackground() {
 			increaseCounter();
