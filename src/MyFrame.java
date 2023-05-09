@@ -408,7 +408,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
 			}
-			case "com.smithmicro.safepath.family" -> {
+			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
 				labelIcon4.setIcon(logo_product);
 				labelIcon4.setText("SPFamily");
 				labelIcon4.setVisible(true);
@@ -418,27 +418,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
 			}
-			case "com.smithmicro.att.securefamily" -> {
-				labelIcon4.setIcon(logo_att);
-				labelIcon4.setText("SecureFamily");
-				labelIcon4.setVisible(true);
-				uninstallApp4.setEnabled(true);
-				uninstallApp4.setVisible(true);
-				enableFirebase4.setEnabled(true);
-				enableFirebase4.setVisible(true);
-				saveLogsButton4.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family.child" -> {
-				labelIcon4.setIcon(logo_product);
-				labelIcon4.setText("SPFamily");
-				labelIcon4.setVisible(true);
-				uninstallApp4.setEnabled(true);
-				uninstallApp4.setVisible(true);
-				enableFirebase4.setEnabled(true);
-				enableFirebase4.setVisible(true);
-				saveLogsButton4.setEnabled(true);
-			}
-			case "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
 				labelIcon4.setIcon(logo_att);
 				labelIcon4.setText("SecureFamily");
 				labelIcon4.setVisible(true);
@@ -494,7 +474,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(true);
 			}
-			case "com.smithmicro.safepath.family" -> {
+			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
 				labelIcon3.setIcon(logo_product);
 				labelIcon3.setText("SPFamily");
 				labelIcon3.setVisible(true);
@@ -504,27 +484,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(true);
 			}
-			case "com.smithmicro.att.securefamily" -> {
-				labelIcon3.setIcon(logo_att);
-				labelIcon3.setText("SecureFamily");
-				labelIcon3.setVisible(true);
-				uninstallApp3.setEnabled(true);
-				uninstallApp3.setVisible(true);
-				enableFirebase3.setEnabled(true);
-				enableFirebase3.setVisible(true);
-				saveLogsButton3.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family.child" -> {
-				labelIcon3.setIcon(logo_product);
-				labelIcon3.setText("SPFamily");
-				labelIcon3.setVisible(true);
-				uninstallApp3.setEnabled(true);
-				uninstallApp3.setVisible(true);
-				enableFirebase3.setEnabled(true);
-				enableFirebase3.setVisible(true);
-				saveLogsButton3.setEnabled(true);
-			}
-			case "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
 				labelIcon3.setIcon(logo_att);
 				labelIcon3.setText("SecureFamily");
 				labelIcon3.setVisible(true);
@@ -580,7 +540,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
 			}
-			case "com.smithmicro.safepath.family" -> {
+			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
 				labelIcon2.setIcon(logo_product);
 				labelIcon2.setText("SPFamily");
 				labelIcon2.setVisible(true);
@@ -590,27 +550,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
 			}
-			case "com.smithmicro.att.securefamily" -> {
-				labelIcon2.setIcon(logo_att);
-				labelIcon2.setText("SecureFamily");
-				labelIcon2.setVisible(true);
-				uninstallApp2.setEnabled(true);
-				uninstallApp2.setVisible(true);
-				enableFirebase2.setEnabled(true);
-				enableFirebase2.setVisible(true);
-				saveLogsButton2.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family.child" -> {
-				labelIcon2.setIcon(logo_product);
-				labelIcon2.setText("SPFamily");
-				labelIcon2.setVisible(true);
-				uninstallApp2.setEnabled(true);
-				uninstallApp2.setVisible(true);
-				enableFirebase2.setEnabled(true);
-				enableFirebase2.setVisible(true);
-				saveLogsButton2.setEnabled(true);
-			}
-			case "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
 				labelIcon2.setIcon(logo_att);
 				labelIcon2.setText("SecureFamily");
 				labelIcon2.setVisible(true);
@@ -666,7 +606,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(true);
 			}
-			case "com.smithmicro.safepath.family" -> {
+			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
 				labelIcon1.setIcon(logo_product);
 				labelIcon1.setText("SPFamily");
 				labelIcon1.setVisible(true);
@@ -676,27 +616,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(true);
 			}
-			case "com.smithmicro.att.securefamily" -> {
-				labelIcon1.setIcon(logo_att);
-				labelIcon1.setText("SecureFamily");
-				labelIcon1.setVisible(true);
-				uninstallApp1.setEnabled(true);
-				uninstallApp1.setVisible(true);
-				enableFirebase1.setEnabled(true);
-				enableFirebase1.setVisible(true);
-				saveLogsButton1.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family.child" -> {
-				labelIcon1.setIcon(logo_product);
-				labelIcon1.setText("SPFamily");
-				labelIcon1.setVisible(true);
-				uninstallApp1.setEnabled(true);
-				uninstallApp1.setVisible(true);
-				enableFirebase1.setEnabled(true);
-				enableFirebase1.setVisible(true);
-				saveLogsButton1.setEnabled(true);
-			}
-			case "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
 				labelIcon1.setIcon(logo_att);
 				labelIcon1.setText("SecureFamily");
 				labelIcon1.setVisible(true);
@@ -804,14 +724,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class FileButtonListener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			File file;
-			try {
-				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream("C:/AdbToolkit/location.ser"));
-				file = (File) objectInputStream.readObject();
-			} catch (IOException | ClassNotFoundException ex) {
-				throw new RuntimeException(ex);
+			File default_location = new File("C:/AdbToolkit/location.ser");
+			if (default_location.exists()) {
+				try {
+					ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream("C:/AdbToolkit/location.ser"));
+					default_location = (File) objectInputStream.readObject();
+				} catch (IOException | ClassNotFoundException ex) {
+					throw new RuntimeException(ex);
+				}
 			}
-			JFileChooser fileChooser = new JFileChooser(file.getAbsolutePath());
+			JFileChooser fileChooser = new JFileChooser(default_location.getAbsolutePath());
 			int response = fileChooser.showOpenDialog(null);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
