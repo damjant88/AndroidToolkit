@@ -430,7 +430,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.smithmicro.safepath.family.child" -> {
 				labelIcon4.setIcon(logo_product);
-				labelIcon4.setText("SPFamily_Child");
+				labelIcon4.setText("SPFamily");
 				labelIcon4.setVisible(true);
 				uninstallApp4.setEnabled(true);
 				uninstallApp4.setVisible(true);
@@ -440,7 +440,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.att.securefamilycompanion" -> {
 				labelIcon4.setIcon(logo_att);
-				labelIcon4.setText("SecureFamily_Child");
+				labelIcon4.setText("SecureFamily");
 				labelIcon4.setVisible(true);
 				uninstallApp4.setEnabled(true);
 				uninstallApp4.setVisible(true);
@@ -516,7 +516,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.smithmicro.safepath.family.child" -> {
 				labelIcon3.setIcon(logo_product);
-				labelIcon3.setText("SPFamily_Child");
+				labelIcon3.setText("SPFamily");
 				labelIcon3.setVisible(true);
 				uninstallApp3.setEnabled(true);
 				uninstallApp3.setVisible(true);
@@ -526,7 +526,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.att.securefamilycompanion" -> {
 				labelIcon3.setIcon(logo_att);
-				labelIcon3.setText("SecureFamily_Child");
+				labelIcon3.setText("SecureFamily");
 				labelIcon3.setVisible(true);
 				uninstallApp3.setEnabled(true);
 				uninstallApp3.setVisible(true);
@@ -602,7 +602,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.smithmicro.safepath.family.child" -> {
 				labelIcon2.setIcon(logo_product);
-				labelIcon2.setText("SPFamily_Child");
+				labelIcon2.setText("SPFamily");
 				labelIcon2.setVisible(true);
 				uninstallApp2.setEnabled(true);
 				uninstallApp2.setVisible(true);
@@ -612,7 +612,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.att.securefamilycompanion" -> {
 				labelIcon2.setIcon(logo_att);
-				labelIcon2.setText("SecureFamily_Child");
+				labelIcon2.setText("SecureFamily");
 				labelIcon2.setVisible(true);
 				uninstallApp2.setEnabled(true);
 				uninstallApp2.setVisible(true);
@@ -688,7 +688,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.smithmicro.safepath.family.child" -> {
 				labelIcon1.setIcon(logo_product);
-				labelIcon1.setText("SPFamily_Child");
+				labelIcon1.setText("SPFamily");
 				labelIcon1.setVisible(true);
 				uninstallApp1.setEnabled(true);
 				uninstallApp1.setVisible(true);
@@ -698,7 +698,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			case "com.att.securefamilycompanion" -> {
 				labelIcon1.setIcon(logo_att);
-				labelIcon1.setText("SecureFamily_Child");
+				labelIcon1.setText("SecureFamily");
 				labelIcon1.setVisible(true);
 				uninstallApp1.setEnabled(true);
 				uninstallApp1.setVisible(true);
