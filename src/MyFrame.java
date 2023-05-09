@@ -295,7 +295,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setResizable(false);
 		this.setSize(1045, 420);
 		this.setIconImage(frameIcon.getImage());
-		System.out.println(listOfDevices.size());
 		for (int i = 0; i < listOfDevices.size(); i++) {
 			if (i == 0) {
 				setIconAndButtons1(i);
@@ -327,7 +326,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file2 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				String defaultPath = file2.getAbsolutePath();
-				System.out.println(defaultPath);
 			}
 			try {
 				FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/location.ser");
@@ -936,7 +934,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	class WifiDebug4Listener implements ActionListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			System.out.println(listOfDevices);
 			if (!listOfDevices.get(3).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(3), ips.get(3));
 				JOptionPane.showMessageDialog(null,
