@@ -137,6 +137,9 @@ public class Util {
 		for (String installedPackage2 : installedPackages) {
 			if (installedPackage2.contains("safepath.family")
 					|| installedPackage2.contains("securefamily")
+					|| installedPackage2.contains("safeandfound")
+					|| installedPackage2.contains("safefound")
+					|| installedPackage2.contains("familycontrols")
 					|| installedPackage2.contains("familymode")) {
 				installedPackage = installedPackage2;
 			}
@@ -150,6 +153,9 @@ public class Util {
 				|| installedPackage.equals("com.smithmicro.att.securefamily")
 				|| installedPackage.equals("com.att.securefamilycompanion")
 				|| installedPackage.equals("com.smithmicro.safepath.family")
+				|| installedPackage.equals("com.smithmicro.sprint.safeandfound.test")
+				|| installedPackage.equals("com.sprint.safefound")
+				|| installedPackage.equals("com.tmobile.familycontrols")
 				|| installedPackage.equals("com.smithmicro.safepath.family.child");
 	}
 
