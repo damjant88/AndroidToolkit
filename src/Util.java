@@ -124,7 +124,7 @@ public class Util {
 
 	public ArrayList<String> getInstalledPackages(String ID) {
 		ArrayList<String> packages = new ArrayList<>();
-		String[] output = runCommand("adb -s " + ID + " shell pm list packages").split("\n");
+		String[] output = runCommand("adb -s " + ID + " shell pm list packages --user 0").split("\n");
 		for (String packagedID : output) {
 			packages.add(packagedID.replace("package:", "").trim());
 		}
