@@ -919,10 +919,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (!listOfDevices.get(0).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(0), ips.get(0));
 				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
+                        "Debugging over WiFi is enabled!\n" +
+                        "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+                        "You may disconnect USB cable from this device.",
 						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
@@ -940,10 +939,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (!listOfDevices.get(1).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(1), ips.get(1));
 				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
+                        "Debugging over WiFi is enabled!\n" +
+                        "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+                        "You may disconnect USB cable from this device.",
 						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
@@ -961,10 +959,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (!listOfDevices.get(2).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(2), ips.get(2));
 				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
+                        "Debugging over WiFi is enabled!\n" +
+                        "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+                        "You may disconnect USB cable from this device.",
 						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
@@ -982,10 +979,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (!listOfDevices.get(3).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(3), ips.get(3));
 				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
+                        "Debugging over WiFi is enabled!\n" +
+                        "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+                        "You may disconnect USB cable from this device.",
 						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
