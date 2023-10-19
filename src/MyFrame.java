@@ -294,7 +294,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		progressBar = new ProgressBar();
 		this.add(progressBar);
 
-		this.setTitle("Adb Toolkit");
+		this.setTitle("Adb Toolkit 11");
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		this.setLayout(null);
 		this.setResizable(false);
