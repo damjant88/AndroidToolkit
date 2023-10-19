@@ -400,55 +400,50 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons4(int i) {
 		radio4.setSelected(true);
 		radio4.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
-				labelIcon4.setIcon(logo_tmo);
-				labelIcon4.setText("FamilyMode");
-				labelIcon4.setVisible(true);
-				uninstallApp4.setEnabled(true);
-				uninstallApp4.setVisible(true);
-				enableFirebase4.setEnabled(true);
-				enableFirebase4.setVisible(true);
-				saveLogsButton4.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
-				labelIcon4.setIcon(logo_product);
-				labelIcon4.setText("SPFamily");
-				labelIcon4.setVisible(true);
-				uninstallApp4.setEnabled(true);
-				uninstallApp4.setVisible(true);
-				enableFirebase4.setEnabled(true);
-				enableFirebase4.setVisible(true);
-				saveLogsButton4.setEnabled(true);
-			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
-				labelIcon4.setIcon(logo_att);
-				labelIcon4.setText("SecureFamily");
-				labelIcon4.setVisible(true);
-				uninstallApp4.setEnabled(true);
-				uninstallApp4.setVisible(true);
-				enableFirebase4.setEnabled(true);
-				enableFirebase4.setVisible(true);
-				saveLogsButton4.setEnabled(true);
-			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
-				labelIcon4.setIcon(logo_sprint);
-				labelIcon4.setText("Safe&Found");
-				labelIcon4.setVisible(true);
-				uninstallApp4.setEnabled(true);
-				uninstallApp4.setVisible(true);
-				enableFirebase4.setEnabled(true);
-				enableFirebase4.setVisible(true);
-				saveLogsButton4.setEnabled(true);
-			}
-			case "" -> {
-				labelIcon4.setIcon(notInstalled);
-				labelIcon4.setText("Not Installed");
-				labelIcon4.setVisible(true);
-				uninstallApp4.setVisible(true);
-				enableFirebase4.setVisible(true);
-				saveLogsButton4.setEnabled(false);
-			}
+		String safePathPackage = utility.getSafePathPackage(listOfDevices.get(i));
+		if (safePathPackage.equals("com.smithmicro.tmobile.familymode.test") || safePathPackage.equals("com.tmobile.familycontrols")) {
+			labelIcon4.setIcon(logo_tmo);
+			labelIcon4.setText("FamilyMode");
+			labelIcon4.setVisible(true);
+			uninstallApp4.setEnabled(true);
+			uninstallApp4.setVisible(true);
+			enableFirebase4.setEnabled(true);
+			enableFirebase4.setVisible(true);
+			saveLogsButton4.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.safepath.family") || safePathPackage.equals("com.smithmicro.safepath.family.child")) {
+			labelIcon4.setIcon(logo_product);
+			labelIcon4.setText("SPFamily");
+			labelIcon4.setVisible(true);
+			uninstallApp4.setEnabled(true);
+			uninstallApp4.setVisible(true);
+			enableFirebase4.setEnabled(true);
+			enableFirebase4.setVisible(true);
+			saveLogsButton4.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.att.securefamily") || safePathPackage.equals("com.att.securefamilycompanion")) {
+			labelIcon4.setIcon(logo_att);
+			labelIcon4.setText("SecureFamily");
+			labelIcon4.setVisible(true);
+			uninstallApp4.setEnabled(true);
+			uninstallApp4.setVisible(true);
+			enableFirebase4.setEnabled(true);
+			enableFirebase4.setVisible(true);
+			saveLogsButton4.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.sprint.safeandfound.test") || safePathPackage.equals("com.sprint.safefound")) {
+			labelIcon4.setIcon(logo_sprint);
+			labelIcon4.setText("Safe&Found");
+			labelIcon4.setVisible(true);
+			uninstallApp4.setEnabled(true);
+			uninstallApp4.setVisible(true);
+			enableFirebase4.setEnabled(true);
+			enableFirebase4.setVisible(true);
+			saveLogsButton4.setEnabled(true);
+		} else if (safePathPackage.equals("")) {
+			labelIcon4.setIcon(notInstalled);
+			labelIcon4.setText("Not Installed");
+			labelIcon4.setVisible(true);
+			uninstallApp4.setVisible(true);
+			enableFirebase4.setVisible(true);
+			saveLogsButton4.setEnabled(false);
 		}
 		saveLogsButton4.setVisible(true);
 		wifiDebug4.setText("WiFi Debug");
@@ -476,55 +471,50 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons3(int i) {
 		radio3.setSelected(true);
 		radio3.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
-				labelIcon3.setIcon(logo_tmo);
-				labelIcon3.setText("FamilyMode");
-				labelIcon3.setVisible(true);
-				uninstallApp3.setEnabled(true);
-				uninstallApp3.setVisible(true);
-				enableFirebase3.setEnabled(true);
-				enableFirebase3.setVisible(true);
-				saveLogsButton3.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
-				labelIcon3.setIcon(logo_product);
-				labelIcon3.setText("SPFamily");
-				labelIcon3.setVisible(true);
-				uninstallApp3.setEnabled(true);
-				uninstallApp3.setVisible(true);
-				enableFirebase3.setEnabled(true);
-				enableFirebase3.setVisible(true);
-				saveLogsButton3.setEnabled(true);
-			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
-				labelIcon3.setIcon(logo_att);
-				labelIcon3.setText("SecureFamily");
-				labelIcon3.setVisible(true);
-				uninstallApp3.setEnabled(true);
-				uninstallApp3.setVisible(true);
-				enableFirebase3.setEnabled(true);
-				enableFirebase3.setVisible(true);
-				saveLogsButton3.setEnabled(true);
-			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
-				labelIcon3.setIcon(logo_sprint);
-				labelIcon3.setText("Safe&Found");
-				labelIcon3.setVisible(true);
-				uninstallApp3.setEnabled(true);
-				uninstallApp3.setVisible(true);
-				enableFirebase3.setEnabled(true);
-				enableFirebase3.setVisible(true);
-				saveLogsButton3.setEnabled(true);
-			}
-			case "" -> {
-				labelIcon3.setIcon(notInstalled);
-				labelIcon3.setText("Not Installed");
-				labelIcon3.setVisible(true);
-				uninstallApp3.setVisible(true);
-				enableFirebase3.setVisible(true);
-				saveLogsButton3.setEnabled(false);
-			}
+		String safePathPackage = utility.getSafePathPackage(listOfDevices.get(i));
+		if (safePathPackage.equals("com.smithmicro.tmobile.familymode.test") || safePathPackage.equals("com.tmobile.familycontrols")) {
+			labelIcon3.setIcon(logo_tmo);
+			labelIcon3.setText("FamilyMode");
+			labelIcon3.setVisible(true);
+			uninstallApp3.setEnabled(true);
+			uninstallApp3.setVisible(true);
+			enableFirebase3.setEnabled(true);
+			enableFirebase3.setVisible(true);
+			saveLogsButton3.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.safepath.family") || safePathPackage.equals("com.smithmicro.safepath.family.child")) {
+			labelIcon3.setIcon(logo_product);
+			labelIcon3.setText("SPFamily");
+			labelIcon3.setVisible(true);
+			uninstallApp3.setEnabled(true);
+			uninstallApp3.setVisible(true);
+			enableFirebase3.setEnabled(true);
+			enableFirebase3.setVisible(true);
+			saveLogsButton3.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.att.securefamily") || safePathPackage.equals("com.att.securefamilycompanion")) {
+			labelIcon3.setIcon(logo_att);
+			labelIcon3.setText("SecureFamily");
+			labelIcon3.setVisible(true);
+			uninstallApp3.setEnabled(true);
+			uninstallApp3.setVisible(true);
+			enableFirebase3.setEnabled(true);
+			enableFirebase3.setVisible(true);
+			saveLogsButton3.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.sprint.safeandfound.test") || safePathPackage.equals("com.sprint.safefound")) {
+			labelIcon3.setIcon(logo_sprint);
+			labelIcon3.setText("Safe&Found");
+			labelIcon3.setVisible(true);
+			uninstallApp3.setEnabled(true);
+			uninstallApp3.setVisible(true);
+			enableFirebase3.setEnabled(true);
+			enableFirebase3.setVisible(true);
+			saveLogsButton3.setEnabled(true);
+		} else if (safePathPackage.equals("")) {
+			labelIcon3.setIcon(notInstalled);
+			labelIcon3.setText("Not Installed");
+			labelIcon3.setVisible(true);
+			uninstallApp3.setVisible(true);
+			enableFirebase3.setVisible(true);
+			saveLogsButton3.setEnabled(false);
 		}
 		saveLogsButton3.setVisible(true);
 		wifiDebug3.setText("WiFi Debug");
@@ -552,55 +542,50 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons2(int i) {
 		radio2.setSelected(true);
 		radio2.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
-				labelIcon2.setIcon(logo_tmo);
-				labelIcon2.setText("FamilyMode");
-				labelIcon2.setVisible(true);
-				uninstallApp2.setEnabled(true);
-				uninstallApp2.setVisible(true);
-				enableFirebase2.setEnabled(true);
-				enableFirebase2.setVisible(true);
-				saveLogsButton2.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
-				labelIcon2.setIcon(logo_product);
-				labelIcon2.setText("SPFamily");
-				labelIcon2.setVisible(true);
-				uninstallApp2.setEnabled(true);
-				uninstallApp2.setVisible(true);
-				enableFirebase2.setEnabled(true);
-				enableFirebase2.setVisible(true);
-				saveLogsButton2.setEnabled(true);
-			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
-				labelIcon2.setIcon(logo_att);
-				labelIcon2.setText("SecureFamily");
-				labelIcon2.setVisible(true);
-				uninstallApp2.setEnabled(true);
-				uninstallApp2.setVisible(true);
-				enableFirebase2.setEnabled(true);
-				enableFirebase2.setVisible(true);
-				saveLogsButton2.setEnabled(true);
-			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
-				labelIcon2.setIcon(logo_sprint);
-				labelIcon2.setText("Safe&Found");
-				labelIcon2.setVisible(true);
-				uninstallApp2.setEnabled(true);
-				uninstallApp2.setVisible(true);
-				enableFirebase2.setEnabled(true);
-				enableFirebase2.setVisible(true);
-				saveLogsButton2.setEnabled(true);
-			}
-			case "" -> {
-				labelIcon2.setIcon(notInstalled);
-				labelIcon2.setText("Not Installed");
-				labelIcon2.setVisible(true);
-				uninstallApp2.setVisible(true);
-				enableFirebase2.setVisible(true);
-				saveLogsButton2.setEnabled(false);
-			}
+		String safePathPackage = utility.getSafePathPackage(listOfDevices.get(i));
+		if (safePathPackage.equals("com.smithmicro.tmobile.familymode.test") || safePathPackage.equals("com.tmobile.familycontrols")) {
+			labelIcon2.setIcon(logo_tmo);
+			labelIcon2.setText("FamilyMode");
+			labelIcon2.setVisible(true);
+			uninstallApp2.setEnabled(true);
+			uninstallApp2.setVisible(true);
+			enableFirebase2.setEnabled(true);
+			enableFirebase2.setVisible(true);
+			saveLogsButton2.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.safepath.family") || safePathPackage.equals("com.smithmicro.safepath.family.child")) {
+			labelIcon2.setIcon(logo_product);
+			labelIcon2.setText("SPFamily");
+			labelIcon2.setVisible(true);
+			uninstallApp2.setEnabled(true);
+			uninstallApp2.setVisible(true);
+			enableFirebase2.setEnabled(true);
+			enableFirebase2.setVisible(true);
+			saveLogsButton2.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.att.securefamily") || safePathPackage.equals("com.att.securefamilycompanion")) {
+			labelIcon2.setIcon(logo_att);
+			labelIcon2.setText("SecureFamily");
+			labelIcon2.setVisible(true);
+			uninstallApp2.setEnabled(true);
+			uninstallApp2.setVisible(true);
+			enableFirebase2.setEnabled(true);
+			enableFirebase2.setVisible(true);
+			saveLogsButton2.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.sprint.safeandfound.test") || safePathPackage.equals("com.sprint.safefound")) {
+			labelIcon2.setIcon(logo_sprint);
+			labelIcon2.setText("Safe&Found");
+			labelIcon2.setVisible(true);
+			uninstallApp2.setEnabled(true);
+			uninstallApp2.setVisible(true);
+			enableFirebase2.setEnabled(true);
+			enableFirebase2.setVisible(true);
+			saveLogsButton2.setEnabled(true);
+		} else if (safePathPackage.equals("")) {
+			labelIcon2.setIcon(notInstalled);
+			labelIcon2.setText("Not Installed");
+			labelIcon2.setVisible(true);
+			uninstallApp2.setVisible(true);
+			enableFirebase2.setVisible(true);
+			saveLogsButton2.setEnabled(false);
 		}
 		saveLogsButton2.setVisible(true);
 		wifiDebug2.setText("WiFi Debug");
@@ -628,55 +613,50 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons1(int i) {
 		radio1.setSelected(true);
 		radio1.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
-				labelIcon1.setIcon(logo_tmo);
-				labelIcon1.setText("FamilyMode");
-				labelIcon1.setVisible(true);
-				uninstallApp1.setEnabled(true);
-				uninstallApp1.setVisible(true);
-				enableFirebase1.setEnabled(true);
-				enableFirebase1.setVisible(true);
-				saveLogsButton1.setEnabled(true);
-			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
-				labelIcon1.setIcon(logo_product);
-				labelIcon1.setText("SPFamily");
-				labelIcon1.setVisible(true);
-				uninstallApp1.setEnabled(true);
-				uninstallApp1.setVisible(true);
-				enableFirebase1.setEnabled(true);
-				enableFirebase1.setVisible(true);
-				saveLogsButton1.setEnabled(true);
-			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
-				labelIcon1.setIcon(logo_att);
-				labelIcon1.setText("SecureFamily");
-				labelIcon1.setVisible(true);
-				uninstallApp1.setEnabled(true);
-				uninstallApp1.setVisible(true);
-				enableFirebase1.setEnabled(true);
-				enableFirebase1.setVisible(true);
-				saveLogsButton1.setEnabled(true);
-			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
-				labelIcon1.setIcon(logo_sprint);
-				labelIcon1.setText("Safe&Found");
-				labelIcon1.setVisible(true);
-				uninstallApp1.setEnabled(true);
-				uninstallApp1.setVisible(true);
-				enableFirebase1.setEnabled(true);
-				enableFirebase1.setVisible(true);
-				saveLogsButton1.setEnabled(true);
-			}
-			case "" -> {
-				labelIcon1.setIcon(notInstalled);
-				labelIcon1.setText("Not Installed");
-				labelIcon1.setVisible(true);
-				uninstallApp1.setVisible(true);
-				enableFirebase1.setVisible(true);
-				saveLogsButton1.setEnabled(false);
-			}
+		String safePathPackage = utility.getSafePathPackage(listOfDevices.get(i));
+		if (safePathPackage.equals("com.smithmicro.tmobile.familymode.test") || safePathPackage.equals("com.tmobile.familycontrols")) {
+			labelIcon1.setIcon(logo_tmo);
+			labelIcon1.setText("FamilyMode");
+			labelIcon1.setVisible(true);
+			uninstallApp1.setEnabled(true);
+			uninstallApp1.setVisible(true);
+			enableFirebase1.setEnabled(true);
+			enableFirebase1.setVisible(true);
+			saveLogsButton1.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.safepath.family") || safePathPackage.equals("com.smithmicro.safepath.family.child")) {
+			labelIcon1.setIcon(logo_product);
+			labelIcon1.setText("SPFamily");
+			labelIcon1.setVisible(true);
+			uninstallApp1.setEnabled(true);
+			uninstallApp1.setVisible(true);
+			enableFirebase1.setEnabled(true);
+			enableFirebase1.setVisible(true);
+			saveLogsButton1.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.att.securefamily") || safePathPackage.equals("com.att.securefamilycompanion")) {
+			labelIcon1.setIcon(logo_att);
+			labelIcon1.setText("SecureFamily");
+			labelIcon1.setVisible(true);
+			uninstallApp1.setEnabled(true);
+			uninstallApp1.setVisible(true);
+			enableFirebase1.setEnabled(true);
+			enableFirebase1.setVisible(true);
+			saveLogsButton1.setEnabled(true);
+		} else if (safePathPackage.equals("com.smithmicro.sprint.safeandfound.test") || safePathPackage.equals("com.sprint.safefound")) {
+			labelIcon1.setIcon(logo_sprint);
+			labelIcon1.setText("Safe&Found");
+			labelIcon1.setVisible(true);
+			uninstallApp1.setEnabled(true);
+			uninstallApp1.setVisible(true);
+			enableFirebase1.setEnabled(true);
+			enableFirebase1.setVisible(true);
+			saveLogsButton1.setEnabled(true);
+		} else if (safePathPackage.equals("")) {
+			labelIcon1.setIcon(notInstalled);
+			labelIcon1.setText("Not Installed");
+			labelIcon1.setVisible(true);
+			uninstallApp1.setVisible(true);
+			enableFirebase1.setVisible(true);
+			saveLogsButton1.setEnabled(false);
 		}
 		saveLogsButton1.setVisible(true);
 		wifiDebug1.setText("WiFi Debug");

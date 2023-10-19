@@ -1,16 +1,10 @@
 package Buttons;
 import java.awt.Color;
 import java.awt.Font;
-import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 
 public class UninstallAllButton extends JButton{
-	/**
-	 * 
-	 */
-	@Serial
-	private static final long serialVersionUID = 1L;
 
 	public UninstallAllButton(int x, int y, int b, int a) {
 		this.setBounds(x, y, b, a);

@@ -3,6 +3,7 @@
     <output-path>$USER_HOME$/OneDrive - Smith Micro Software/Desktop</output-path>
     <root id="archive" name="AndroidToolkit.jar">
       <element id="module-output" name="AndroidToolkit" />
+      <element id="artifact" artifact-name="AndroidToolkit11" />
     </root>
   </artifact>
 </component>

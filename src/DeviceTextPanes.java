@@ -1,6 +1,5 @@
 import java.awt.Color;
 import java.awt.Font;
-import java.io.Serial;
 import javax.swing.BorderFactory;
 import javax.swing.JTextPane;
 import javax.swing.text.SimpleAttributeSet;
@@ -8,11 +7,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 public class DeviceTextPanes extends JTextPane {
-	/**
-	 * 
-	 */
-	@Serial
-	private static final long serialVersionUID = 1L;
+
 	SimpleAttributeSet center = new SimpleAttributeSet();
 	
 	// Construct a device text pane using position and dimensions only
