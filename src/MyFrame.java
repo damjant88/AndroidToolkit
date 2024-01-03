@@ -13,42 +13,75 @@ import Buttons.*;
 
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
-	Util utility = new Util();
-	ArrayList<String> listOfDevices = utility.getConnectedDevices();
+	static Util utility = new Util();
+	static ArrayList<String> listOfDevices = utility.getConnectedDevices();
 	private static int counter = 0;
 	private static final Object lock = new Object();
-	ArrayList<String> ips = new ArrayList<>();
-	ImageIcon buttonIcon, logo_tmo, logo_att, logo_product, frameIcon, notInstalled, logo_sprint;
+	static ArrayList<String> ips = new ArrayList<>();
+	ImageIcon buttonIcon;
+	static ImageIcon logo_tmo;
+	static ImageIcon logo_att;
+	static ImageIcon logo_product;
+	ImageIcon frameIcon;
+	static ImageIcon notInstalled;
+	static ImageIcon logo_sprint;
 	File file1 = null;
 	//File file2 = null;
-	SaveSPLogsButtons saveLogsButton1, saveLogsButton2, saveLogsButton3, saveLogsButton4;
-	WifiDebugButtons wifiDebug1, wifiDebug2, wifiDebug3, wifiDebug4;
-	EnableFirebaseButtons enableFirebase1, enableFirebase2, enableFirebase3, enableFirebase4;
-	RebootButtons reboot1, reboot2, reboot3, reboot4;
-	TakeScreenshotButtons takeScreenshotButton1, takeScreenshotButton2, takeScreenshotButton3, takeScreenshotButton4;
-	UninstallAppButtons uninstallApp1, uninstallApp2, uninstallApp3, uninstallApp4;
+	static SaveSPLogsButtons saveLogsButton1;
+	static SaveSPLogsButtons saveLogsButton2;
+	static SaveSPLogsButtons saveLogsButton3;
+	static SaveSPLogsButtons saveLogsButton4;
+	static WifiDebugButtons wifiDebug1;
+	static WifiDebugButtons wifiDebug2;
+	static WifiDebugButtons wifiDebug3;
+	static WifiDebugButtons wifiDebug4;
+	static EnableFirebaseButtons enableFirebase1;
+	static EnableFirebaseButtons enableFirebase2;
+	static EnableFirebaseButtons enableFirebase3;
+	static EnableFirebaseButtons enableFirebase4;
+	static RebootButtons reboot1;
+	static RebootButtons reboot2;
+	static RebootButtons reboot3;
+	static RebootButtons reboot4;
+	static TakeScreenshotButtons takeScreenshotButton1;
+	static TakeScreenshotButtons takeScreenshotButton2;
+	static TakeScreenshotButtons takeScreenshotButton3;
+	static TakeScreenshotButtons takeScreenshotButton4;
+	static UninstallAppButtons uninstallApp1;
+	static UninstallAppButtons uninstallApp2;
+	static UninstallAppButtons uninstallApp3;
+	static UninstallAppButtons uninstallApp4;
 	DevicesButton devicesButton;
 	JButton fileButton;
 	InstallButton installButton;
-	UninstallAllButton uninstallAllButton;
-	RadioButtons radio1, radio2, radio3, radio4;
-	LogoIconLabels labelIcon1, labelIcon2, labelIcon3, labelIcon4;
+	static UninstallAllButton uninstallAllButton;
+	static RadioButtons radio1;
+	static RadioButtons radio2;
+	static RadioButtons radio3;
+	static RadioButtons radio4;
+	static LogoIconLabels labelIcon1;
+	static LogoIconLabels labelIcon2;
+	static LogoIconLabels labelIcon3;
+	static LogoIconLabels labelIcon4;
 	JTextPane staticPane;
 	ProgressBar progressBar;
 	FileTextField fileTextField;
-	DeviceTextPanes device1TextPane, device2TextPane, device3TextPane, device4TextPane;
+	static DeviceTextPanes device1TextPane;
+	static DeviceTextPanes device2TextPane;
+	static DeviceTextPanes device3TextPane;
+	static DeviceTextPanes device4TextPane;
 	DefaultBuildLocationButton defaultBuildLocationButton;
 	boolean radio1State = false, radio2State = false, radio3State = false, radio4State = false;
 	
-	ArrayList<DeviceTextPanes> deviceTextPanes = new ArrayList<>();
-	ArrayList<LogoIconLabels> logoIconLabels = new ArrayList<>();
-	ArrayList<SaveSPLogsButtons> saveSPLogsButtons = new ArrayList<>();
-	ArrayList<EnableFirebaseButtons> enableFirebaseButtons = new ArrayList<>();
-	ArrayList<RebootButtons> rebootButtons = new ArrayList<>();
-	ArrayList<TakeScreenshotButtons> takeScreenshotButtons = new ArrayList<>();
-	ArrayList<UninstallAppButtons> uninstallAppButtons = new ArrayList<>();
-	ArrayList<RadioButtons> radioButtons = new ArrayList<>();
-	ArrayList<WifiDebugButtons> wifiDebugButtons = new ArrayList<>();
+	static ArrayList<DeviceTextPanes> deviceTextPanes = new ArrayList<>();
+	static ArrayList<LogoIconLabels> logoIconLabels = new ArrayList<>();
+	static ArrayList<SaveSPLogsButtons> saveSPLogsButtons = new ArrayList<>();
+	static ArrayList<EnableFirebaseButtons> enableFirebaseButtons = new ArrayList<>();
+	static ArrayList<RebootButtons> rebootButtons = new ArrayList<>();
+	static ArrayList<TakeScreenshotButtons> takeScreenshotButtons = new ArrayList<>();
+	static ArrayList<UninstallAppButtons> uninstallAppButtons = new ArrayList<>();
+	static ArrayList<RadioButtons> radioButtons = new ArrayList<>();
+	static ArrayList<WifiDebugButtons> wifiDebugButtons = new ArrayList<>();
 
 	public MyFrame() {
 
@@ -312,7 +345,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 		}
 		this.setVisible(true);
+		startDeviceCheckThread();
 	}
+
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if ("progress".equals(evt.getPropertyName())) {
@@ -380,10 +415,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			listOfDevices.clear();
 			ips.clear();
 			listOfDevices = utility.getConnectedDevices();
+//			startDeviceCheckThread();
 			for (String element : listOfDevices) {
 				ips.add(utility.getWlanIp(element));
 			}
-
 			for (int i = 0; i < listOfDevices.size(); i++) {
 				if (i == 0) {
 					setIconAndButtons1(i);
@@ -397,7 +432,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 		}
 	}
-	private void setIconAndButtons4(int i) {
+	private static void setIconAndButtons4(int i) {
 		radio4.setSelected(true);
 		radio4.setVisible(true);
 		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
@@ -473,7 +508,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
-	private void setIconAndButtons3(int i) {
+	private static void setIconAndButtons3(int i) {
 		radio3.setSelected(true);
 		radio3.setVisible(true);
 		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
@@ -549,7 +584,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
-	private void setIconAndButtons2(int i) {
+	private static void setIconAndButtons2(int i) {
 		radio2.setSelected(true);
 		radio2.setVisible(true);
 		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
@@ -625,7 +660,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
-	private void setIconAndButtons1(int i) {
+	private static void setIconAndButtons1(int i) {
 		radio1.setSelected(true);
 		radio1.setVisible(true);
 		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
@@ -1148,5 +1183,77 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				devicesButton.doClick();
 			}
 		}
+	}
+	private static void startDeviceCheckThread() {
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while (true) {
+					try {
+						ArrayList<String> TempListOfDevices = utility.getConnectedDevices();
+						System.out.println(TempListOfDevices);
+						System.out.println(listOfDevices);
+						if (!TempListOfDevices.equals(listOfDevices)) {
+							boolean isConnected = !utility.getConnectedDevices().isEmpty();
+							System.out.println("Device connected: " + isConnected);
+							for (DeviceTextPanes deviceTextPane : deviceTextPanes) {
+								deviceTextPane.setVisible(false);
+							}
+							for (RadioButtons radiobutton : radioButtons) {
+								radiobutton.setVisible(false);
+							}
+							for (SaveSPLogsButtons saveLogsButton : saveSPLogsButtons) {
+								saveLogsButton.setVisible(false);
+							}
+							for (TakeScreenshotButtons screenshotButton : takeScreenshotButtons) {
+								screenshotButton.setVisible(false);
+							}
+							for (WifiDebugButtons wifiButton : wifiDebugButtons) {
+								wifiButton.setVisible(false);
+							}
+							for (EnableFirebaseButtons firebaseButton : enableFirebaseButtons) {
+								firebaseButton.setVisible(false);
+								firebaseButton.setEnabled(false);
+							}
+							for (UninstallAppButtons uninstallButton : uninstallAppButtons) {
+								uninstallButton.setVisible(false);
+								uninstallButton.setEnabled(false);
+							}
+							for (RebootButtons rebootButton : rebootButtons) {
+								rebootButton.setVisible(false);
+							}
+							for (LogoIconLabels IconLabel : logoIconLabels) {
+								IconLabel.setVisible(false);
+							}
+							listOfDevices.clear();
+							ips.clear();
+							listOfDevices = utility.getConnectedDevices();
+							for (String element : listOfDevices) {
+								ips.add(utility.getWlanIp(element));
+							}
+							if (!listOfDevices.isEmpty()) {
+								System.out.println("Uredjaj je nakacen!");
+							} else {
+								System.out.println("Uredjaj nije nakacen!");
+							}
+							for (int i = 0; i < listOfDevices.size(); i++) {
+								if (i == 0) {
+									setIconAndButtons1(i);
+								} else if (i == 1) {
+									setIconAndButtons2(i);
+								} else if (i == 2) {
+									setIconAndButtons3(i);
+								} else if (i == 3) {
+									setIconAndButtons4(i);
+								}
+							}
+						}
+						Thread.sleep(3000); // Sleep for 3 seconds
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
 	}
 }
