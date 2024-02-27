@@ -8,7 +8,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Objects;
 import javax.swing.*;
-
 import Buttons.*;
 
 public class MyFrame extends JFrame implements PropertyChangeListener {
