@@ -1,13 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.Serial;
 
 public class DefaultBuildLocationTextField extends JTextField {
 	/**
 	 *
 	 */
-	@Serial
-	private static final long serialVersionUID = 1L;
 
 	public DefaultBuildLocationTextField() {
 		this.setPreferredSize(new Dimension(250, 40));

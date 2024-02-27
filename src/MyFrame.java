@@ -61,7 +61,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		logo_att = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("att.png")));
 		logo_product = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("product.png")));
 		logo_sprint = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("sprint.png")));
-		logo_orange = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("orange.png")));
+		logo_orange = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("toyo.png")));
 
 		// Get list of wlan0 IP addresses
 		for (String element : listOfDevices) {
@@ -403,8 +403,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons4(int i) {
 		radio4.setSelected(true);
 		radio4.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
+		String packageName = utility.getSafePathPackage(listOfDevices.get(i));
+		switch (packageName) {
+			case "com.smithmicro.tmobile.familymode.test":
+			case "com.tmobile.familycontrols": {
 				labelIcon4.setIcon(logo_tmo);
 				labelIcon4.setText("FamilyMode");
 				labelIcon4.setVisible(true);
@@ -413,8 +415,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setEnabled(true);
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
+			case "com.smithmicro.safepath.family":
+			case "com.smithmicro.safepath.family.child": {
 				labelIcon4.setIcon(logo_product);
 				labelIcon4.setText("SPFamily");
 				labelIcon4.setVisible(true);
@@ -423,8 +427,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setEnabled(true);
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily":
+			case "com.att.securefamilycompanion": {
 				labelIcon4.setIcon(logo_att);
 				labelIcon4.setText("SecureFamily");
 				labelIcon4.setVisible(true);
@@ -433,8 +439,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setEnabled(true);
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
+			case "com.smithmicro.sprint.safeandfound.test":
+			case "com.sprint.safefound": {
 				labelIcon4.setIcon(logo_sprint);
 				labelIcon4.setText("Safe&Found");
 				labelIcon4.setVisible(true);
@@ -443,8 +451,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setEnabled(true);
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.orangespain.test" -> {
+			case "com.smithmicro.orangespain.test": {
 				labelIcon4.setIcon(logo_orange);
 				labelIcon4.setText("TuYo");
 				labelIcon4.setVisible(true);
@@ -453,14 +462,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setEnabled(true);
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
+				break;
 			}
-			case "" -> {
+			case "": {
 				labelIcon4.setIcon(notInstalled);
 				labelIcon4.setText("Not Installed");
 				labelIcon4.setVisible(true);
 				uninstallApp4.setVisible(true);
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(false);
+				break;
 			}
 		}
 		saveLogsButton4.setVisible(true);
@@ -489,8 +500,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons3(int i) {
 		radio3.setSelected(true);
 		radio3.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
+		String packageName3 = utility.getSafePathPackage(listOfDevices.get(i));
+		switch (packageName3) {
+			case "com.smithmicro.tmobile.familymode.test":
+			case "com.tmobile.familycontrols": {
 				labelIcon3.setIcon(logo_tmo);
 				labelIcon3.setText("FamilyMode");
 				labelIcon3.setVisible(true);
@@ -499,8 +512,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase3.setEnabled(true);
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
+			case "com.smithmicro.safepath.family":
+			case "com.smithmicro.safepath.family.child": {
 				labelIcon3.setIcon(logo_product);
 				labelIcon3.setText("SPFamily");
 				labelIcon3.setVisible(true);
@@ -509,8 +524,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase3.setEnabled(true);
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily":
+			case "com.att.securefamilycompanion": {
 				labelIcon3.setIcon(logo_att);
 				labelIcon3.setText("SecureFamily");
 				labelIcon3.setVisible(true);
@@ -519,8 +536,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase3.setEnabled(true);
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
+			case "com.smithmicro.sprint.safeandfound.test":
+			case "com.sprint.safefound": {
 				labelIcon3.setIcon(logo_sprint);
 				labelIcon3.setText("Safe&Found");
 				labelIcon3.setVisible(true);
@@ -529,8 +548,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase3.setEnabled(true);
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.orangespain.test" -> {
+			case "com.smithmicro.orangespain.test": {
 				labelIcon3.setIcon(logo_orange);
 				labelIcon3.setText("TuYo");
 				labelIcon3.setVisible(true);
@@ -539,14 +559,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase3.setEnabled(true);
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(true);
+				break;
 			}
-			case "" -> {
+			case "": {
 				labelIcon3.setIcon(notInstalled);
 				labelIcon3.setText("Not Installed");
 				labelIcon3.setVisible(true);
 				uninstallApp3.setVisible(true);
 				enableFirebase3.setVisible(true);
 				saveLogsButton3.setEnabled(false);
+				break;
 			}
 		}
 		saveLogsButton3.setVisible(true);
@@ -575,8 +597,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons2(int i) {
 		radio2.setSelected(true);
 		radio2.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
+		String packageName2 = utility.getSafePathPackage(listOfDevices.get(i));
+		switch (packageName2) {
+			case "com.smithmicro.tmobile.familymode.test":
+			case "com.tmobile.familycontrols": {
 				labelIcon2.setIcon(logo_tmo);
 				labelIcon2.setText("FamilyMode");
 				labelIcon2.setVisible(true);
@@ -585,8 +609,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setEnabled(true);
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
+			case "com.smithmicro.safepath.family":
+			case "com.smithmicro.safepath.family.child": {
 				labelIcon2.setIcon(logo_product);
 				labelIcon2.setText("SPFamily");
 				labelIcon2.setVisible(true);
@@ -595,8 +621,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setEnabled(true);
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily":
+			case "com.att.securefamilycompanion": {
 				labelIcon2.setIcon(logo_att);
 				labelIcon2.setText("SecureFamily");
 				labelIcon2.setVisible(true);
@@ -605,8 +633,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setEnabled(true);
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
+			case "com.smithmicro.sprint.safeandfound.test":
+			case "com.sprint.safefound": {
 				labelIcon2.setIcon(logo_sprint);
 				labelIcon2.setText("Safe&Found");
 				labelIcon2.setVisible(true);
@@ -615,8 +645,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setEnabled(true);
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.orangespain.test" -> {
+			case "com.smithmicro.orangespain.test": {
 				labelIcon2.setIcon(logo_orange);
 				labelIcon2.setText("TuYo");
 				labelIcon2.setVisible(true);
@@ -625,14 +656,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setEnabled(true);
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
+				break;
 			}
-			case "" -> {
+			case "": {
 				labelIcon2.setIcon(notInstalled);
 				labelIcon2.setText("Not Installed");
 				labelIcon2.setVisible(true);
 				uninstallApp2.setVisible(true);
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(false);
+				break;
 			}
 		}
 		saveLogsButton2.setVisible(true);
@@ -661,8 +694,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void setIconAndButtons1(int i) {
 		radio1.setSelected(true);
 		radio1.setVisible(true);
-		switch (utility.getSafePathPackage(listOfDevices.get(i))) {
-			case "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols" -> {
+		String packageName1 = utility.getSafePathPackage(listOfDevices.get(i));
+		switch (packageName1) {
+			case "com.smithmicro.tmobile.familymode.test":
+			case "com.tmobile.familycontrols": {
 				labelIcon1.setIcon(logo_tmo);
 				labelIcon1.setText("FamilyMode");
 				labelIcon1.setVisible(true);
@@ -671,8 +706,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase1.setEnabled(true);
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> {
+			case "com.smithmicro.safepath.family":
+			case "com.smithmicro.safepath.family.child": {
 				labelIcon1.setIcon(logo_product);
 				labelIcon1.setText("SPFamily");
 				labelIcon1.setVisible(true);
@@ -681,8 +718,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase1.setEnabled(true);
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.att.securefamily", "com.att.securefamilycompanion" -> {
+			case "com.smithmicro.att.securefamily":
+			case "com.att.securefamilycompanion": {
 				labelIcon1.setIcon(logo_att);
 				labelIcon1.setText("SecureFamily");
 				labelIcon1.setVisible(true);
@@ -691,8 +730,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase1.setEnabled(true);
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
+			case "com.smithmicro.sprint.safeandfound.test":
+			case "com.sprint.safefound": {
 				labelIcon1.setIcon(logo_sprint);
 				labelIcon1.setText("Safe&Found");
 				labelIcon1.setVisible(true);
@@ -701,8 +742,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase1.setEnabled(true);
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(true);
+				break;
 			}
-			case "com.smithmicro.orangespain.test" -> {
+			case "com.smithmicro.orangespain.test": {
 				labelIcon1.setIcon(logo_orange);
 				labelIcon1.setText("TuYo");
 				labelIcon1.setVisible(true);
@@ -711,14 +753,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase1.setEnabled(true);
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(true);
+				break;
 			}
-			case "" -> {
+			case "": {
 				labelIcon1.setIcon(notInstalled);
 				labelIcon1.setText("Not Installed");
 				labelIcon1.setVisible(true);
 				uninstallApp1.setVisible(true);
 				enableFirebase1.setVisible(true);
 				saveLogsButton1.setEnabled(false);
+				break;
 			}
 		}
 		saveLogsButton1.setVisible(true);
@@ -961,12 +1005,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		public void actionPerformed(ActionEvent e) {
 			if (!listOfDevices.get(0).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(0), ips.get(0));
-				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(
+						null,
+						"Debugging over WiFi is enabled!\n" +
+								"If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+								"You may disconnect USB cable from this device.",
+						"Enable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {
@@ -982,12 +1027,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		public void actionPerformed(ActionEvent e) {
 			if (!listOfDevices.get(1).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(1), ips.get(1));
-				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(
+						null,
+						"Debugging over WiFi is enabled!\n" +
+								"If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+								"You may disconnect USB cable from this device.",
+						"Enable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {
@@ -1003,12 +1049,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		public void actionPerformed(ActionEvent e) {
 			if (!listOfDevices.get(2).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(2), ips.get(2));
-				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(
+						null,
+						"Debugging over WiFi is enabled!\n" +
+								"If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+								"You may disconnect USB cable from this device.",
+						"Enable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {
@@ -1024,12 +1071,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		public void actionPerformed(ActionEvent e) {
 			if (!listOfDevices.get(3).endsWith(":5555")) {
 				utility.startWifiDebugging(listOfDevices.get(3), ips.get(3));
-				JOptionPane.showMessageDialog(null,
-						"""
-								Debugging over WiFi is enabled!
-								If prompted on the device, allow wireless debugging on specific wifi network.
-								You may disconnect USB cable from this device.""",
-						"Enable WiFi Debugging.", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(
+						null,
+						"Debugging over WiFi is enabled!\n" +
+								"If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+								"You may disconnect USB cable from this device.",
+						"Enable WiFi Debugging.",
+						JOptionPane.INFORMATION_MESSAGE);
 				wifiDebug4.setText("Disable WiFi");
 				devicesButton.doClick(200);
 			} else {

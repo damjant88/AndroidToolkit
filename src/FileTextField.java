@@ -1,5 +1,4 @@
 import java.awt.Dimension;
-import java.io.Serial;
 import javax.swing.JTextField;
 
 public class FileTextField extends JTextField {
@@ -7,8 +6,6 @@ public class FileTextField extends JTextField {
 	/**
 	 * 
 	 */
-	@Serial
-	private static final long serialVersionUID = 1L;
 
 	public FileTextField() {
 		this.setPreferredSize(new Dimension(250, 40));

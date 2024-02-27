@@ -1,15 +1,12 @@
 package Buttons;
 
 import java.awt.Font;
-import java.io.Serial;
 import javax.swing.JRadioButton;
 
 public class RadioButtons extends JRadioButton{
 	/**
 	 * 
 	 */
-	@Serial
-	private static final long serialVersionUID = 1L;
 	
 	// If only radio button text is used...
 	public RadioButtons(String text) {
