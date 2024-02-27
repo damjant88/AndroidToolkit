@@ -18,9 +18,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private static int counter = 0;
 	private static final Object lock = new Object();
 	ArrayList<String> ips = new ArrayList<>();
-	ImageIcon buttonIcon, logo_tmo, logo_att, logo_product, frameIcon, notInstalled, logo_sprint;
+	ImageIcon buttonIcon, logo_tmo, logo_att, logo_product, frameIcon, notInstalled, logo_sprint, logo_orange;
 	File file1 = null;
-	//File file2 = null;
 	SaveSPLogsButtons saveLogsButton1, saveLogsButton2, saveLogsButton3, saveLogsButton4;
 	WifiDebugButtons wifiDebug1, wifiDebug2, wifiDebug3, wifiDebug4;
 	EnableFirebaseButtons enableFirebase1, enableFirebase2, enableFirebase3, enableFirebase4;
@@ -37,7 +36,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	ProgressBar progressBar;
 	FileTextField fileTextField;
 	DeviceTextPanes device1TextPane, device2TextPane, device3TextPane, device4TextPane;
-	DefaultBuildLocationButton defaultBuildLocationButton;
 	boolean radio1State = false, radio2State = false, radio3State = false, radio4State = false;
 	
 	ArrayList<DeviceTextPanes> deviceTextPanes = new ArrayList<>();
@@ -63,6 +61,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		logo_att = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("att.png")));
 		logo_product = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("product.png")));
 		logo_sprint = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("sprint.png")));
+		logo_orange = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("orange.png")));
 
 		// Get list of wlan0 IP addresses
 		for (String element : listOfDevices) {
@@ -92,6 +91,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		Image image6 = logo_sprint.getImage();
 		newimg = image6.getScaledInstance(45, 45, java.awt.Image.SCALE_SMOOTH);
 		logo_sprint = new ImageIcon(newimg);
+
+		Image image7 = logo_orange.getImage();
+		newimg = image7.getScaledInstance(45, 45, java.awt.Image.SCALE_SMOOTH);
+		logo_orange = new ImageIcon(newimg);
 
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
@@ -441,6 +444,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase4.setVisible(true);
 				saveLogsButton4.setEnabled(true);
 			}
+			case "com.smithmicro.orangespain.test" -> {
+				labelIcon4.setIcon(logo_orange);
+				labelIcon4.setText("TuYo");
+				labelIcon4.setVisible(true);
+				uninstallApp4.setEnabled(true);
+				uninstallApp4.setVisible(true);
+				enableFirebase4.setEnabled(true);
+				enableFirebase4.setVisible(true);
+				saveLogsButton4.setEnabled(true);
+			}
 			case "" -> {
 				labelIcon4.setIcon(notInstalled);
 				labelIcon4.setText("Not Installed");
@@ -510,6 +523,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
 				labelIcon3.setIcon(logo_sprint);
 				labelIcon3.setText("Safe&Found");
+				labelIcon3.setVisible(true);
+				uninstallApp3.setEnabled(true);
+				uninstallApp3.setVisible(true);
+				enableFirebase3.setEnabled(true);
+				enableFirebase3.setVisible(true);
+				saveLogsButton3.setEnabled(true);
+			}
+			case "com.smithmicro.orangespain.test" -> {
+				labelIcon3.setIcon(logo_orange);
+				labelIcon3.setText("TuYo");
 				labelIcon3.setVisible(true);
 				uninstallApp3.setEnabled(true);
 				uninstallApp3.setVisible(true);
@@ -593,6 +616,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				enableFirebase2.setVisible(true);
 				saveLogsButton2.setEnabled(true);
 			}
+			case "com.smithmicro.orangespain.test" -> {
+				labelIcon2.setIcon(logo_orange);
+				labelIcon2.setText("TuYo");
+				labelIcon2.setVisible(true);
+				uninstallApp2.setEnabled(true);
+				uninstallApp2.setVisible(true);
+				enableFirebase2.setEnabled(true);
+				enableFirebase2.setVisible(true);
+				saveLogsButton2.setEnabled(true);
+			}
 			case "" -> {
 				labelIcon2.setIcon(notInstalled);
 				labelIcon2.setText("Not Installed");
@@ -662,6 +695,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			case "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound" -> {
 				labelIcon1.setIcon(logo_sprint);
 				labelIcon1.setText("Safe&Found");
+				labelIcon1.setVisible(true);
+				uninstallApp1.setEnabled(true);
+				uninstallApp1.setVisible(true);
+				enableFirebase1.setEnabled(true);
+				enableFirebase1.setVisible(true);
+				saveLogsButton1.setEnabled(true);
+			}
+			case "com.smithmicro.orangespain.test" -> {
+				labelIcon1.setIcon(logo_orange);
+				labelIcon1.setText("TuYo");
 				labelIcon1.setVisible(true);
 				uninstallApp1.setEnabled(true);
 				uninstallApp1.setVisible(true);

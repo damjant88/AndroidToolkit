@@ -140,6 +140,7 @@ public class Util {
 					|| installedPackage2.contains("safeandfound")
 					|| installedPackage2.contains("safefound")
 					|| installedPackage2.contains("familycontrols")
+					|| installedPackage2.contains("orangespain")
 					|| installedPackage2.contains("familymode")) {
 				installedPackage = installedPackage2;
 			}
@@ -156,6 +157,7 @@ public class Util {
 				|| installedPackage.equals("com.smithmicro.sprint.safeandfound.test")
 				|| installedPackage.equals("com.sprint.safefound")
 				|| installedPackage.equals("com.tmobile.familycontrols")
+				|| installedPackage.equals("com.smithmicro.orangespain.test")
 				|| installedPackage.equals("com.smithmicro.safepath.family.child");
 	}
 
