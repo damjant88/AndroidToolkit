@@ -122,7 +122,6 @@ public class Device extends JPanel {
     }
 
     class UninstallAppListener implements ActionListener {
-
         @Override
         public void actionPerformed(ActionEvent e) {
             int response = JOptionPane.showConfirmDialog(null, "Are you sure?", "Uninstall the app",
