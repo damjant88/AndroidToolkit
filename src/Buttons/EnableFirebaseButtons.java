@@ -9,8 +9,8 @@ public class EnableFirebaseButtons extends JButton{
 	 * 
 	 */
 
-	public EnableFirebaseButtons(int x, int y, int b, int a) {
-		this.setBounds(x, y, b, a);
+	public EnableFirebaseButtons() {
+		this.setBounds(0, 220, 95, 30);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

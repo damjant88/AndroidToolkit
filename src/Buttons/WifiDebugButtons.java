@@ -9,8 +9,8 @@ public class WifiDebugButtons extends JButton{
 	 * 
 	 */
 	
-	public WifiDebugButtons(int x, int y, int b, int a) {
-		this.setBounds(x, y, b, a);
+	public WifiDebugButtons() {
+		this.setBounds(115, 160, 95, 30);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

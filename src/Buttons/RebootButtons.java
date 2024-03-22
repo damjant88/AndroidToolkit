@@ -9,8 +9,8 @@ public class RebootButtons extends JButton{
 	 * 
 	 */
 
-	public RebootButtons(int x, int y, int b, int a) {
-		this.setBounds(x, y, b, a);
+	public RebootButtons() {
+		this.setBounds(0, 190, 95, 30);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

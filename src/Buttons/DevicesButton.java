@@ -11,7 +11,7 @@ public class DevicesButton extends JButton{
 	 */
 
 	public DevicesButton(ImageIcon buttonIcon) {
-		this.setBounds(0, 0, 198, 50);
+		this.setBounds(0, 0, 200, 50);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

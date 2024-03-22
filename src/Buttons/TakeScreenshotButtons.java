@@ -9,8 +9,8 @@ public class TakeScreenshotButtons extends JButton{
 	 * 
 	 */
 
-	public TakeScreenshotButtons(int x, int y, int b, int a) {
-		this.setBounds(x, y, b, a);
+	public TakeScreenshotButtons() {
+		this.setBounds(115, 190, 95, 30);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);
