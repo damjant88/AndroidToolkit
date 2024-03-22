@@ -77,8 +77,16 @@ public class Device extends JPanel {
     class WifiDebugListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (!deviceInfo.serialNo.endsWith(":5555")) {
-                utility.startWifiDebugging(deviceInfo.serialNo, deviceInfo.wifi);
+            if (deviceInfo.wifiIP.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Connect the device " + deviceName + " to WiFi and click on 'Display Connected Devices' button to refresh IP! ",
+                        "Enable WiFi Debugging",
+                        JOptionPane.INFORMATION_MESSAGE);
+
+            }
+            else if (!deviceInfo.serialNo.endsWith(":5555")) {
+                utility.startWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
                 JOptionPane.showMessageDialog(
                         null,
                         "Debugging over WiFi is enabled on " + deviceName + "!\n" +
@@ -87,12 +95,11 @@ public class Device extends JPanel {
                         "Enable WiFi Debugging",
                         JOptionPane.INFORMATION_MESSAGE);
                 wifiDebug.setText("Disable WiFi");
-//                devicesButton.doClick(200);
-            } else {
-                utility.stopWifiDebugging(deviceInfo.serialNo, deviceInfo.wifi);
+            }
+            else {
+                utility.stopWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
                 JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
                         JOptionPane.INFORMATION_MESSAGE);
-//                devicesButton.doClick(100);
             }
         }
     }
@@ -151,7 +158,7 @@ public class Device extends JPanel {
         deviceTextPane = new DeviceTextPanes();
         deviceTextPane.setText(deviceInfo.serialNo + "\n" + deviceInfo.manufacturer + "\n"
                 + deviceInfo.model + "\n" + "Android "
-                + deviceInfo.OSVersion + "\n" + deviceInfo.wifi);
+                + deviceInfo.OSVersion + "\n" + deviceInfo.ip);
         deviceTextPane.setVisible(true);
         this.add(deviceTextPane);
 
@@ -261,7 +268,7 @@ public class Device extends JPanel {
         reboot.setVisible(true);
         deviceTextPane.setText(deviceInfo.serialNo + "\n" + deviceInfo.manufacturer + "\n"
                 + deviceInfo.model + "\n" + "Android "
-                + deviceInfo.OSVersion + "\n" + deviceInfo.wifi);
+                + deviceInfo.OSVersion + "\n" + deviceInfo.ip);
         deviceTextPane.setVisible(true);
         takeScreenshotButton.setVisible(true);
     }

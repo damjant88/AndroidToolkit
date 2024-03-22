@@ -3,7 +3,9 @@ public class DeviceInfo {
     String manufacturer;
     String model;
     String OSVersion;
-    String wifi;
+    String wifiIP;
+    String ip;
+    String mobileIP;
     String safePathPackage;
     Boolean appIsInstalled;
     String serialNo;
@@ -16,6 +18,11 @@ public class DeviceInfo {
             OSVersion = utility.getDeviceOSVersion(serial);
             safePathPackage = utility.getSafePathPackage(serial);
             appIsInstalled = utility.checkIfInstalled(serial);
-            wifi = utility.getWlanIp(serial);
+            wifiIP = utility.getWlanIp(serial);
+            mobileIP = utility.getMobileIp(serial);
+            ip = wifiIP;
+            if (wifiIP.isEmpty()) {
+                ip = mobileIP;
+        }
     }
 }

@@ -308,9 +308,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		ArrayList<Boolean> isInstalled = new ArrayList<Boolean>();
 		for(Device element : listOfDevices) {
 			element.setVisible(true);
-			isInstalled.add(element.appIsInstalled);
 		}
-		System.out.println(isInstalled);
 		devicesList = tempListOfDevices;
 	}
 

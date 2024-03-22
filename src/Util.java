@@ -75,6 +75,16 @@ public class Util {
 		return ip;
 	}
 
+	public String getMobileIp(String ID) {
+		String ip = "";
+		String output = runCommand("adb -s " + ID + " shell ip addr show rmnet_data1");
+		ip = Arrays.stream(output.split("\n")).map(String::trim)
+				.filter(line -> line.startsWith("inet") && line.endsWith("rmnet_data1"))
+				.map(line -> line.replace("inet", "").trim()).map(line -> line.substring(0, line.indexOf("/")))
+				.findFirst().orElse("");
+		return ip;
+	}
+
 	public String getDeviceOSVersion(String ID) {
 		String os_version;
 		os_version = runCommand("adb -s " + ID + " shell getprop ro.build.version.release");

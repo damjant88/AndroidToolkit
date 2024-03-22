@@ -25,7 +25,7 @@ public class StaticPane extends JTextPane {
 		StyleConstants.setAlignment(center, StyleConstants.ALIGN_RIGHT);
 		doc.setParagraphAttributes(0, doc.getLength(), center, false);
 		this.setText("Serial number: " + "\n" + "Manufacturer: " + "\n" + "Model: " + "\n" + "OS Version: " + "\n"
-				+ "WiFi IP Address: ");
+				+ "IP Address: ");
 		
 	}
 }
