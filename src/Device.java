@@ -24,21 +24,21 @@ public class Device extends JPanel {
     int numberOfDevices;
     String serial;
     Boolean appIsInstalled;
-    JButton devicesButton;
     String deviceName;
     MyFrame parent;
+    ArrayList<String> serialNumberList;
+
     public Device(MyFrame parent, int index) {
 
         this.setBounds((index+1)*210, 0, 210, 250);
         this.setLayout(null);
         icon = new Icons();
         utility = new Util();
-        ArrayList<String> listOfDevices = utility.getConnectedDevices();
-        numberOfDevices = listOfDevices.size();
-        serial = listOfDevices.get(index);
+        serialNumberList = utility.getConnectedDevices();
+        numberOfDevices = serialNumberList.size();
+        serial = serialNumberList.get(index);
         deviceInfo = new DeviceInfo(serial);
         appIsInstalled = deviceInfo.appIsInstalled;
-        devicesButton = new JButton();
         setIconAndButtons(index);
         this.setVisible(false);
         this.parent = parent;
@@ -49,7 +49,7 @@ public class Device extends JPanel {
         public void actionPerformed(ActionEvent e) {
             JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int response = fileChooser.showSaveDialog(null);
+            int response = fileChooser.showSaveDialog(parent);
             if (response == JFileChooser.APPROVE_OPTION) {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
                 utility.saveLogs(deviceInfo.serialNo, deviceInfo.safePathPackage, file.getAbsolutePath());
@@ -68,7 +68,8 @@ public class Device extends JPanel {
                 device.mkdirs();
             }
             utility.pullFile(deviceInfo.serialNo, output, "C:/AdbToolkit/Screenshots/" + deviceName);
-            JOptionPane.showMessageDialog(null,
+            ScreenshotFrame screenshotFrame = new ScreenshotFrame(deviceName, numberOfDevices);
+            JOptionPane.showMessageDialog(parent,
                     deviceName + " screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/" + deviceName,
                     "Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -79,16 +80,15 @@ public class Device extends JPanel {
         public void actionPerformed(ActionEvent e) {
             if (deviceInfo.wifiIP.isEmpty()) {
                 JOptionPane.showMessageDialog(
-                        null,
+                        parent,
                         "Connect the device " + deviceName + " to WiFi and click on 'Display Connected Devices' button to refresh IP! ",
                         "Enable WiFi Debugging",
                         JOptionPane.INFORMATION_MESSAGE);
-
             }
             else if (!deviceInfo.serialNo.endsWith(":5555")) {
                 utility.startWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
                 JOptionPane.showMessageDialog(
-                        null,
+                        parent,
                         "Debugging over WiFi is enabled on " + deviceName + "!\n" +
                                 "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
                                 "You may disconnect USB cable from this device.",
@@ -98,7 +98,7 @@ public class Device extends JPanel {
             }
             else {
                 utility.stopWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
-                JOptionPane.showMessageDialog(null, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
+                JOptionPane.showMessageDialog(parent, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
                         JOptionPane.INFORMATION_MESSAGE);
             }
         }
@@ -109,7 +109,7 @@ public class Device extends JPanel {
         public void actionPerformed(ActionEvent e) {
             utility.enableAnalyticsDebug(deviceInfo.serialNo, deviceInfo.safePathPackage);
             if (deviceInfo.appIsInstalled) {
-                JOptionPane.showMessageDialog(null,
+                JOptionPane.showMessageDialog(parent,
                         "Firebase Debugging enabled on " + deviceName + "!" + "\n"
                                 + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
                         "Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
@@ -120,7 +120,7 @@ public class Device extends JPanel {
     class RebootListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            int response = JOptionPane.showConfirmDialog(null, "Are you sure?", "Reboot the device",
+            int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Reboot the device",
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
                 utility.reboot(deviceInfo.serialNo);
@@ -131,15 +131,16 @@ public class Device extends JPanel {
     class UninstallAppListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            int response = JOptionPane.showConfirmDialog(null, "Are you sure?", "Uninstall the app",
+            int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Uninstall the app",
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
                 utility.uninstallApp(deviceInfo.serialNo, deviceInfo.safePathPackage);
-                JOptionPane.showMessageDialog(null, "App is uninstalled!", "Uninstall the app.",
+                JOptionPane.showMessageDialog(parent, "App is uninstalled!", "Uninstall the app.",
                         JOptionPane.INFORMATION_MESSAGE);
                 saveLogsButton.setEnabled(false);
                 enableFirebase.setEnabled(false);
                 labelIcon.setVisible(true);
+//                MyFrame.refreshListOfDevices();
                 parent.getDevicesButton().doClick();
             }
         }

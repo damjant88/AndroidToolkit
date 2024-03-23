@@ -112,8 +112,6 @@ public class Util {
 	public void saveLogs(String ID, String appFlavour, String newFolder) {
 		runCommand("adb -s " + ID + " pull " + "sdcard/Android/data/" + appFlavour + "/files/logs/ "
 				+ newFolder);
-		System.out.println("adb -s " + ID + " pull " + "sdcard/Android/data/" + appFlavour + "/files/logs/ "
-				+ newFolder);
 	}
 
 	public void startWifiDebugging(String ID, String IP) {
@@ -129,7 +127,6 @@ public class Util {
 	public void enableAnalyticsDebug(String ID, String installedPackage) {
 		runCommand("adb -s " + ID + " shell setprop debug.firebase.analytics.app " + installedPackage);
 		runCommand("adb -s " + ID + " shell setprop log.tag.FA VERBOSE");
-		System.out.println("adb -s " + ID + " shell setprop debug.firebase.analytics.app " + installedPackage);
 	}
 
 	public ArrayList<String> getInstalledPackages(String ID) {
@@ -191,7 +188,6 @@ public class Util {
 
 	public boolean pullFile(String ID, String source, String target) {
 		String output = runCommand("adb -s " + ID + " pull " + source + " " + target);
-		System.out.println("adb -s " + ID + " pull " + source + " " + target);
 		return output.contains("file pulled");
 	}
 

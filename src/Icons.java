@@ -18,7 +18,7 @@ public class Icons extends JPanel {
         notInstalled = scaleImageIcon("Android.png", 45, 45);
     }
 
-    private ImageIcon scaleImageIcon(String imageName, int width, int height) {
+    public ImageIcon scaleImageIcon(String imageName, int width, int height) {
         ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(imageName)));
         Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(image);

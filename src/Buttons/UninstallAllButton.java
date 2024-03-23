@@ -15,7 +15,7 @@ public class UninstallAllButton extends JButton{
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);
 		this.setFont(new Font("Calibri", Font.BOLD, 16));
-		this.setEnabled(false);
+		this.setEnabled(true);
 		this.setText("Uninstall All");
 	}
 }

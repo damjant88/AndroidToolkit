@@ -5,16 +5,14 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Objects;
 import javax.swing.*;
 import Buttons.*;
 
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
-	Util utility = new Util();
+	static Util utility = new Util();
 	private static int counter = 0;
 	private static final Object lock = new Object();
-	ArrayList<String> ips = new ArrayList<>();
 	File file1 = null;
 	DevicesButton devicesButton;
 	JButton fileButton;
@@ -23,10 +21,12 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	JTextPane staticPane;
 	ProgressBar progressBar;
 	FileTextField fileTextField;
-	ArrayList<String> devicesList = new ArrayList<>();
+	ArrayList<String> serialNumberList = new ArrayList<>();
 	Device device;
-	Icons icon;
+	public Icons icon;
 	ArrayList<Device> listOfDevices = new ArrayList<>();
+	Boolean canInstall;
+	ArrayList<Boolean> isInstalledList;
 
 	public DevicesButton getDevicesButton() {
 		return devicesButton;
@@ -39,17 +39,33 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			logs.mkdirs();
 		}
 		icon = new Icons();
-		devicesList = utility.getConnectedDevices();
-		for (int i = 0; i < devicesList.size(); i++) {
+
+		setStaticElements();
+		refreshListOfDevices();
+		this.setVisible(true);
+		startDeviceCheckThread();
+	}
+
+	public void refreshListOfDevices() {
+		for (Device element : listOfDevices) {
+			element.setVisible(false);
+		}
+		isInstalledList = new ArrayList<Boolean>();
+		listOfDevices.clear();
+		serialNumberList = utility.getConnectedDevices();
+		for (int i = 0; i < serialNumberList.size(); i++) {
 			device = new Device(this, i);
 			device.setVisible(true);
 			listOfDevices.add(device);
 			this.add(device);
+			isInstalledList.add(device.appIsInstalled);
 		}
-
-		setStaticElements();
-		this.setVisible(true);
-		startDeviceCheckThread();
+		if(isInstalledList.contains(false) && !fileTextField.getText().isEmpty()){
+			installButton.setEnabled(true);
+		}
+		if(!isInstalledList.contains(true)){
+			uninstallAllButton.setEnabled(false);
+		}
 	}
 
 	@Override
@@ -92,20 +108,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			for (Device element : listOfDevices) {
 				element.setVisible(false);
 			}
-			listOfDevices.clear();
-			devicesList = utility.getConnectedDevices();
-
-			for (int i = 0; i < devicesList.size(); i++) {
-				device = new Device(MyFrame.this, i);
-				device.setVisible(true);
-				listOfDevices.add(device);
-				add(device);
-			}
-//			for (int i = 0; i < devicesList.size(); i++) {
-//				listOfDevices.get(i).setDevicesButton(devicesButton);
-//				//System.out.println("Tekst devices buttona iz liste uredjaja broj "+ i + "je " + listOfDevices.get(i).devicesButton.getText());
-//			}
-			int width = devicesList.size() * 210 + 230;
+			refreshListOfDevices();
+			int width = serialNumberList.size() * 210 + 230;
 			setSize(width, 420);
 			setVisible(true);
 		}
@@ -167,11 +171,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				}
 			}
 			JFileChooser fileChooser = new JFileChooser(default_location.getAbsolutePath());
-			int response = fileChooser.showOpenDialog(null);
+			int response = fileChooser.showOpenDialog(fileButton);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 				fileTextField.setText(file1.getName());
-				installButton.setEnabled(true);
+				if (!serialNumberList.isEmpty() && isInstalledList.contains(false)){
+					installButton.setEnabled(true);
+				}
 				progressBar.setBackground(new Color(238, 238, 238));
 				progressBar.setString("Waiting for build...");
 			}
@@ -190,17 +196,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		editMenu.add(defaultBuildLocation);
 		defaultBuildLocation.addActionListener(new DefaultBuildLocationListener());
 		this.setJMenuBar(menuBar);
-
+		serialNumberList = utility.getConnectedDevices();
 		installButton = new InstallButton(0, 300, 100, 50);
 		installButton.addActionListener(new InstallButtonListener());
 		this.add(installButton);
 
 		uninstallAllButton = new UninstallAllButton(0, 200, 100, 50);
 		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
-
 		int j = 0;
 		while (j < listOfDevices.size()) {
-			if (listOfDevices.get(j).appIsInstalled) {
+			if (!canInstall) {
 				uninstallAllButton.setEnabled(true);
 				break;
 			}
@@ -228,7 +233,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		this.setLayout(null);
 		this.setResizable(false);
-		int width = devicesList.size() * 210 + 230;
+		int width = serialNumberList.size() * 210 + 230;
 		this.setMinimumSize(new Dimension(650, 420));
 		this.setSize(width, 420);
 		this.setIconImage(icon.frameIcon.getImage());
@@ -267,11 +272,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (counter == 0) {
 				progressBar.setString("Done!");
 				progressBar.setBackground(Color.green);
-				if (!Objects.equals(fileTextField.getText(), "")) {
+				refreshListOfDevices();
+				if (isInstalledList.contains(false) && !fileTextField.getText().isEmpty()) {
 					installButton.setEnabled(true);
 				}
 				progressBar.setIndeterminate(false);
-				devicesButton.doClick();
 			}
 		}
 	}
@@ -280,9 +285,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		Thread thread = new Thread(() -> {
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
-					ArrayList<String> tempListOfDevices = utility.getConnectedDevices();
-					if (!tempListOfDevices.equals(devicesList)) {
-						updateDeviceList(tempListOfDevices);
+					ArrayList<String> tempSerialNumberList = utility.getConnectedDevices();
+					if (!tempSerialNumberList.equals(serialNumberList)) {
+						updateDeviceList(tempSerialNumberList);
 						updatePanelSize();
 					}
 					Thread.sleep(3000); // Sleep for 3 seconds
@@ -299,22 +304,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		for(Device element : listOfDevices) {
 			remove(element);
 		}
-		listOfDevices.clear();
-		for (int i = 0; i < tempListOfDevices.size(); i++) {
-			device = new Device(this, i);
-			listOfDevices.add(device);
-			add(listOfDevices.get(i));
-		}
-		ArrayList<Boolean> isInstalled = new ArrayList<Boolean>();
+		refreshListOfDevices();
 		for(Device element : listOfDevices) {
 			element.setVisible(true);
 		}
-		devicesList = tempListOfDevices;
+		serialNumberList = tempListOfDevices;
 	}
 
 	private void updatePanelSize() {
 		SwingUtilities.invokeLater(() -> {
-			int width = devicesList.size() * 210 + 230;
+			int width = serialNumberList.size() * 210 + 230;
 			setSize(width, 420);
 			revalidate();
 			repaint();

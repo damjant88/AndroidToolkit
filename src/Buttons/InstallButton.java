@@ -4,7 +4,7 @@ import java.awt.Font;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 
-public class InstallButton extends JButton{
+public class InstallButton extends JButton {
 	/**
 	 * 
 	 */
