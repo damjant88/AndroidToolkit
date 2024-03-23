@@ -27,8 +27,9 @@ public class Device extends JPanel {
     String deviceName;
     MyFrame parent;
     ArrayList<String> serialNumberList;
+    Runnable refreshDevicesMethod;
 
-    public Device(MyFrame parent, int index) {
+    public Device(MyFrame parent, int index, Runnable refreshDevicesMethod) {
 
         this.setBounds((index+1)*210, 0, 210, 250);
         this.setLayout(null);
@@ -42,6 +43,7 @@ public class Device extends JPanel {
         setIconAndButtons(index);
         this.setVisible(false);
         this.parent = parent;
+        this.refreshDevicesMethod = refreshDevicesMethod;
     }
 
     class SaveLogsButtonListener implements ActionListener {
@@ -140,8 +142,8 @@ public class Device extends JPanel {
                 saveLogsButton.setEnabled(false);
                 enableFirebase.setEnabled(false);
                 labelIcon.setVisible(true);
-//                MyFrame.refreshListOfDevices();
-                parent.getDevicesButton().doClick();
+//                parent.getDevicesButton().doClick();
+                refreshDevicesMethod.run();
             }
         }
     }

@@ -54,7 +54,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		listOfDevices.clear();
 		serialNumberList = utility.getConnectedDevices();
 		for (int i = 0; i < serialNumberList.size(); i++) {
-			device = new Device(this, i);
+			device = new Device(this, i, this::refreshListOfDevices);
 			device.setVisible(true);
 			listOfDevices.add(device);
 			this.add(device);
