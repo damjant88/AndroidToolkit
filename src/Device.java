@@ -46,108 +46,6 @@ public class Device extends JPanel {
         this.refreshDevicesMethod = refreshDevicesMethod;
     }
 
-    class SaveLogsButtonListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
-            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int response = fileChooser.showSaveDialog(parent);
-            if (response == JFileChooser.APPROVE_OPTION) {
-                file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-                utility.saveLogs(deviceInfo.serialNo, deviceInfo.safePathPackage, file.getAbsolutePath());
-                JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        }
-    }
-
-    class TakeScreenshotButtonListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            String output = utility.takeScreenshot(deviceInfo.serialNo, "sdcard/", "screenshot.png");
-            File device = new File("C:/AdbToolkit/Screenshots/" + deviceName);
-            if (!device.exists()) {
-                device.mkdirs();
-            }
-            utility.pullFile(deviceInfo.serialNo, output, "C:/AdbToolkit/Screenshots/" + deviceName);
-            ScreenshotFrame screenshotFrame = new ScreenshotFrame(deviceName, numberOfDevices);
-            JOptionPane.showMessageDialog(parent,
-                    deviceName + " screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/" + deviceName,
-                    "Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    class WifiDebugListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (deviceInfo.wifiIP.isEmpty()) {
-                JOptionPane.showMessageDialog(
-                        parent,
-                        "Connect the device " + deviceName + " to WiFi and click on 'Display Connected Devices' button to refresh IP! ",
-                        "Enable WiFi Debugging",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-            else if (!deviceInfo.serialNo.endsWith(":5555")) {
-                utility.startWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
-                JOptionPane.showMessageDialog(
-                        parent,
-                        "Debugging over WiFi is enabled on " + deviceName + "!\n" +
-                                "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
-                                "You may disconnect USB cable from this device.",
-                        "Enable WiFi Debugging",
-                        JOptionPane.INFORMATION_MESSAGE);
-                wifiDebug.setText("Disable WiFi");
-            }
-            else {
-                utility.stopWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
-                JOptionPane.showMessageDialog(parent, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-        }
-    }
-
-    class EnableFirebaseListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            utility.enableAnalyticsDebug(deviceInfo.serialNo, deviceInfo.safePathPackage);
-            if (deviceInfo.appIsInstalled) {
-                JOptionPane.showMessageDialog(parent,
-                        "Firebase Debugging enabled on " + deviceName + "!" + "\n"
-                                + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
-                        "Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
-            }
-        }
-    }
-
-    class RebootListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Reboot the device",
-                    JOptionPane.YES_NO_OPTION);
-            if (response == JOptionPane.YES_OPTION) {
-                utility.reboot(deviceInfo.serialNo);
-            }
-        }
-    }
-
-    class UninstallAppListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Uninstall the app",
-                    JOptionPane.YES_NO_OPTION);
-            if (response == JOptionPane.YES_OPTION) {
-                utility.uninstallApp(deviceInfo.serialNo, deviceInfo.safePathPackage);
-                JOptionPane.showMessageDialog(parent, "App is uninstalled!", "Uninstall the app.",
-                        JOptionPane.INFORMATION_MESSAGE);
-                saveLogsButton.setEnabled(false);
-                enableFirebase.setEnabled(false);
-                labelIcon.setVisible(true);
-//                parent.getDevicesButton().doClick();
-                refreshDevicesMethod.run();
-            }
-        }
-    }
-
     private void setIconAndButtons(int i) {
         deviceName = "Device"+(i+1);
         radio = new RadioButtons(deviceName);
@@ -274,5 +172,106 @@ public class Device extends JPanel {
                 + deviceInfo.OSVersion + "\n" + deviceInfo.ip);
         deviceTextPane.setVisible(true);
         takeScreenshotButton.setVisible(true);
+    }
+
+    class SaveLogsButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/logs");
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int response = fileChooser.showSaveDialog(parent);
+            if (response == JFileChooser.APPROVE_OPTION) {
+                file = new File(fileChooser.getSelectedFile().getAbsolutePath());
+                utility.saveLogs(deviceInfo.serialNo, deviceInfo.safePathPackage, file.getAbsolutePath());
+                JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    class WifiDebugListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (deviceInfo.wifiIP.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        parent,
+                        "Connect the device " + deviceName + " to WiFi and click on 'Display Connected Devices' button to refresh IP! ",
+                        "Enable WiFi Debugging",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+            else if (!deviceInfo.serialNo.endsWith(":5555")) {
+                utility.startWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
+                JOptionPane.showMessageDialog(
+                        parent,
+                        "Debugging over WiFi is enabled on " + deviceName + "!\n" +
+                                "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+                                "You may disconnect USB cable from this device.",
+                        "Enable WiFi Debugging",
+                        JOptionPane.INFORMATION_MESSAGE);
+                wifiDebug.setText("Disable WiFi");
+            }
+            else {
+                utility.stopWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
+                JOptionPane.showMessageDialog(parent, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    class RebootListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Reboot the device",
+                    JOptionPane.YES_NO_OPTION);
+            if (response == JOptionPane.YES_OPTION) {
+                utility.reboot(deviceInfo.serialNo);
+            }
+        }
+    }
+
+    class TakeScreenshotButtonListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String output = utility.takeScreenshot(deviceInfo.serialNo, "sdcard/", "screenshot.png");
+            File device = new File("C:/AdbToolkit/Screenshots/" + deviceName);
+            if (!device.exists()) {
+                device.mkdirs();
+            }
+            utility.pullFile(deviceInfo.serialNo, output, "C:/AdbToolkit/Screenshots/" + deviceName);
+            ScreenshotFrame screenshotFrame = new ScreenshotFrame(deviceName, numberOfDevices);
+            JOptionPane.showMessageDialog(parent,
+                    deviceName + " screenshot captured!" + "\n" + "Location: C:/AdbToolkit/Screenshots/" + deviceName,
+                    "Screenshot Capture", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    class EnableFirebaseListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            utility.enableAnalyticsDebug(deviceInfo.serialNo, deviceInfo.safePathPackage);
+            if (deviceInfo.appIsInstalled) {
+                JOptionPane.showMessageDialog(parent,
+                        "Firebase Debugging enabled on " + deviceName + "!" + "\n"
+                                + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
+                        "Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
+    class UninstallAppListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Uninstall the app",
+                    JOptionPane.YES_NO_OPTION);
+            if (response == JOptionPane.YES_OPTION) {
+                utility.uninstallApp(deviceInfo.serialNo, deviceInfo.safePathPackage);
+                JOptionPane.showMessageDialog(parent, "App is uninstalled!", "Uninstall the app.",
+                        JOptionPane.INFORMATION_MESSAGE);
+                saveLogsButton.setEnabled(false);
+                enableFirebase.setEnabled(false);
+                labelIcon.setVisible(true);
+                refreshDevicesMethod.run();
+            }
+        }
     }
 }

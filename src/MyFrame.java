@@ -25,12 +25,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	Device device;
 	public Icons icon;
 	ArrayList<Device> listOfDevices = new ArrayList<>();
-	Boolean canInstall;
-	ArrayList<Boolean> isInstalledList;
-
-	public DevicesButton getDevicesButton() {
-		return devicesButton;
-	}
+	ArrayList<Boolean> isInstalledList = new ArrayList<>();
+	int numberOfDevices;
 
 	public MyFrame() {
 
@@ -46,11 +42,66 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		startDeviceCheckThread();
 	}
 
+	private void setStaticElements() {
+		JMenuBar menuBar = new JMenuBar();
+		JMenu fileMenu = new JMenu("File");
+		JMenu editMenu = new JMenu("Edit");
+		JMenu helpMenu = new JMenu("Help");
+		menuBar.add(fileMenu);
+		menuBar.add(editMenu);
+		menuBar.add(helpMenu);
+		JMenuItem defaultBuildLocation = new JMenuItem("Set Default 'Select Build' Location");
+		editMenu.add(defaultBuildLocation);
+		defaultBuildLocation.addActionListener(new DefaultBuildLocationListener());
+		this.setJMenuBar(menuBar);
+		serialNumberList = utility.getConnectedDevices();
+		numberOfDevices = serialNumberList.size();
+		installButton = new InstallButton(0, 300, 100, 50);
+		installButton.addActionListener(new InstallButtonListener());
+		this.add(installButton);
+
+		uninstallAllButton = new UninstallAllButton(0, 200, 100, 50);
+		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
+		int j = 0;
+		while (j < numberOfDevices) {
+			if (!isInstalledList.contains(true)) {
+				uninstallAllButton.setEnabled(true);
+				break;
+			}
+			j++;
+		}
+		this.add(uninstallAllButton);
+
+		staticPane = new StaticPane();
+		this.add(staticPane);
+		fileTextField = new FileTextField();
+		this.add(fileTextField);
+
+		devicesButton = new DevicesButton(icon.buttonIcon);
+		devicesButton.addActionListener(new DevicesButtonListener());
+		this.add(devicesButton);
+
+		fileButton = new FileButton("Select Build");
+		fileButton.addActionListener(new FileButtonListener());
+		this.add(fileButton);
+
+		progressBar = new ProgressBar();
+		this.add(progressBar);
+
+		this.setTitle("Adb Toolkit");
+		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		this.setLayout(null);
+		this.setResizable(false);
+		int width = numberOfDevices * 210 + 230;
+		this.setMinimumSize(new Dimension(650, 420));
+		this.setSize(width, 420);
+		this.setIconImage(icon.frameIcon.getImage());
+	}
+
 	public void refreshListOfDevices() {
 		for (Device element : listOfDevices) {
 			element.setVisible(false);
 		}
-		isInstalledList = new ArrayList<Boolean>();
 		listOfDevices.clear();
 		serialNumberList = utility.getConnectedDevices();
 		for (int i = 0; i < serialNumberList.size(); i++) {
@@ -59,6 +110,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			listOfDevices.add(device);
 			this.add(device);
 			isInstalledList.add(device.appIsInstalled);
+			numberOfDevices = listOfDevices.size();
 		}
 		if(isInstalledList.contains(false) && !fileTextField.getText().isEmpty()){
 			installButton.setEnabled(true);
@@ -109,7 +161,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				element.setVisible(false);
 			}
 			refreshListOfDevices();
-			int width = serialNumberList.size() * 210 + 230;
+			int width = numberOfDevices * 210 + 230;
 			setSize(width, 420);
 			setVisible(true);
 		}
@@ -123,7 +175,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setIndeterminate(true);
 			progressBar.setBackground(new Color(238, 238, 238));
 			installButton.setEnabled(false);
-			for (int i = 0; i < listOfDevices.size(); i++) {
+			for (int i = 0; i < numberOfDevices; i++) {
 				if (listOfDevices.get(i).radio.isSelected() && !listOfDevices.isEmpty()) {
 					listOfDevices.get(i).radioState = true;
 					Task task1 = new Task("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + file1.getAbsolutePath() + "\"");
@@ -132,8 +184,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				} else {
 					listOfDevices.get(i).radioState = false;
 				}
-				uninstallAllButton.setEnabled(true);
 			}
+			uninstallAllButton.setEnabled(true);
 		}
 	}
 
@@ -146,8 +198,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setBackground(new Color(238, 238, 238));
 			uninstallAllButton.setEnabled(false);
 			int i = 0;
-			Task[] task = new Task[4];
-			while (i < listOfDevices.size()) {
+			Task[] task = new Task[numberOfDevices];
+			while (i < numberOfDevices) {
 				task[i] = new Task("adb -s " + listOfDevices.get(i).serial + " shell pm uninstall "
 						+ utility.getSafePathPackage(listOfDevices.get(i).serial));
 				task[i].addPropertyChangeListener(null);
@@ -182,61 +234,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				progressBar.setString("Waiting for build...");
 			}
 		}
-	}
-
-	private void setStaticElements() {
-		JMenuBar menuBar = new JMenuBar();
-		JMenu fileMenu = new JMenu("File");
-		JMenu editMenu = new JMenu("Edit");
-		JMenu helpMenu = new JMenu("Help");
-		menuBar.add(fileMenu);
-		menuBar.add(editMenu);
-		menuBar.add(helpMenu);
-		JMenuItem defaultBuildLocation = new JMenuItem("Set Default 'Select Build' Location");
-		editMenu.add(defaultBuildLocation);
-		defaultBuildLocation.addActionListener(new DefaultBuildLocationListener());
-		this.setJMenuBar(menuBar);
-		serialNumberList = utility.getConnectedDevices();
-		installButton = new InstallButton(0, 300, 100, 50);
-		installButton.addActionListener(new InstallButtonListener());
-		this.add(installButton);
-
-		uninstallAllButton = new UninstallAllButton(0, 200, 100, 50);
-		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
-		int j = 0;
-		while (j < listOfDevices.size()) {
-			if (!canInstall) {
-				uninstallAllButton.setEnabled(true);
-				break;
-			}
-			j++;
-		}
-		this.add(uninstallAllButton);
-
-		staticPane = new StaticPane();
-		this.add(staticPane);
-		fileTextField = new FileTextField();
-		this.add(fileTextField);
-
-		devicesButton = new DevicesButton(icon.buttonIcon);
-		devicesButton.addActionListener(new DevicesButtonListener());
-		this.add(devicesButton);
-
-		fileButton = new FileButton("Select Build");
-		fileButton.addActionListener(new FileButtonListener());
-		this.add(fileButton);
-
-		progressBar = new ProgressBar();
-		this.add(progressBar);
-
-		this.setTitle("Adb Toolkit");
-		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		this.setLayout(null);
-		this.setResizable(false);
-		int width = serialNumberList.size() * 210 + 230;
-		this.setMinimumSize(new Dimension(650, 420));
-		this.setSize(width, 420);
-		this.setIconImage(icon.frameIcon.getImage());
 	}
 
 	// Thread synchronization to determine the end of all processes
@@ -277,6 +274,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 					installButton.setEnabled(true);
 				}
 				progressBar.setIndeterminate(false);
+				uninstallAllButton.setEnabled(true);
 			}
 		}
 	}
@@ -313,12 +311,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	private void updatePanelSize() {
 		SwingUtilities.invokeLater(() -> {
-			int width = serialNumberList.size() * 210 + 230;
+			int width = numberOfDevices * 210 + 230;
 			setSize(width, 420);
 			revalidate();
 			repaint();
 		});
 	}
 }
-
-
