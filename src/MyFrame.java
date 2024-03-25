@@ -30,7 +30,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	public MyFrame() {
 
-		File logs = new File("C:/AdbToolkit/logs");
+		File logs = new File("C:/AdbToolkit/Logs");
 		if (!logs.exists()) {
 			logs.mkdirs();
 		}
@@ -56,11 +56,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setJMenuBar(menuBar);
 		serialNumberList = utility.getConnectedDevices();
 		numberOfDevices = serialNumberList.size();
-		installButton = new InstallButton(0, 300, 100, 50);
+		installButton = new InstallButton(0, 330, 100, 50);
 		installButton.addActionListener(new InstallButtonListener());
 		this.add(installButton);
 
-		uninstallAllButton = new UninstallAllButton(0, 200, 100, 50);
+		uninstallAllButton = new UninstallAllButton(0, 230, 100, 50);
 		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
 		int j = 0;
 		while (j < numberOfDevices) {
@@ -93,8 +93,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setLayout(null);
 		this.setResizable(false);
 		int width = numberOfDevices * 210 + 230;
-		this.setMinimumSize(new Dimension(650, 420));
-		this.setSize(width, 420);
+		this.setMinimumSize(new Dimension(650, 450));
+		this.setSize(width, 450);
 		this.setIconImage(icon.frameIcon.getImage());
 	}
 
