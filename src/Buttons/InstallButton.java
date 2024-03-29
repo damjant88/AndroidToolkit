@@ -9,8 +9,8 @@ public class InstallButton extends JButton {
 	 * 
 	 */
 
-	public InstallButton(int x, int y, int b, int a) {
-		this.setBounds(x, y, b, a);
+	public InstallButton() {
+		this.setBounds(0, 340, 100, 50);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

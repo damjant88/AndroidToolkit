@@ -3,19 +3,18 @@ package Buttons;
 import javax.swing.*;
 import java.awt.*;
 
-public class OpenLogButtons extends JButton{
+public class ScreenRecordingButtons extends JButton{
 	/**
 	 *
 	 */
 
-	public OpenLogButtons() {
-		this.setBounds(110, 250, 100, 30);
+	public ScreenRecordingButtons() {
+		this.setBounds(110, 280, 100, 30);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);
 		this.setFont(new Font("Calibri", Font.BOLD, 15));
-		this.setEnabled(false);
 		this.setVisible(false);
-		this.setText("Open Log");
+		this.setText("Start Record");
 	}
 }

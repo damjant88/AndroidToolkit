@@ -6,6 +6,9 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Device extends JPanel {
 
@@ -33,10 +36,15 @@ public class Device extends JPanel {
     Runnable refreshDevicesMethod;
     String logLocation = "C:/AdbToolkit/Logs/";
     OpenLogButtons openLogButton;
+    ScreenMirrorButtons screenMirrorButton;
+    ScreenRecordingButtons screenRecordingButton;
+    private String recordingFileName;
+    private AtomicBoolean recordingInProgress = new AtomicBoolean(false);
+    private Process recordingProcess;
 
     public Device(MyFrame parent, int index, Runnable refreshDevicesMethod) {
 
-        this.setBounds((index+1)*210, 0, 210, 280);
+        this.setBounds((index+1)*210, 0, 210, 310);
         this.setLayout(null);
         icon = new Icons();
         utility = new Util();
@@ -80,7 +88,15 @@ public class Device extends JPanel {
         logLocationButton.addActionListener(new LogLocationButtonsListener());
         this.add(logLocationButton);
 
-        wifiDebug = new WifiDebugButtons();
+        screenMirrorButton = new ScreenMirrorButtons();
+        screenMirrorButton.addActionListener(new ScreenMirrorButtonsListener());
+        this.add(screenMirrorButton);
+
+        screenRecordingButton = new ScreenRecordingButtons();
+        screenRecordingButton.addActionListener(new ScreenRecordingButtonsListener());
+        this.add(screenRecordingButton);
+
+                wifiDebug = new WifiDebugButtons();
         wifiDebug.addActionListener(new WifiDebugListener());
         this.add(wifiDebug);
 
@@ -115,6 +131,24 @@ public class Device extends JPanel {
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
                 openLogButton.setEnabled(false);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
+                break;
+            }
+            case "com.smithmicro.safepath.dish.test":
+            case "com.smithmicro.safepath.dish.kid.test": {
+                labelIcon.setIcon(icon.logo_dish);
+                labelIcon.setText("Dish");
+                labelIcon.setVisible(true);
+                uninstallApp.setEnabled(true);
+                uninstallApp.setVisible(true);
+                enableFirebase.setEnabled(true);
+                enableFirebase.setVisible(true);
+                saveLogsButton.setEnabled(true);
+                logLocationButton.setEnabled(false);
+                openLogButton.setEnabled(false);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
                 break;
             }
             case "com.smithmicro.safepath.family":
@@ -129,6 +163,8 @@ public class Device extends JPanel {
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
                 openLogButton.setEnabled(false);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
                 break;
             }
             case "com.smithmicro.att.securefamily":
@@ -143,6 +179,8 @@ public class Device extends JPanel {
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
                 openLogButton.setEnabled(false);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
                 break;
             }
             case "com.smithmicro.sprint.safeandfound.test":
@@ -157,6 +195,8 @@ public class Device extends JPanel {
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
                 openLogButton.setEnabled(false);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
                 break;
             }
             case "com.smithmicro.orangespain.test": {
@@ -170,6 +210,8 @@ public class Device extends JPanel {
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
                 openLogButton.setEnabled(false);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
                 break;
             }
             case "": {
@@ -181,12 +223,16 @@ public class Device extends JPanel {
                 saveLogsButton.setEnabled(false);
                 logLocationButton.setEnabled(false);
                 openLogButton.setEnabled(false);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
                 break;
             }
         }
         saveLogsButton.setVisible(true);
         logLocationButton.setVisible(true);
         openLogButton.setVisible(true);
+        screenMirrorButton.setVisible(true);
+        screenRecordingButton.setVisible(true);
         wifiDebug.setText("WiFi Debug");
         if (deviceInfo.serialNo.endsWith(":5555")) {
             wifiDebug.setText("Disable WiFi");
@@ -338,7 +384,6 @@ public class Device extends JPanel {
             // Iterate over the files and print their names
             if (files != null) {
                 for (File file : files) {
-                    System.out.println(file.getAbsolutePath());
                     if (!file.exists() || !file.isFile()) {
                         System.err.println("File does not exist.");
                     }
@@ -352,8 +397,6 @@ public class Device extends JPanel {
                     for (File file : files) {
                         if (!file.isDirectory()) {
                             desktop.open(file);
-                            System.out.println(file.getAbsolutePath());
-                            System.out.println("File opened in default text editor successfully.");
                         }
                     }
                 } else {
@@ -361,6 +404,117 @@ public class Device extends JPanel {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private void startScreenMirror(String serial) {
+        // Check if scrcpy executable exists
+        File scrcpyExecutable = new File("C:/scrcpy-win64-v2.4/scrcpy.exe");
+        if (!scrcpyExecutable.exists()) {
+            JOptionPane.showMessageDialog(this, "scrcpy executable not found!", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Run scrcpy for the specific device
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(scrcpyExecutable.getAbsolutePath(), "-s", serial);
+                    pb.redirectErrorStream(true);
+                    pb.start().waitFor();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(Device.this, "Failed to start scrcpy for device with serial: " + serial, "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                return null;
+            }
+        };
+        worker.execute();
+    }
+
+    private void startScreenRecording(String serial) {
+        // Check if Adb Toolkit directory exists, if not, create it
+        File toolkitDir = new File("C:/AdbToolkit/Screen_Recordings");
+        if (!toolkitDir.exists()) {
+            toolkitDir.mkdirs();
+        }
+
+        // Generate recording file name
+        recordingFileName = "screen_record_" + System.currentTimeMillis() + ".mp4";
+        startScreenMirror(serial);
+
+        // Start screen recording on the device
+        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                recordingInProgress.set(true);
+                try {
+                    ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", "screenrecord", "/sdcard/" + recordingFileName);
+                    pb.redirectErrorStream(true);
+                    recordingProcess = pb.start();
+                    System.out.println("Screen recording started on device with serial: " + serial);
+                    recordingProcess.waitFor();
+                } catch (InterruptedException ex) {
+                    System.out.println("Screen recording interrupted.");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(Device.this, "Failed to start screen recording for device with serial: " + serial, "Error", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    recordingInProgress.set(false);
+                }
+                return null;
+            }
+        };
+        worker.execute();
+        screenRecordingButton.setText("Stop Record");
+    }
+
+    private void stopScreenRecording(String serial, String recordingFileName, String deviceName) throws InterruptedException {
+        if (recordingProcess != null) {
+            recordingProcess.destroy();
+            try {
+                // Wait for the process to terminate
+                File device = new File("C:/AdbToolkit/Screen_Recordings/" + deviceName);
+                if (!device.exists()) {
+                    device.mkdirs();
+                }
+                Thread.sleep(200);
+                String output = utility.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + "C:/AdbToolkit/Screen_Recordings/" + deviceName);
+                System.out.println("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + "C:/AdbToolkit/Screen_Recordings/" + deviceName);
+                recordingProcess = null;
+                recordingInProgress.set(false);
+                screenRecordingButton.setText("Start Record");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    class ScreenMirrorButtonsListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            startScreenMirror(serial);
+        }
+    }
+
+    class ScreenRecordingButtonsListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (screenRecordingButton.getText().equals("Start Record")) {
+                startScreenRecording(serial);
+            } else if(recordingInProgress.get()) {
+                try {
+                    stopScreenRecording(serial, recordingFileName, deviceName);
+                    String output = utility.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingFileName);
+                } catch (InterruptedException ex) {
+                    throw new RuntimeException(ex);
+                }
+            } else {
+                JOptionPane.showMessageDialog(Device.this, "No active recording!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

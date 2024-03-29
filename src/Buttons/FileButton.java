@@ -10,7 +10,7 @@ public class FileButton extends JButton{
 	 */
 
 	public FileButton(String text) {
-		this.setBounds(0, 300, 100, 25);
+		this.setBounds(0, 310, 100, 25);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

@@ -78,7 +78,6 @@ public class ScreenshotFrame extends JFrame {
 		@Override
 		public void actionPerformed(ActionEvent event) {
 			File imageFile = new File("C:/AdbToolkit/Screenshots/" + deviceName + "/screenshot.png");
-			System.out.println("C:/AdbToolkit/Screenshots/" + deviceName + "/screenshot.png");
 			if (!imageFile.exists()) {
 				System.err.println("Image file does not exist.");
 				return;
@@ -112,7 +111,6 @@ public class ScreenshotFrame extends JFrame {
 				// Set the transferable object to clipboard
 				Toolkit.getDefaultToolkit().getSystemClipboard().setContents(transferable, null);
 
-				System.out.println("Image copied to clipboard successfully.");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

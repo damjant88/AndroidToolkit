@@ -4,12 +4,22 @@ import java.util.Objects;
 
 public class Icons extends JPanel {
 
-    public ImageIcon buttonIcon, logo_tmo, logo_att, logo_product, frameIcon, notInstalled, logo_sprint, logo_orange;
+    public ImageIcon logo_tmo;
+    public ImageIcon logo_att;
+    public ImageIcon logo_product;
+    public ImageIcon frameIcon;
+    public ImageIcon notInstalled;
+    public ImageIcon logo_sprint;
+    public ImageIcon logo_orange;
+    public ImageIcon logo_dish;
+    public ImageIcon display_icon;
 
     public Icons() {
+
         //Set of scaled icons
-        frameIcon = new ImageIcon(getToolkit().getImage(ClassLoader.getSystemResource("Android.png")));
-        buttonIcon = scaleImageIcon("display.png", 25, 25);
+        display_icon = scaleImageIcon("display.png", 25, 25);
+        frameIcon = scaleImageIcon("Android.png", 25, 25);
+        logo_dish = scaleImageIcon("dish.png", 45, 45);
         logo_tmo = scaleImageIcon("tmo.png", 45, 45);
         logo_att = scaleImageIcon("att.png", 45, 45);
         logo_product = scaleImageIcon("product.png", 45, 45);

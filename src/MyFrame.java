@@ -56,11 +56,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setJMenuBar(menuBar);
 		serialNumberList = utility.getConnectedDevices();
 		numberOfDevices = serialNumberList.size();
-		installButton = new InstallButton(0, 330, 100, 50);
+		installButton = new InstallButton();
 		installButton.addActionListener(new InstallButtonListener());
 		this.add(installButton);
 
-		uninstallAllButton = new UninstallAllButton(0, 230, 100, 50);
+		uninstallAllButton = new UninstallAllButton();
 		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
 		int j = 0;
 		while (j < numberOfDevices) {
@@ -77,7 +77,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		fileTextField = new FileTextField();
 		this.add(fileTextField);
 
-		devicesButton = new DevicesButton(icon.buttonIcon);
+		devicesButton = new DevicesButton(icon.display_icon);
 		devicesButton.addActionListener(new DevicesButtonListener());
 		this.add(devicesButton);
 

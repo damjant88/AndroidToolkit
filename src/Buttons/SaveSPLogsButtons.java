@@ -10,7 +10,7 @@ public class SaveSPLogsButtons extends JButton{
 	 */
 
 	public SaveSPLogsButtons() {
-		this.setBounds(0, 160, 95, 30);
+		this.setBounds(0, 160, 100, 30);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

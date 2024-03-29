@@ -10,7 +10,7 @@ public class UninstallAppButtons extends JButton{
 	 */
 
 	public UninstallAppButtons() {
-		this.setBounds(115, 220, 95, 30);
+		this.setBounds(110, 220, 100, 30);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);
