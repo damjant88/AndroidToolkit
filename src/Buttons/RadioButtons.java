@@ -10,7 +10,7 @@ public class RadioButtons extends JRadioButton{
 	
 	// If only radio button text is used...
 	public RadioButtons(String text) {
-		this.setBounds(6,17,70,15);
+		this.setBounds(10,17,70,15);
 		this.setFont(new Font("Calibri", Font.BOLD, 13));
 		this.setVisible(false);
 		this.setText(text);

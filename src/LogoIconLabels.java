@@ -9,7 +9,7 @@ public class LogoIconLabels extends JLabel{
 
 	// If only image icon is used to construct...
 	public LogoIconLabels(ImageIcon icon) {
-		this.setBounds(80, 0, 122, 50);
+		this.setBounds(83, 0, 122, 50);
 		this.setIcon(icon);
 		this.setFont(new Font("Calibri", Font.BOLD, 13));
 		this.setVisible(false);

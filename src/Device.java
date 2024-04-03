@@ -35,6 +35,7 @@ public class Device extends JPanel {
     ArrayList<String> serialNumberList;
     Runnable refreshDevicesMethod;
     String logLocation = "C:/AdbToolkit/Logs/";
+    String recordingLocation = "C:/AdbToolkit/Screen_Recordings/";
     OpenLogButtons openLogButton;
     ScreenMirrorButtons screenMirrorButton;
     ScreenRecordingButtons screenRecordingButton;
@@ -257,10 +258,9 @@ public class Device extends JPanel {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
                 utility.saveLogs(deviceInfo.serialNo, deviceInfo.safePathPackage, file.getAbsolutePath());
                 logLocation = file.getAbsolutePath() + "/logs";
-                JOptionPane.showMessageDialog(null, "Safe Path logs saved!", "Safe Path Logs",
-                        JOptionPane.INFORMATION_MESSAGE);
                 openLogButton.setEnabled(true);
                 logLocationButton.setEnabled(true);
+                openExplorerToFolder(logLocation);
             }
         }
     }
@@ -341,7 +341,7 @@ public class Device extends JPanel {
                 JOptionPane.showMessageDialog(parent, "App is uninstalled!", "Uninstall the app.",
                         JOptionPane.INFORMATION_MESSAGE);
                 saveLogsButton.setEnabled(false);
-                logLocationButton.setVisible(false);
+//                logLocationButton.setVisible(false);
                 enableFirebase.setEnabled(false);
                 labelIcon.setVisible(true);
                 refreshDevicesMethod.run();
@@ -409,19 +409,29 @@ public class Device extends JPanel {
     }
 
     private void startScreenMirror(String serial) {
-        // Check if scrcpy executable exists
-        File scrcpyExecutable = new File("C:/scrcpy-win64-v2.4/scrcpy.exe");
-        if (!scrcpyExecutable.exists()) {
-            JOptionPane.showMessageDialog(this, "scrcpy executable not found!", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
+        // Check if scrcpy executable exists in PATH
+
+        String[] pathDirectories = System.getenv("PATH").split(File.pathSeparator);
+        File scrcpyExecutable = null;
+        boolean found = false;
+        for (String directory : pathDirectories) {
+            scrcpyExecutable = new File(directory, "scrcpy.exe");
+            if (scrcpyExecutable.exists()) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            JOptionPane.showMessageDialog(parent, "scrcpy executable not found in System variables Path!", "Error", JOptionPane.ERROR_MESSAGE);
         }
 
         // Run scrcpy for the specific device
+        File finalScrcpyExecutable = scrcpyExecutable;
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
                 try {
-                    ProcessBuilder pb = new ProcessBuilder(scrcpyExecutable.getAbsolutePath(), "-s", serial);
+                    ProcessBuilder pb = new ProcessBuilder(finalScrcpyExecutable.getAbsolutePath(), "-s", serial);
                     pb.redirectErrorStream(true);
                     pb.start().waitFor();
                 } catch (Exception ex) {
@@ -476,16 +486,18 @@ public class Device extends JPanel {
             recordingProcess.destroy();
             try {
                 // Wait for the process to terminate
-                File device = new File("C:/AdbToolkit/Screen_Recordings/" + deviceName);
+                recordingLocation = "C:/AdbToolkit/Screen_Recordings/" + deviceName;
+                File device = new File(recordingLocation);
                 if (!device.exists()) {
                     device.mkdirs();
                 }
-                Thread.sleep(200);
+                Thread.sleep(300);
                 String output = utility.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + "C:/AdbToolkit/Screen_Recordings/" + deviceName);
                 System.out.println("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + "C:/AdbToolkit/Screen_Recordings/" + deviceName);
                 recordingProcess = null;
                 recordingInProgress.set(false);
                 screenRecordingButton.setText("Start Record");
+                openExplorerToFolder(recordingLocation);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -515,6 +527,7 @@ public class Device extends JPanel {
                 }
             } else {
                 JOptionPane.showMessageDialog(Device.this, "No active recording!", "Error", JOptionPane.ERROR_MESSAGE);
+                screenRecordingButton.setText("Start Record");
             }
         }
     }

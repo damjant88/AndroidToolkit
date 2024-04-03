@@ -10,7 +10,7 @@ public class UninstallAllButton extends JButton{
 	 */
 
 	public UninstallAllButton() {
-		this.setBounds(0, 255, 100, 50);
+		this.setBounds(0, 259, 100, 50);
 		this.setFocusable(false);
 		this.setBorder(BorderFactory.createEtchedBorder());
 		this.setBackground(Color.lightGray);

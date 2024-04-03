@@ -5,6 +5,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import javax.swing.*;
 import Buttons.*;
 
@@ -20,13 +21,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	UninstallAllButton uninstallAllButton;
 	JTextPane staticPane;
 	ProgressBar progressBar;
-	FileTextField fileTextField;
 	ArrayList<String> serialNumberList = new ArrayList<>();
 	Device device;
 	public Icons icon;
 	ArrayList<Device> listOfDevices = new ArrayList<>();
 	ArrayList<Boolean> isInstalledList = new ArrayList<>();
 	int numberOfDevices;
+	FileTextFieldBox fileTextFieldBox;
+	ArrayList<String> builds;
+	ArrayList<String> build_names;
 
 	public MyFrame() {
 
@@ -74,8 +77,41 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		staticPane = new StaticPane();
 		this.add(staticPane);
-		fileTextField = new FileTextField();
-		this.add(fileTextField);
+
+		File temp_builds = new File("C:/AdbToolkit/builds.ser");
+		if (temp_builds.exists()) {
+			try {
+				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(temp_builds));
+				builds = (ArrayList<String>) objectInputStream.readObject();
+				objectInputStream.close();
+				System.out.println("Polazna lista buildova je : " + builds);
+				build_names = new ArrayList<>();
+				for (int i = 0; i < builds.size(); i++) {
+					if (builds.get(i) != null) {
+						String separator = builds.get(i).contains("/") ? "/" : "\\"; // Check if path uses '/' or '\'
+						build_names.add(builds.get(i).substring(builds.get(i).lastIndexOf(separator) + 1));
+					}
+				}
+				System.out.println("Polazna lista imena je : " + build_names);
+			} catch (IOException | ClassNotFoundException ex) {
+				throw new RuntimeException(ex);
+			}
+			try {
+				FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
+				ObjectOutputStream os = new ObjectOutputStream(fs);
+				os.writeObject(builds);
+				os.close();
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
+		} else{
+			builds = new ArrayList<>();
+			build_names = new ArrayList<>();
+		}
+
+		fileTextFieldBox = new FileTextFieldBox(build_names);
+		fileTextFieldBox.addActionListener(new FileButtonBoxListener());
+		this.add(fileTextFieldBox);
 
 		devicesButton = new DevicesButton(icon.display_icon);
 		devicesButton.addActionListener(new DevicesButtonListener());
@@ -94,7 +130,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setResizable(false);
 		int width = numberOfDevices * 210 + 230;
 		this.setMinimumSize(new Dimension(650, 450));
-		this.setSize(width, 450);
+		this.setSize(width, 460);
 		this.setIconImage(icon.frameIcon.getImage());
 	}
 
@@ -112,7 +148,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			isInstalledList.add(device.appIsInstalled);
 			numberOfDevices = listOfDevices.size();
 		}
-		if(isInstalledList.contains(false) && !fileTextField.getText().isEmpty()){
+		if(isInstalledList.contains(false) && !fileTextFieldBox.getItemAt(0).equals("")){
 			installButton.setEnabled(true);
 		}
 		if(!isInstalledList.contains(true)){
@@ -162,7 +198,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			refreshListOfDevices();
 			int width = numberOfDevices * 210 + 230;
-			setSize(width, 420);
+			setSize(width, 460);
 			setVisible(true);
 		}
 	}
@@ -178,7 +214,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			for (int i = 0; i < numberOfDevices; i++) {
 				if (listOfDevices.get(i).radio.isSelected() && !listOfDevices.isEmpty()) {
 					listOfDevices.get(i).radioState = true;
-					Task task1 = new Task("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + file1.getAbsolutePath() + "\"");
+					Task task1 = new Task("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + builds.get(0) + "\"");
+                    System.out.println("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + builds.get(0) + "\"");
 					task1.addPropertyChangeListener(null);
 					task1.execute();
 				} else {
@@ -226,12 +263,52 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int response = fileChooser.showOpenDialog(fileButton);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				fileTextField.setText(file1.getName());
+				builds.add(0, file1.getAbsolutePath());
+
+				fileTextFieldBox.insertItemAt(file1.getName(), 0);
+				fileTextFieldBox.setSelectedIndex(0);
+				if (builds.size() > 5) {
+					builds.remove(5);
+//					fileTextFieldBox.remove(5);
+				}
+				System.out.println("Lista buildova: " + builds);
+				System.out.println(builds.size());
+				try {
+					FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
+					ObjectOutputStream os = new ObjectOutputStream(fs);
+					os.writeObject(builds);
+					os.close();
+				} catch (IOException ex) {
+						throw new RuntimeException(ex);
+					}
 				if (!serialNumberList.isEmpty() && isInstalledList.contains(false)){
 					installButton.setEnabled(true);
 				}
 				progressBar.setBackground(new Color(238, 238, 238));
 				progressBar.setString("Waiting for build...");
+			}
+		}
+	}
+
+	class FileButtonBoxListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (e.getSource() == fileTextFieldBox) {
+				//Swap current build at index 0
+				int temp_index = fileTextFieldBox.getSelectedIndex();
+				String temp = builds.get(temp_index);
+				builds.set(temp_index, builds.get(0));
+				builds.set(0, temp);
+				System.out.println(builds);
+				try {
+					FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
+					ObjectOutputStream os = new ObjectOutputStream(fs);
+					os.writeObject(builds);
+					os.close();
+				} catch (IOException ex) {
+					throw new RuntimeException(ex);
+				}
 			}
 		}
 	}
@@ -270,7 +347,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				progressBar.setString("Done!");
 				progressBar.setBackground(Color.green);
 				refreshListOfDevices();
-				if (isInstalledList.contains(false) && !fileTextField.getText().isEmpty()) {
+				if (isInstalledList.contains(false) && !fileTextFieldBox.getItemAt(0).equals("")) {
 					installButton.setEnabled(true);
 				}
 				progressBar.setIndeterminate(false);
@@ -312,7 +389,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	private void updatePanelSize() {
 		SwingUtilities.invokeLater(() -> {
 			int width = numberOfDevices * 210 + 230;
-			setSize(width, 420);
+			setSize(width, 460);
 			revalidate();
 			repaint();
 		});
