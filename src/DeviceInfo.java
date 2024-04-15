@@ -9,6 +9,7 @@ public class DeviceInfo {
     String safePathPackage;
     Boolean appIsInstalled;
     String serialNo;
+    String pid;
 
     public DeviceInfo(String serial) {
             serialNo = serial;
@@ -23,6 +24,8 @@ public class DeviceInfo {
             ip = wifiIP;
             if (wifiIP.isEmpty()) {
                 ip = mobileIP;
-        }
+            }
+            pid = utility.runCommand("adb -s " + serialNo + " shell pidof -s com.smithmicro.safepath.family");
+            System.out.println(pid);
     }
 }

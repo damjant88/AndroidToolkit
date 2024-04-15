@@ -1,7 +1,8 @@
-
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class Util {
+
+	private volatile boolean stopRequested = false;
 
 	public String runCommand(String command) {
 		String output = null;
@@ -34,14 +37,31 @@ public class Util {
 		return output.trim();
 	}
 
-	public String runCommand(List<String> command) {
-		String output = null;
-		// ProcessBuilder does not read spaces hence need to do this
+	public String runLiveLogs(String command, String searchString) {
+		StringBuilder output = new StringBuilder();
+
+		String[] str = command.split(" ");
+		List<String> commands = new ArrayList<>(Arrays.asList(str));
 		try {
-			ProcessBuilder pb = new ProcessBuilder(command).redirectErrorStream(true);
+			ProcessBuilder pb = new ProcessBuilder(commands).redirectErrorStream(true);
 			Process process = pb.start();
-			output = new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
-					.collect(Collectors.joining("\r\n"));
+
+			// Clear stopRequested flag when starting tracking
+			stopRequested = false;
+
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+				String line;
+				while (!stopRequested && (line = reader.readLine()) != null) {
+					output.append(line).append(System.lineSeparator()); // Append line separator
+					// Check if the line contains the specific string
+//					System.out.println(line);
+					if (line.contains(searchString)) {
+						// Do whatever you need with the line
+						System.out.println(line);
+					}
+				}
+			}
+
 			if (!process.waitFor(3, TimeUnit.SECONDS)) {
 				// if the process has not exited yet, destroy it forcefully
 				process.destroyForcibly();
@@ -49,11 +69,28 @@ public class Util {
 		} catch (IOException e) {
 			throw new RuntimeException(e.getMessage());
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
-		return output.trim();
+		return output.toString().trim();
+	}
+
+	public void stopTracking() {
+		stopRequested = true; // Set stopRequested flag to stop tracking
+	}
+
+	public void runCommandAndSave(String command, String fileName) {
+        try {
+			ProcessBuilder processBuilder = new ProcessBuilder(command.split(" "));
+			processBuilder.redirectOutput(new File(fileName));
+			Process process = processBuilder.start();
+			process.waitFor();
+		} catch (IOException e) {
+			throw new RuntimeException(e.getMessage());
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public ArrayList<String> getConnectedDevices() {
@@ -109,9 +146,19 @@ public class Util {
 		runCommand("adb -s " + ID + " install -r -d " + path);
 	}
 
-	public void saveLogs(String ID, String appFlavour, String newFolder) {
-		runCommand("adb -s " + ID + " pull " + "sdcard/Android/data/" + appFlavour + "/files/logs/ "
-				+ newFolder);
+	public void saveLogs(String ID, String pid, String newFolder) {
+		LocalDate currentDate = LocalDate.now();
+		String command = "adb -s " + ID + " logcat -d --pid=" + pid;
+		String fileName = newFolder + "/" + "app-" + currentDate + ".log";
+		runCommandAndSave(command, fileName);
+	}
+
+	public void saveScreenRecordingLogs(String ID, String pid , String deviceName, String name) {
+		LocalDate currentDate = LocalDate.now();
+		String dateString = currentDate.toString();
+		String command = "adb -s " + ID + " logcat -d --pid=" + pid;
+		String fileName = "C:/AdbToolkit/Screen_Recordings/" + deviceName + "/" + dateString + "/" + name + ".log";
+		runCommandAndSave(command, fileName);
 	}
 
 	public void startWifiDebugging(String ID, String IP) {

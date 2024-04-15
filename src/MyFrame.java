@@ -5,9 +5,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import javax.swing.*;
 import Buttons.*;
+
 
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
@@ -30,6 +30,12 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	FileTextFieldBox fileTextFieldBox;
 	ArrayList<String> builds;
 	ArrayList<String> build_names;
+	ConsoleView consoleView;
+	int height = 460;
+	int width;
+	Boolean isConsoleVisible = false;
+	JMenuItem consoleViewMenu;
+	static LiveEventTracker liveEventTracker;
 
 	public MyFrame() {
 
@@ -50,13 +56,22 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		JMenu fileMenu = new JMenu("File");
 		JMenu editMenu = new JMenu("Edit");
 		JMenu helpMenu = new JMenu("Help");
+		JMenu toolsMenu = new JMenu("Tools");
 		menuBar.add(fileMenu);
 		menuBar.add(editMenu);
 		menuBar.add(helpMenu);
+		menuBar.add(toolsMenu);
+
 		JMenuItem defaultBuildLocation = new JMenuItem("Set Default 'Select Build' Location");
 		editMenu.add(defaultBuildLocation);
 		defaultBuildLocation.addActionListener(new DefaultBuildLocationListener());
+
+		consoleViewMenu = new JMenuItem("Show Console View");
+		toolsMenu.add(consoleViewMenu);
+		consoleViewMenu.addActionListener(new ConsoleViewActionListener());
+
 		this.setJMenuBar(menuBar);
+
 		serialNumberList = utility.getConnectedDevices();
 		numberOfDevices = serialNumberList.size();
 		installButton = new InstallButton();
@@ -124,13 +139,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		progressBar = new ProgressBar();
 		this.add(progressBar);
 
+		width = numberOfDevices * 210 + 230;
+		consoleView = new ConsoleView(this);
+		this.add(consoleView);
 		this.setTitle("Adb Toolkit");
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		this.setLayout(null);
 		this.setResizable(false);
-		int width = numberOfDevices * 210 + 230;
-		this.setMinimumSize(new Dimension(650, 450));
-		this.setSize(width, 460);
+
+		this.setMinimumSize(new Dimension(650, 460));
+		this.setSize(width, height);
 		this.setIconImage(icon.frameIcon.getImage());
 	}
 
@@ -189,6 +207,24 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
+	class ConsoleViewActionListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			if (!consoleView.isVisible()) {
+				consoleView.setVisible(true);
+				isConsoleVisible = true;
+				setSize(width, height + 200);
+				consoleViewMenu.setText("Hide Console View");
+			} else {
+				consoleView.setVisible(false);
+				isConsoleVisible = false;
+				consoleViewMenu.setText("Show Console View");
+				setSize(width, height);
+			}
+		}
+	}
+
 	class DevicesButtonListener implements ActionListener {
 
 		@Override
@@ -198,7 +234,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			refreshListOfDevices();
 			int width = numberOfDevices * 210 + 230;
-			setSize(width, 460);
+			setSize(width, height);
 			setVisible(true);
 		}
 	}
@@ -209,15 +245,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		public void actionPerformed(ActionEvent e) {
 			progressBar.setString("Installing...");
 			progressBar.setIndeterminate(true);
-			progressBar.setBackground(new Color(238, 238, 238));
+			progressBar.setBackground(Color.WHITE);
 			installButton.setEnabled(false);
 			for (int i = 0; i < numberOfDevices; i++) {
 				if (listOfDevices.get(i).radio.isSelected() && !listOfDevices.isEmpty()) {
 					listOfDevices.get(i).radioState = true;
 					Task task1 = new Task("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + builds.get(0) + "\"");
-                    System.out.println("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + builds.get(0) + "\"");
 					task1.addPropertyChangeListener(null);
 					task1.execute();
+					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App installed: " + build_names.get(0));
 				} else {
 					listOfDevices.get(i).radioState = false;
 				}
@@ -237,10 +273,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int i = 0;
 			Task[] task = new Task[numberOfDevices];
 			while (i < numberOfDevices) {
-				task[i] = new Task("adb -s " + listOfDevices.get(i).serial + " shell pm uninstall "
-						+ utility.getSafePathPackage(listOfDevices.get(i).serial));
-				task[i].addPropertyChangeListener(null);
-				task[i].execute();
+				if(listOfDevices.get(i).appIsInstalled) {
+					task[i] = new Task("adb -s " + listOfDevices.get(i).serial + " shell pm uninstall "
+							+ utility.getSafePathPackage(listOfDevices.get(i).serial));
+					task[i].addPropertyChangeListener(null);
+					task[i].execute();
+					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App removed: " + build_names.get(0));
+				}
 				i++;
 			}
 		}
@@ -269,7 +308,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				fileTextFieldBox.setSelectedIndex(0);
 				if (builds.size() > 5) {
 					builds.remove(5);
-//					fileTextFieldBox.remove(5);
 				}
 				System.out.println("Lista buildova: " + builds);
 				System.out.println(builds.size());
@@ -356,6 +394,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
+
 	public void startDeviceCheckThread() {
 		Thread thread = new Thread(() -> {
 			while (!Thread.currentThread().isInterrupted()) {
@@ -388,8 +427,12 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	private void updatePanelSize() {
 		SwingUtilities.invokeLater(() -> {
-			int width = numberOfDevices * 210 + 230;
-			setSize(width, 460);
+			width = numberOfDevices * 210 + 230;
+			if (consoleView.isVisible()) {
+				setSize(width, height + 200);
+			} else {
+				setSize(width, height);
+			}
 			revalidate();
 			repaint();
 		});

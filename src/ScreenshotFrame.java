@@ -4,11 +4,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import Buttons.*;
+
+import Buttons.CopyScreenshotButtons;
+import Buttons.ScreenshotLocationButtons;
 
 public class ScreenshotFrame extends JFrame {
 
@@ -44,7 +45,7 @@ public class ScreenshotFrame extends JFrame {
 		try {
 				BufferedImage image = ImageIO.read(new File("C:/AdbToolkit/Screenshots/" + deviceName + "/screenshot.png"));
 				ImageIcon icon = new ImageIcon(image);
-				Image scaledImage = icon.getImage().getScaledInstance(240, 520, Image.SCALE_SMOOTH);
+				Image scaledImage = icon.getImage().getScaledInstance(330, 740, Image.SCALE_SMOOTH);
 				ImageIcon scaledIcon = new ImageIcon(scaledImage); // Create a new ImageIcon from the scaled Image
 				imageLabel.setIcon(scaledIcon);
 		} catch (IOException e) {

@@ -1,14 +1,13 @@
-import Buttons.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import Buttons.*;
 
 public class Device extends JPanel {
 
@@ -36,12 +35,14 @@ public class Device extends JPanel {
     Runnable refreshDevicesMethod;
     String logLocation = "C:/AdbToolkit/Logs/";
     String recordingLocation = "C:/AdbToolkit/Screen_Recordings/";
-    OpenLogButtons openLogButton;
+    EventTrackerButtons eventTrackerButton;
     ScreenMirrorButtons screenMirrorButton;
     ScreenRecordingButtons screenRecordingButton;
     private String recordingFileName;
     private AtomicBoolean recordingInProgress = new AtomicBoolean(false);
     private Process recordingProcess;
+    ConsoleView consoleView;
+    LiveEventTracker liveEventTracker;
 
     public Device(MyFrame parent, int index, Runnable refreshDevicesMethod) {
 
@@ -58,6 +59,7 @@ public class Device extends JPanel {
         this.setVisible(false);
         this.parent = parent;
         this.refreshDevicesMethod = refreshDevicesMethod;
+        consoleView = new ConsoleView(parent);
     }
 
     private void setIconAndButtons(int i) {
@@ -77,9 +79,9 @@ public class Device extends JPanel {
         deviceTextPane.setVisible(true);
         this.add(deviceTextPane);
 
-        openLogButton = new OpenLogButtons();
-        openLogButton.addActionListener(new OpenLogButtonsListener());
-        this.add(openLogButton);
+        eventTrackerButton = new EventTrackerButtons();
+        eventTrackerButton.addActionListener(new EventTrackerListener());
+        this.add(eventTrackerButton);
 
         saveLogsButton = new SaveSPLogsButtons();
         saveLogsButton.addActionListener(new SaveSPLogsButtonListener());
@@ -131,9 +133,12 @@ public class Device extends JPanel {
                 enableFirebase.setVisible(true);
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
-                openLogButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
                 screenMirrorButton.setEnabled(true);
                 screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
                 break;
             }
             case "com.smithmicro.safepath.dish.test":
@@ -147,9 +152,12 @@ public class Device extends JPanel {
                 enableFirebase.setVisible(true);
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
-                openLogButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
                 screenMirrorButton.setEnabled(true);
                 screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
                 break;
             }
             case "com.smithmicro.safepath.family":
@@ -163,9 +171,12 @@ public class Device extends JPanel {
                 enableFirebase.setVisible(true);
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
-                openLogButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
                 screenMirrorButton.setEnabled(true);
                 screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
                 break;
             }
             case "com.smithmicro.att.securefamily":
@@ -179,9 +190,12 @@ public class Device extends JPanel {
                 enableFirebase.setVisible(true);
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
-                openLogButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
                 screenMirrorButton.setEnabled(true);
                 screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
                 break;
             }
             case "com.smithmicro.sprint.safeandfound.test":
@@ -195,9 +209,12 @@ public class Device extends JPanel {
                 enableFirebase.setVisible(true);
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
-                openLogButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
                 screenMirrorButton.setEnabled(true);
                 screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
                 break;
             }
             case "com.smithmicro.orangespain.test": {
@@ -210,9 +227,12 @@ public class Device extends JPanel {
                 enableFirebase.setVisible(true);
                 saveLogsButton.setEnabled(true);
                 logLocationButton.setEnabled(false);
-                openLogButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
                 screenMirrorButton.setEnabled(true);
                 screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
                 break;
             }
             case "": {
@@ -221,17 +241,21 @@ public class Device extends JPanel {
                 labelIcon.setVisible(true);
                 uninstallApp.setVisible(true);
                 enableFirebase.setVisible(true);
+                enableFirebase.setEnabled(false);
                 saveLogsButton.setEnabled(false);
                 logLocationButton.setEnabled(false);
-                openLogButton.setEnabled(false);
+                eventTrackerButton.setEnabled(false);
                 screenMirrorButton.setEnabled(true);
                 screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
                 break;
             }
         }
         saveLogsButton.setVisible(true);
         logLocationButton.setVisible(true);
-        openLogButton.setVisible(true);
+        eventTrackerButton.setVisible(true);
         screenMirrorButton.setVisible(true);
         screenRecordingButton.setVisible(true);
         wifiDebug.setText("WiFi Debug");
@@ -256,11 +280,12 @@ public class Device extends JPanel {
             int response = fileChooser.showSaveDialog(parent);
             if (response == JFileChooser.APPROVE_OPTION) {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-                utility.saveLogs(deviceInfo.serialNo, deviceInfo.safePathPackage, file.getAbsolutePath());
-                logLocation = file.getAbsolutePath() + "/logs";
-                openLogButton.setEnabled(true);
+                logLocation = file.getAbsolutePath();
+                utility.saveLogs(serial, deviceInfo.pid, file.getAbsolutePath());
+                eventTrackerButton.setEnabled(true);
                 logLocationButton.setEnabled(true);
                 openExplorerToFolder(logLocation);
+                parent.consoleView.appendText("SP logs from " + deviceName + " are saved to " + logLocation);
             }
         }
     }
@@ -274,22 +299,31 @@ public class Device extends JPanel {
                         "Connect the device " + deviceName + " to WiFi and click on 'Display Connected Devices' button to refresh IP! ",
                         "Enable WiFi Debugging",
                         JOptionPane.INFORMATION_MESSAGE);
-            }
-            else if (!deviceInfo.serialNo.endsWith(":5555")) {
+
+            } else if (!deviceInfo.serialNo.endsWith(":5555")) {
                 utility.startWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
-                JOptionPane.showMessageDialog(
-                        parent,
-                        "Debugging over WiFi is enabled on " + deviceName + "!\n" +
-                                "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
-                                "You may disconnect USB cable from this device.",
-                        "Enable WiFi Debugging",
-                        JOptionPane.INFORMATION_MESSAGE);
-                wifiDebug.setText("Disable WiFi");
-            }
-            else {
+                if (parent.isConsoleVisible) {
+                    parent.consoleView.appendText("WiFi debugging is enabled on " + deviceName + "!\n" +
+                            "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+                            "You may disconnect USB cable from this device.");
+                } else {
+                    JOptionPane.showMessageDialog(
+                            parent,
+                            "Debugging over WiFi is enabled on " + deviceName + "!\n" +
+                                    "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
+                                    "You may disconnect USB cable from this device.",
+                            "Enable WiFi Debugging",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    wifiDebug.setText("Disable WiFi");
+                }
+            } else {
                 utility.stopWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
-                JOptionPane.showMessageDialog(parent, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
-                        JOptionPane.INFORMATION_MESSAGE);
+                if (parent.isConsoleVisible) {
+                    parent.consoleView.appendText("WiFi debugging is disabled on " + deviceName);
+                } else {
+                    JOptionPane.showMessageDialog(parent, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
             }
         }
     }
@@ -301,6 +335,9 @@ public class Device extends JPanel {
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
                 utility.reboot(deviceInfo.serialNo);
+            }
+            if (parent.isConsoleVisible) {
+                parent.consoleView.appendText(deviceName + " is restarted!");
             }
         }
     }
@@ -315,6 +352,7 @@ public class Device extends JPanel {
             }
             utility.pullFile(deviceInfo.serialNo, output, "C:/AdbToolkit/Screenshots/" + deviceName);
             ScreenshotFrame screenshotFrame = new ScreenshotFrame(deviceName, numberOfDevices);
+            parent.consoleView.appendText("Screenhot is captured on " + deviceName);
         }
     }
 
@@ -322,12 +360,16 @@ public class Device extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             utility.enableAnalyticsDebug(deviceInfo.serialNo, deviceInfo.safePathPackage);
-            if (deviceInfo.appIsInstalled) {
+            if (parent.isConsoleVisible) {
+                parent.consoleView.appendText("Firebase Debugging enabled on " + deviceName + "!" + "\n"
+                        + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.");
+            } else {
                 JOptionPane.showMessageDialog(parent,
                         "Firebase Debugging enabled on " + deviceName + "!" + "\n"
                                 + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
                         "Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
             }
+
         }
     }
 
@@ -338,13 +380,18 @@ public class Device extends JPanel {
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
                 utility.uninstallApp(deviceInfo.serialNo, deviceInfo.safePathPackage);
-                JOptionPane.showMessageDialog(parent, "App is uninstalled!", "Uninstall the app.",
-                        JOptionPane.INFORMATION_MESSAGE);
                 saveLogsButton.setEnabled(false);
-//                logLocationButton.setVisible(false);
                 enableFirebase.setEnabled(false);
                 labelIcon.setVisible(true);
                 refreshDevicesMethod.run();
+                if (parent.isConsoleVisible) {
+                    parent.consoleView.appendText("App is uninstalled from " + deviceName + "!");
+                    System.out.println(parent.isConsoleVisible);
+                } else {
+                    JOptionPane.showMessageDialog(parent, "App is uninstalled from " + deviceName + "!", "Uninstall the app.",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    System.out.println(parent.isConsoleVisible);
+                }
             }
         }
     }
@@ -370,41 +417,16 @@ public class Device extends JPanel {
         }
     }
 
-    class OpenLogButtonsListener implements ActionListener {
+    class EventTrackerListener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            openFileInDefaultTextEditor(logLocation);
-        }
-
-        public void openFileInDefaultTextEditor(String filePath) {
-            File folder = new File(filePath);
-            File[] files = folder.listFiles();
-
-            // Iterate over the files and print their names
-            if (files != null) {
-                for (File file : files) {
-                    if (!file.exists() || !file.isFile()) {
-                        System.err.println("File does not exist.");
-                    }
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    liveEventTracker = new LiveEventTracker(serial, deviceInfo.pid);
+                    System.out.println("Tracker Opened!");
                 }
-            }
-
-            // Open the file with the default text editor
-            try {
-                Desktop desktop = Desktop.getDesktop();
-                if (desktop.isSupported(Desktop.Action.OPEN)) {
-                    for (File file : files) {
-                        if (!file.isDirectory()) {
-                            desktop.open(file);
-                        }
-                    }
-                } else {
-                    System.err.println("OPEN action is not supported.");
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            });
         }
     }
 
@@ -464,7 +486,6 @@ public class Device extends JPanel {
                     ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", "screenrecord", "/sdcard/" + recordingFileName);
                     pb.redirectErrorStream(true);
                     recordingProcess = pb.start();
-                    System.out.println("Screen recording started on device with serial: " + serial);
                     recordingProcess.waitFor();
                 } catch (InterruptedException ex) {
                     System.out.println("Screen recording interrupted.");
@@ -486,14 +507,15 @@ public class Device extends JPanel {
             recordingProcess.destroy();
             try {
                 // Wait for the process to terminate
-                recordingLocation = "C:/AdbToolkit/Screen_Recordings/" + deviceName;
+                LocalDate currentDate = LocalDate.now();
+                String dateString = currentDate.toString();
+                recordingLocation = "C:/AdbToolkit/Screen_Recordings/" + deviceName + "/" + dateString ;
                 File device = new File(recordingLocation);
                 if (!device.exists()) {
                     device.mkdirs();
                 }
                 Thread.sleep(300);
-                String output = utility.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + "C:/AdbToolkit/Screen_Recordings/" + deviceName);
-                System.out.println("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + "C:/AdbToolkit/Screen_Recordings/" + deviceName);
+                utility.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + recordingLocation);
                 recordingProcess = null;
                 recordingInProgress.set(false);
                 screenRecordingButton.setText("Start Record");
@@ -509,6 +531,7 @@ public class Device extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             startScreenMirror(serial);
+            parent.consoleView.appendText("Screen mirror is started on " + deviceName);
         }
     }
 
@@ -518,10 +541,14 @@ public class Device extends JPanel {
         public void actionPerformed(ActionEvent e) {
             if (screenRecordingButton.getText().equals("Start Record")) {
                 startScreenRecording(serial);
+                parent.consoleView.appendText("Screen recording is started on " + deviceName);
             } else if(recordingInProgress.get()) {
                 try {
+                    String name = recordingFileName.replace(".mp4", "");
                     stopScreenRecording(serial, recordingFileName, deviceName);
-                    String output = utility.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingFileName);
+                    utility.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingFileName);
+                    utility.saveScreenRecordingLogs(serial, deviceInfo.pid, deviceName, name);
+                    parent.consoleView.appendText("Screen recording is stopped on " + deviceName + "\n" + "Screen recording saved to:\n" + recordingLocation);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }

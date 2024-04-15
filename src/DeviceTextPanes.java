@@ -16,7 +16,7 @@ public class DeviceTextPanes extends JTextPane {
 	// x, y - position of the pane in the window
 	// a, b - dimensions of the pane
 	public DeviceTextPanes() {
-		this.setBounds(0, 50, 210, 110);
+		this.setBounds(0, 50, 206, 110);
 		this.setEditable(false);
 		this.setVisible(false);
 		this.setBackground(new Color(238, 238, 238));
