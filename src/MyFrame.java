@@ -5,6 +5,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import javax.swing.*;
 import Buttons.*;
 
@@ -107,7 +110,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 						build_names.add(builds.get(i).substring(builds.get(i).lastIndexOf(separator) + 1));
 					}
 				}
+				Set<String> uniqueBuildSet = new HashSet<>(builds);
+				Set<String> uniqueBuildNameSet = new HashSet<>(build_names);
+
+				// Create a new ArrayList from the unique elements in the Set
+				ArrayList<String> noDuplicateBuilds = new ArrayList<>(uniqueBuildSet);
+				ArrayList<String> noDuplicateBuildNames = new ArrayList<>(uniqueBuildNameSet);
+				builds = noDuplicateBuilds;
+				build_names = noDuplicateBuildNames;
 				System.out.println("Polazna lista imena je : " + build_names);
+
 			} catch (IOException | ClassNotFoundException ex) {
 				throw new RuntimeException(ex);
 			}
@@ -302,15 +314,19 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int response = fileChooser.showOpenDialog(fileButton);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				builds.add(0, file1.getAbsolutePath());
-
+				if (!builds.contains(file1.getAbsolutePath())) {
+					builds.add(0, file1.getAbsolutePath());
+					System.out.println("Novi build je: " + file1.getAbsolutePath().substring(file1.getAbsolutePath().lastIndexOf("\\") + 1));
+					build_names.add(0, file1.getAbsolutePath().substring(file1.getAbsolutePath().lastIndexOf("\\") + 1));
+				}
 				fileTextFieldBox.insertItemAt(file1.getName(), 0);
 				fileTextFieldBox.setSelectedIndex(0);
 				if (builds.size() > 5) {
 					builds.remove(5);
+					build_names.remove(5);
 				}
 				System.out.println("Lista buildova: " + builds);
-				System.out.println(builds.size());
+				System.out.println("Lista imena: " + build_names);
 				try {
 					FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
 					ObjectOutputStream os = new ObjectOutputStream(fs);
@@ -335,10 +351,22 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (e.getSource() == fileTextFieldBox) {
 				//Swap current build at index 0
 				int temp_index = fileTextFieldBox.getSelectedIndex();
-				String temp = builds.get(temp_index);
+				System.out.println(fileTextFieldBox.getSelectedIndex());
+				String temp_build = builds.get(temp_index);
+				String temp_build_name = build_names.get(temp_index);
 				builds.set(temp_index, builds.get(0));
-				builds.set(0, temp);
+				build_names.set(temp_index, build_names.get(0));
+				builds.set(0, temp_build);
+				build_names.set(0, temp_build_name);
+				fileTextFieldBox.removeAllItems();
+
+				// Add new values to the combo box
+				for (String newValue : build_names) {
+					fileTextFieldBox.addItem(newValue);
+				}
+
 				System.out.println(builds);
+				System.out.println(build_names);
 				try {
 					FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
 					ObjectOutputStream os = new ObjectOutputStream(fs);
