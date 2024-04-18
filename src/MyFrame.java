@@ -102,7 +102,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(temp_builds));
 				builds = (ArrayList<String>) objectInputStream.readObject();
 				objectInputStream.close();
-				System.out.println("Polazna lista buildova je : " + builds);
 				build_names = new ArrayList<>();
 				for (int i = 0; i < builds.size(); i++) {
 					if (builds.get(i) != null) {
@@ -110,14 +109,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 						build_names.add(builds.get(i).substring(builds.get(i).lastIndexOf(separator) + 1));
 					}
 				}
-				Set<String> uniqueBuildSet = new HashSet<>(builds);
-				Set<String> uniqueBuildNameSet = new HashSet<>(build_names);
-
-				// Create a new ArrayList from the unique elements in the Set
-				ArrayList<String> noDuplicateBuilds = new ArrayList<>(uniqueBuildSet);
-				ArrayList<String> noDuplicateBuildNames = new ArrayList<>(uniqueBuildNameSet);
-				builds = noDuplicateBuilds;
-				build_names = noDuplicateBuildNames;
+				System.out.println("Polazna lista buildova je : " + builds);
 				System.out.println("Polazna lista imena je : " + build_names);
 
 			} catch (IOException | ClassNotFoundException ex) {
@@ -246,7 +238,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			}
 			refreshListOfDevices();
 			int width = numberOfDevices * 210 + 230;
-			setSize(width, height);
+			if (consoleView.isVisible()) {
+				setSize(width, height + 200);
+			} else {
+				setSize(width, height);
+			}
 			setVisible(true);
 		}
 	}
@@ -314,10 +310,23 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			int response = fileChooser.showOpenDialog(fileButton);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				if (!builds.contains(file1.getAbsolutePath())) {
-					builds.add(0, file1.getAbsolutePath());
-					System.out.println("Novi build je: " + file1.getAbsolutePath().substring(file1.getAbsolutePath().lastIndexOf("\\") + 1));
-					build_names.add(0, file1.getAbsolutePath().substring(file1.getAbsolutePath().lastIndexOf("\\") + 1));
+				String name = file1.getAbsolutePath().substring(file1.getAbsolutePath().lastIndexOf("\\") + 1);
+				String build = file1.getAbsolutePath();
+				if (!builds.contains(build)) {
+					builds.add(0, build);
+					System.out.println("Novi build je: " + name);
+					build_names.add(0, name);
+				}
+				else {
+					int index = builds.indexOf(build);
+
+					// If element found, remove it and add it to index 0
+					if (index != -1) {
+						builds.remove(index);
+						build_names.remove(index);
+						builds.add(0, build);
+						build_names.add(0, name);
+					}
 				}
 				fileTextFieldBox.insertItemAt(file1.getName(), 0);
 				fileTextFieldBox.setSelectedIndex(0);
