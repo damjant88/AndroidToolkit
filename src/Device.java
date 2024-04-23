@@ -541,14 +541,26 @@ public class Device extends JPanel {
         public void actionPerformed(ActionEvent e) {
             if (screenRecordingButton.getText().equals("Start Record")) {
                 startScreenRecording(serial);
-                parent.consoleView.appendText("Screen recording is started on " + deviceName);
+                parent.consoleView.appendText("Screen recording is started on " + deviceName + ".");
             } else if(recordingInProgress.get()) {
                 try {
                     stopScreenRecording(serial, recordingFileName, deviceName);
                     utility.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingFileName);
                     String appFlavour = utility.getSafePathPackage(serial);
                     utility.saveLogs(serial, appFlavour, recordingLocation);
-                    parent.consoleView.appendText("Screen recording is stopped on " + deviceName + "\n" + "Screen recording saved to:\n" + recordingLocation);
+                    File logsFolder = new File(recordingLocation + "/logs");
+                    File[] logFiles = logsFolder.listFiles((dir, name) -> name.endsWith(".log"));
+
+                    if (logFiles != null) {
+                        for (File logFile : logFiles) {
+                            if (logFile.isFile()) {
+                                File destination = new File(recordingLocation, recordingFileName + ".log");
+                                logFile.renameTo(destination);
+                            }
+                        }
+                    }
+                    logsFolder.delete();
+                    parent.consoleView.appendText("Screen recording is stopped on " + deviceName + "." + "\n" + "Screen recording saved to:\n" + recordingLocation);
                     openExplorerToFolder(recordingLocation);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
