@@ -281,10 +281,11 @@ public class Device extends JPanel {
             if (response == JFileChooser.APPROVE_OPTION) {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
                 logLocation = file.getAbsolutePath();
-                utility.saveLogs(serial, deviceInfo.pid, file.getAbsolutePath());
+                String appFlavour = utility.getSafePathPackage(serial);
+                utility.saveLogs(serial, appFlavour, file.getAbsolutePath());
                 eventTrackerButton.setEnabled(true);
                 logLocationButton.setEnabled(true);
-                openExplorerToFolder(logLocation);
+                openExplorerToFolder(logLocation + "/logs/");
                 parent.consoleView.appendText("SP logs from " + deviceName + " are saved to " + logLocation);
             }
         }
@@ -519,7 +520,6 @@ public class Device extends JPanel {
                 recordingProcess = null;
                 recordingInProgress.set(false);
                 screenRecordingButton.setText("Start Record");
-                openExplorerToFolder(recordingLocation);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -544,11 +544,12 @@ public class Device extends JPanel {
                 parent.consoleView.appendText("Screen recording is started on " + deviceName);
             } else if(recordingInProgress.get()) {
                 try {
-                    String name = recordingFileName.replace(".mp4", "");
                     stopScreenRecording(serial, recordingFileName, deviceName);
                     utility.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingFileName);
-                    utility.saveScreenRecordingLogs(serial, deviceInfo.pid, deviceName, name);
+                    String appFlavour = utility.getSafePathPackage(serial);
+                    utility.saveLogs(serial, appFlavour, recordingLocation);
                     parent.consoleView.appendText("Screen recording is stopped on " + deviceName + "\n" + "Screen recording saved to:\n" + recordingLocation);
+                    openExplorerToFolder(recordingLocation);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
                 }

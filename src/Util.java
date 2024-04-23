@@ -146,11 +146,16 @@ public class Util {
 		runCommand("adb -s " + ID + " install -r -d " + path);
 	}
 
-	public void saveLogs(String ID, String pid, String newFolder) {
+	public void saveAllLogs(String ID, String pid, String newFolder) {
 		LocalDate currentDate = LocalDate.now();
 		String command = "adb -s " + ID + " logcat -d --pid=" + pid;
 		String fileName = newFolder + "/" + "app-" + currentDate + ".log";
 		runCommandAndSave(command, fileName);
+	}
+
+	public void saveLogs(String ID, String appFlavour, String newFolder) {
+		runCommand("adb -s " + ID + " pull " + "sdcard/Android/data/" + appFlavour + "/files/logs/ "
+				+ newFolder);
 	}
 
 	public void saveScreenRecordingLogs(String ID, String pid , String deviceName, String name) {
