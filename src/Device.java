@@ -179,10 +179,45 @@ public class Device extends JPanel {
                 reboot.setEnabled(true);
                 break;
             }
-            case "com.smithmicro.att.securefamily":
+            case "com.smithmicro.att.securefamily": {
+                labelIcon.setIcon(icon.logo_att);
+                labelIcon.setText("SF IAP");
+                labelIcon.setVisible(true);
+                uninstallApp.setEnabled(true);
+                uninstallApp.setVisible(true);
+                enableFirebase.setEnabled(true);
+                enableFirebase.setVisible(true);
+                saveLogsButton.setEnabled(true);
+                logLocationButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
+                break;
+            }
+            case "com.wavemarket.waplauncher": {
+                labelIcon.setIcon(icon.logo_att);
+                labelIcon.setText("SF EAP");
+                labelIcon.setVisible(true);
+                uninstallApp.setEnabled(true);
+                uninstallApp.setVisible(true);
+                enableFirebase.setEnabled(true);
+                enableFirebase.setVisible(true);
+                saveLogsButton.setEnabled(true);
+                logLocationButton.setEnabled(false);
+                eventTrackerButton.setEnabled(true);
+                screenMirrorButton.setEnabled(true);
+                screenRecordingButton.setEnabled(true);
+                takeScreenshotButton.setEnabled(true);
+                wifiDebug.setEnabled(true);
+                reboot.setEnabled(true);
+                break;
+            }
             case "com.att.securefamilycompanion": {
                 labelIcon.setIcon(icon.logo_att);
-                labelIcon.setText("SecureFamily");
+                labelIcon.setText("SF Companion");
                 labelIcon.setVisible(true);
                 uninstallApp.setEnabled(true);
                 uninstallApp.setVisible(true);
