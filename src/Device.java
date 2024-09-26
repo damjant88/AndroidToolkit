@@ -53,8 +53,10 @@ public class Device extends JPanel {
         serialNumberList = utility.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
         serial = serialNumberList.get(index);
+        System.out.println(serial);
         deviceInfo = new DeviceInfo(serial);
         appIsInstalled = deviceInfo.appIsInstalled;
+        System.out.println(appIsInstalled);
         setIconAndButtons(index);
         this.setVisible(false);
         this.parent = parent;
@@ -64,6 +66,7 @@ public class Device extends JPanel {
 
     private void setIconAndButtons(int i) {
         deviceName = "Device"+(i+1);
+        System.out.println(deviceName);
         radio = new RadioButtons(deviceName);
         radio.setVisible(true);
         this.add(radio);
@@ -252,7 +255,8 @@ public class Device extends JPanel {
                 reboot.setEnabled(true);
                 break;
             }
-            case "com.smithmicro.orangespain.test": {
+            case "com.smithmicro.orangespain.test":
+            case "com.orange.es.TuYo": {
                 labelIcon.setIcon(icon.logo_orange);
                 labelIcon.setText("TuYo");
                 labelIcon.setVisible(true);

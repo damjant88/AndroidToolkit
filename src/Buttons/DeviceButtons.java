@@ -9,7 +9,7 @@ public class DeviceButtons extends JButton {
      */
 
     public DeviceButtons() {
-//        this.setBounds(0, 220, 100, 30);
+//      this.setBounds(0, 220, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
 //		this.setBackground(Color.lightGray);
@@ -17,6 +17,6 @@ public class DeviceButtons extends JButton {
         this.setFont(new Font("Calibri", Font.BOLD, 15));
 		this.setEnabled(false);
         this.setVisible(false);
-//        this.setText("Firebase");
+//      this.setText("Firebase");
     }
 }

@@ -201,10 +201,12 @@ public class Util {
 					|| installedPackage2.contains("safefound")
 					|| installedPackage2.contains("familycontrols")
 					|| installedPackage2.contains("orangespain")
-					|| installedPackage2.contains("dish")
+					|| installedPackage2.contains("TuYo")
+					|| installedPackage2.contains("safepath.dish")
 					|| installedPackage2.contains("familymode")) {
 
 				installedPackage = installedPackage2;
+				System.out.println(installedPackage);
 			}
 		}
 		return installedPackage;
@@ -221,6 +223,7 @@ public class Util {
 				|| installedPackage.equals("com.sprint.safefound")
 				|| installedPackage.equals("com.tmobile.familycontrols")
 				|| installedPackage.equals("com.smithmicro.orangespain.test")
+				|| installedPackage.equals("com.orange.es.TuYo")
 				|| installedPackage.equals("com.smithmicro.safepath.dish.test")
 				|| installedPackage.equals("com.smithmicro.safepath.dish.kid.test")
 				|| installedPackage.equals("com.smithmicro.safepath.family.child");
