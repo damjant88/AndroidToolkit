@@ -230,7 +230,9 @@ public class Util {
 	}
 
 	public boolean uninstallApp(String ID, String appPackage) {
-		String output = runCommand("adb -s " + ID + " shell pm uninstall " + appPackage);
+		String output = runCommand("adb -s " + ID + " shell pm clear " + appPackage);
+		output = runCommand("adb -s " + ID + " shell pm disable-user --user 0 " + appPackage);
+		output = runCommand("adb -s " + ID + " shell pm uninstall " + appPackage);
 		if (output.contains("Success")) {
 			return true;
 		} else {
