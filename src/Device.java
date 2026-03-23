@@ -13,6 +13,7 @@ public class Device extends JPanel {
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
     DeviceInfoService deviceInfoService;
+    DevicePanelStateFactory devicePanelStateFactory;
     File file = null;
     SaveSPLogsButtons saveLogsButton;
     LogLocationButtons logLocationButton;
@@ -52,6 +53,7 @@ public class Device extends JPanel {
         deviceActionService = new DeviceActionService(utility, STORAGE_PATHS);
         screenRecordingService = new ScreenRecordingService(utility, STORAGE_PATHS);
         deviceInfoService = new DeviceInfoService(utility);
+        devicePanelStateFactory = new DevicePanelStateFactory();
         serialNumberList = utility.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
         serial = serialNumberList.get(index);
@@ -123,184 +125,12 @@ public class Device extends JPanel {
         this.add(uninstallApp);
 
         radio.setSelected(true);
-
-        switch (deviceInfo.getSafePathPackage()) {
-            case "com.smithmicro.tmobile.familymode.test":
-            case "com.tmobile.familycontrols": {
-                labelIcon.setIcon(icon.logo_tmo);
-                labelIcon.setText("FamilyMode");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "com.smithmicro.safepath.dish.test":
-            case "com.smithmicro.safepath.dish.kid.test": {
-                labelIcon.setIcon(icon.logo_dish);
-                labelIcon.setText("Dish");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "com.smithmicro.safepath.family":
-            case "com.smithmicro.safepath.family.child": {
-                labelIcon.setIcon(icon.logo_product);
-                labelIcon.setText("SPFamily");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "com.smithmicro.att.securefamily": {
-                labelIcon.setIcon(icon.logo_att);
-                labelIcon.setText("SF IAP");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "com.wavemarket.waplauncher": {
-                labelIcon.setIcon(icon.logo_att);
-                labelIcon.setText("SF EAP");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "com.att.securefamilycompanion": {
-                labelIcon.setIcon(icon.logo_att);
-                labelIcon.setText("SF Companion");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "com.smithmicro.sprint.safeandfound.test":
-            case "com.sprint.safefound": {
-                labelIcon.setIcon(icon.logo_sprint);
-                labelIcon.setText("Safe&Found");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "com.smithmicro.orangespain.test":
-            case "com.orange.es.TuYo": {
-                labelIcon.setIcon(icon.logo_orange);
-                labelIcon.setText("TuYo");
-                labelIcon.setVisible(true);
-                uninstallApp.setEnabled(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setEnabled(true);
-                enableFirebase.setVisible(true);
-                saveLogsButton.setEnabled(true);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(true);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-            case "": {
-                labelIcon.setIcon(icon.notInstalled);
-                labelIcon.setText("Not Installed");
-                labelIcon.setVisible(true);
-                uninstallApp.setVisible(true);
-                enableFirebase.setVisible(true);
-                enableFirebase.setEnabled(false);
-                saveLogsButton.setEnabled(false);
-                logLocationButton.setEnabled(false);
-                eventTrackerButton.setEnabled(false);
-                screenMirrorButton.setEnabled(true);
-                screenRecordingButton.setEnabled(true);
-                takeScreenshotButton.setEnabled(true);
-                wifiDebug.setEnabled(true);
-                reboot.setEnabled(true);
-                break;
-            }
-        }
+        applyPanelState(devicePanelStateFactory.create(deviceInfo, icon));
         saveLogsButton.setVisible(true);
         logLocationButton.setVisible(true);
         eventTrackerButton.setVisible(true);
         screenMirrorButton.setVisible(true);
         screenRecordingButton.setVisible(true);
-        wifiDebug.setText("WiFi Debug");
-        if (deviceInfo.isWifiDebugSession()) {
-            wifiDebug.setText("Disable WiFi");
-        }
         wifiDebug.setVisible(true);
         enableFirebase.setVisible(true);
         reboot.setVisible(true);
@@ -442,6 +272,25 @@ public class Device extends JPanel {
         } catch (RuntimeException ex) {
             System.err.println(ex.getMessage());
         }
+    }
+
+    private void applyPanelState(DevicePanelState panelState) {
+        labelIcon.setIcon(panelState.getIcon());
+        labelIcon.setText(panelState.getLabelText());
+        labelIcon.setVisible(true);
+        uninstallApp.setEnabled(panelState.isUninstallEnabled());
+        uninstallApp.setVisible(true);
+        enableFirebase.setEnabled(panelState.isEnableFirebaseEnabled());
+        enableFirebase.setVisible(true);
+        saveLogsButton.setEnabled(panelState.isSaveLogsEnabled());
+        logLocationButton.setEnabled(panelState.isLogLocationEnabled());
+        eventTrackerButton.setEnabled(panelState.isEventTrackerEnabled());
+        screenMirrorButton.setEnabled(panelState.isScreenMirrorEnabled());
+        screenRecordingButton.setEnabled(panelState.isScreenRecordingEnabled());
+        takeScreenshotButton.setEnabled(panelState.isScreenshotEnabled());
+        wifiDebug.setEnabled(panelState.isWifiDebugEnabled());
+        reboot.setEnabled(panelState.isRebootEnabled());
+        wifiDebug.setText(panelState.getWifiButtonText());
     }
 
     class EventTrackerListener implements ActionListener {
