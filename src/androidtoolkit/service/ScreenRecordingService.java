@@ -10,20 +10,27 @@ public class ScreenRecordingService {
 
     private final CommandExecutor commandExecutor;
     private final DeviceGateway deviceGateway;
-    private final StoragePaths storagePaths;
+    private final StorageService storageService;
+    private final HostToolsGateway hostToolsGateway;
 
-    public ScreenRecordingService(CommandExecutor commandExecutor, DeviceGateway deviceGateway, StoragePaths storagePaths) {
+    public ScreenRecordingService(
+            CommandExecutor commandExecutor,
+            DeviceGateway deviceGateway,
+            StorageService storageService,
+            HostToolsGateway hostToolsGateway
+    ) {
         this.commandExecutor = commandExecutor;
         this.deviceGateway = deviceGateway;
-        this.storagePaths = storagePaths;
+        this.storageService = storageService;
+        this.hostToolsGateway = hostToolsGateway;
     }
 
     public boolean isScrcpyAvailable() {
-        return findScrcpyExecutable() != null;
+        return hostToolsGateway.findScrcpyExecutable() != null;
     }
 
     public void startScreenMirrorAsync(String serial) {
-        File scrcpyExecutable = findScrcpyExecutable();
+        File scrcpyExecutable = hostToolsGateway.findScrcpyExecutable();
         if (scrcpyExecutable == null) {
             throw new IllegalStateException("scrcpy executable not found in System variables Path!");
         }
@@ -41,10 +48,8 @@ public class ScreenRecordingService {
     }
 
     public void startScreenRecording(String serial, RecordingSession recordingSession) {
-        File toolkitDir = storagePaths.screenRecordingsDir();
-        if (!toolkitDir.exists()) {
-            toolkitDir.mkdirs();
-        }
+        File toolkitDir = storageService.screenRecordingsDir();
+        storageService.ensureDirectoryExists(toolkitDir);
 
         recordingSession.setRecordingFileName("screen_record_" + System.currentTimeMillis() + ".mp4");
         startScreenMirrorAsync(serial);
@@ -80,10 +85,8 @@ public class ScreenRecordingService {
         recordingSession.getRecordingProcess().destroy();
         LocalDate currentDate = LocalDate.now();
         String dateString = currentDate.toString();
-        File deviceDir = storagePaths.recordingDir(deviceName, dateString);
-        if (!deviceDir.exists()) {
-            deviceDir.mkdirs();
-        }
+        File deviceDir = storageService.recordingDir(deviceName, dateString);
+        storageService.ensureDirectoryExists(deviceDir);
 
         Thread.sleep(300);
         String recordingLocation = deviceDir.getPath();
@@ -111,14 +114,4 @@ public class ScreenRecordingService {
         return recordingLocation;
     }
 
-    private File findScrcpyExecutable() {
-        String[] pathDirectories = System.getenv("PATH").split(File.pathSeparator);
-        for (String directory : pathDirectories) {
-            File scrcpyExecutable = new File(directory, "scrcpy.exe");
-            if (scrcpyExecutable.exists()) {
-                return scrcpyExecutable;
-            }
-        }
-        return null;
-    }
 }

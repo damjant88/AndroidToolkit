@@ -12,14 +12,14 @@ import java.util.ArrayList;
 
 public class BuildSelectionStore {
 
-    private final StoragePaths storagePaths;
+    private final StorageService storageService;
 
-    public BuildSelectionStore(StoragePaths storagePaths) {
-        this.storagePaths = storagePaths;
+    public BuildSelectionStore(StorageService storageService) {
+        this.storageService = storageService;
     }
 
     public BuildSelectionState loadBuildSelection() {
-        File buildsFile = storagePaths.buildsFile();
+        File buildsFile = storageService.buildsFile();
         if (!buildsFile.exists()) {
             return new BuildSelectionState(new ArrayList<>());
         }
@@ -34,8 +34,8 @@ public class BuildSelectionStore {
     }
 
     public void saveBuildSelection(BuildSelectionState buildSelectionState) {
-        storagePaths.rootDir().mkdirs();
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(storagePaths.buildsFile()))) {
+        storageService.ensureDirectoryExists(storageService.rootDir());
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(storageService.buildsFile()))) {
             objectOutputStream.writeObject(buildSelectionState.getBuildPaths());
         } catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -43,7 +43,7 @@ public class BuildSelectionStore {
     }
 
     public File loadDefaultBuildLocation() {
-        File locationFile = storagePaths.locationFile();
+        File locationFile = storageService.locationFile();
         if (!locationFile.exists()) {
             return locationFile;
         }
@@ -56,8 +56,8 @@ public class BuildSelectionStore {
     }
 
     public void saveDefaultBuildLocation(File location) {
-        storagePaths.rootDir().mkdirs();
-        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(storagePaths.locationFile()))) {
+        storageService.ensureDirectoryExists(storageService.rootDir());
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(storageService.locationFile()))) {
             objectOutputStream.writeObject(location);
         } catch (IOException ex) {
             throw new RuntimeException(ex);

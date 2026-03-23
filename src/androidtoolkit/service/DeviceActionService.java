@@ -1,16 +1,17 @@
 package androidtoolkit.service;
 
 import java.io.File;
-import java.io.IOException;
 
 public class DeviceActionService {
 
     private final DeviceGateway deviceGateway;
-    private final StoragePaths storagePaths;
+    private final StorageService storageService;
+    private final HostToolsGateway hostToolsGateway;
 
-    public DeviceActionService(DeviceGateway deviceGateway, StoragePaths storagePaths) {
+    public DeviceActionService(DeviceGateway deviceGateway, StorageService storageService, HostToolsGateway hostToolsGateway) {
         this.deviceGateway = deviceGateway;
-        this.storagePaths = storagePaths;
+        this.storageService = storageService;
+        this.hostToolsGateway = hostToolsGateway;
     }
 
     public String saveLogs(String serial, String selectedFolder) {
@@ -33,10 +34,8 @@ public class DeviceActionService {
 
     public File captureScreenshot(String serial, String deviceName) {
         String output = deviceGateway.takeScreenshot(serial, "sdcard/", "screenshot.png");
-        File screenshotDir = storagePaths.screenshotDir(deviceName);
-        if (!screenshotDir.exists()) {
-            screenshotDir.mkdirs();
-        }
+        File screenshotDir = storageService.screenshotDir(deviceName);
+        storageService.ensureDirectoryExists(screenshotDir);
         deviceGateway.pullFile(serial, output, screenshotDir.getPath());
         return screenshotDir;
     }
@@ -51,14 +50,6 @@ public class DeviceActionService {
 
     public void openFolder(String folderPath) {
         File folder = new File(folderPath);
-        if (folder.exists() && folder.isDirectory()) {
-            try {
-                java.awt.Desktop.getDesktop().open(folder);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        } else {
-            throw new IllegalArgumentException("Folder does not exist or is not a directory: " + folderPath);
-        }
+        hostToolsGateway.openFolder(folder);
     }
 }
