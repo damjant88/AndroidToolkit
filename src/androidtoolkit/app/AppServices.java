@@ -29,6 +29,7 @@ public class AppServices {
     private final BuildInstaller buildInstaller;
     private final DeviceCatalog deviceCatalog;
     private final LogExporter logExporter;
+    private final DeviceOperations deviceOperations;
 
     public AppServices() {
         this.storagePaths = new StoragePaths();
@@ -44,6 +45,7 @@ public class AppServices {
         this.buildInstaller = new BuildInstaller(deviceGateway, commandExecutor);
         this.deviceCatalog = new DeviceCatalog(deviceGateway, deviceInfoService);
         this.logExporter = new LogExporter(deviceActionService);
+        this.deviceOperations = new DeviceOperations(deviceActionService, screenRecordingService);
     }
 
     public StoragePaths storagePaths() {
@@ -92,5 +94,9 @@ public class AppServices {
 
     public LogExporter logExporter() {
         return logExporter;
+    }
+
+    public DeviceOperations deviceOperations() {
+        return deviceOperations;
     }
 }

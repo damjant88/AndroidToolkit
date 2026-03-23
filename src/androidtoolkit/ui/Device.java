@@ -3,8 +3,23 @@ package androidtoolkit.ui;
 import androidtoolkit.app.AppServices;
 import androidtoolkit.app.ConnectedDevice;
 import androidtoolkit.app.DeviceTarget;
+import androidtoolkit.app.DeviceMessageResult;
+import androidtoolkit.app.DeviceOperations;
+import androidtoolkit.app.FirebaseDebugRequest;
 import androidtoolkit.app.LogExportRequest;
 import androidtoolkit.app.LogExporter;
+import androidtoolkit.app.RebootDeviceRequest;
+import androidtoolkit.app.ScreenMirrorRequest;
+import androidtoolkit.app.ScreenshotRequest;
+import androidtoolkit.app.ScreenshotResult;
+import androidtoolkit.app.StartScreenRecordingRequest;
+import androidtoolkit.app.StartScreenRecordingResult;
+import androidtoolkit.app.StopScreenRecordingRequest;
+import androidtoolkit.app.StopScreenRecordingResult;
+import androidtoolkit.app.UninstallAppRequest;
+import androidtoolkit.app.UninstallAppResult;
+import androidtoolkit.app.WifiDebugRequest;
+import androidtoolkit.app.WifiDebugResult;
 import androidtoolkit.domain.DeviceInfo;
 import androidtoolkit.domain.RecordingSession;
 import androidtoolkit.service.CommandExecutor;
@@ -26,6 +41,7 @@ public class Device extends JPanel {
     private final CommandExecutor commandExecutor;
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
+    DeviceOperations deviceOperations;
     LogExporter logExporter;
     DevicePanelStateFactory devicePanelStateFactory;
     File file = null;
@@ -70,6 +86,7 @@ public class Device extends JPanel {
         icon = new Icons();
         deviceActionService = appServices.deviceActionService();
         screenRecordingService = appServices.screenRecordingService();
+        deviceOperations = appServices.deviceOperations();
         logExporter = appServices.logExporter();
         devicePanelStateFactory = new DevicePanelStateFactory();
         serial = connectedDevice.getSerial();
@@ -222,37 +239,30 @@ public class Device extends JPanel {
     }
 
     void toggleWifiDebugging() {
-        if (!deviceInfo.hasWifiIp()) {
+        WifiDebugResult result = deviceOperations.toggleWifiDebugging(
+                new WifiDebugRequest(
+                        deviceInfo.getSerialNumber(),
+                        deviceName,
+                        deviceInfo.getIpAddress(),
+                        deviceInfo.isWifiDebugSession(),
+                        deviceInfo.hasWifiIp()
+                )
+        );
+
+        if (result.isWifiConnectionRequired()) {
             JOptionPane.showMessageDialog(
                     parent,
-                    "Connect the device " + deviceName + " to WiFi and click on 'Display Connected Devices' button to refresh IP! ",
+                    result.getMessage(),
                     "Enable WiFi Debugging",
                     JOptionPane.INFORMATION_MESSAGE);
-
-        } else if (!deviceInfo.isWifiDebugSession()) {
-            deviceActionService.enableWifiDebugging(deviceInfo.getSerialNumber(), deviceInfo.getIpAddress());
-            if (parent.isConsoleVisible) {
-                parent.consoleView.appendText("WiFi debugging is enabled on " + deviceName + "!\n" +
-                        "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
-                        "You may disconnect USB cable from this device.");
-            } else {
-                JOptionPane.showMessageDialog(
-                        parent,
-                        "Debugging over WiFi is enabled on " + deviceName + "!\n" +
-                                "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
-                                "You may disconnect USB cable from this device.",
-                        "Enable WiFi Debugging",
-                        JOptionPane.INFORMATION_MESSAGE);
-                wifiDebug.setText("Disable WiFi");
-            }
         } else {
-            deviceActionService.disableWifiDebugging(deviceInfo.getSerialNumber(), deviceInfo.getIpAddress());
             if (parent.isConsoleVisible) {
-                parent.consoleView.appendText("WiFi debugging is disabled on " + deviceName);
+                parent.consoleView.appendText(result.getMessage());
             } else {
-                JOptionPane.showMessageDialog(parent, "Debugging over WiFi is disabled on " + deviceName + "!", "Disable WiFi Debugging.",
+                JOptionPane.showMessageDialog(parent, result.getMessage(), result.isWifiEnabled() ? "Enable WiFi Debugging" : "Disable WiFi Debugging.",
                         JOptionPane.INFORMATION_MESSAGE);
             }
+            wifiDebug.setText(result.getButtonText());
         }
     }
 
@@ -260,28 +270,32 @@ public class Device extends JPanel {
         int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Reboot the device",
                 JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
-            deviceActionService.reboot(deviceInfo.getSerialNumber());
-        }
-        if (parent.isConsoleVisible) {
-            parent.consoleView.appendText(deviceName + " is restarted!");
+            DeviceMessageResult result = deviceOperations.rebootDevice(
+                    new RebootDeviceRequest(deviceInfo.getSerialNumber(), deviceName)
+            );
+            if (parent.isConsoleVisible) {
+                parent.consoleView.appendText(result.getMessage());
+            }
         }
     }
 
     void takeScreenshot() {
-        deviceActionService.captureScreenshot(deviceInfo.getSerialNumber(), deviceName);
+        ScreenshotResult result = deviceOperations.captureScreenshot(
+                new ScreenshotRequest(deviceInfo.getSerialNumber(), deviceName)
+        );
         new ScreenshotFrame(deviceName, Device.this.totalDeviceCount);
-        parent.consoleView.appendText("Screenhot is captured on " + deviceName);
+        parent.consoleView.appendText(result.getMessage());
     }
 
     void enableFirebaseDebugging() {
-        deviceActionService.enableFirebaseDebugging(deviceInfo.getSerialNumber(), deviceInfo.getSafePathPackage());
+        DeviceMessageResult result = deviceOperations.enableFirebaseDebugging(
+                new FirebaseDebugRequest(deviceInfo.getSerialNumber(), deviceName, deviceInfo.getSafePathPackage())
+        );
         if (parent.isConsoleVisible) {
-            parent.consoleView.appendText("Firebase Debugging enabled on " + deviceName + "!" + "\n"
-                    + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.");
+            parent.consoleView.appendText(result.getMessage());
         } else {
             JOptionPane.showMessageDialog(parent,
-                    "Firebase Debugging enabled on " + deviceName + "!" + "\n"
-                            + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.",
+                    result.getMessage(),
                     "Enable Firebase Debugging", JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -290,16 +304,18 @@ public class Device extends JPanel {
         int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Uninstall the app",
                 JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
-            deviceActionService.uninstallApp(deviceInfo.getSerialNumber(), deviceInfo.getSafePathPackage());
+            UninstallAppResult result = deviceOperations.uninstallApp(
+                    new UninstallAppRequest(deviceInfo.getSerialNumber(), deviceName, deviceInfo.getSafePathPackage())
+            );
             saveLogsButton.setEnabled(false);
             enableFirebase.setEnabled(false);
             labelIcon.setVisible(true);
             refreshDevicesMethod.run();
             if (parent.isConsoleVisible) {
-                parent.consoleView.appendText("App is uninstalled from " + deviceName + "!");
+                parent.consoleView.appendText(result.getMessage());
                 System.out.println(parent.isConsoleVisible);
             } else {
-                JOptionPane.showMessageDialog(parent, "App is uninstalled from " + deviceName + "!", "Uninstall the app.",
+                JOptionPane.showMessageDialog(parent, result.getMessage(), "Uninstall the app.",
                         JOptionPane.INFORMATION_MESSAGE);
                 System.out.println(parent.isConsoleVisible);
             }
@@ -321,8 +337,10 @@ public class Device extends JPanel {
 
     void startScreenMirror() {
         try {
-            screenRecordingService.startScreenMirrorAsync(serial);
-            parent.consoleView.appendText("Screen mirror is started on " + deviceName);
+            DeviceMessageResult result = deviceOperations.startScreenMirror(
+                    new ScreenMirrorRequest(serial, deviceName)
+            );
+            parent.consoleView.appendText(result.getMessage());
         } catch (RuntimeException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -331,17 +349,22 @@ public class Device extends JPanel {
     void handleScreenRecording() {
         if (screenRecordingButton.getText().equals("Start Record")) {
             try {
-                screenRecordingService.startScreenRecording(serial, recordingSession);
-                screenRecordingButton.setText("Stop Record");
-                parent.consoleView.appendText("Screen recording is started on " + deviceName + ".");
+                StartScreenRecordingResult result = deviceOperations.startScreenRecording(
+                        new StartScreenRecordingRequest(serial, deviceName, recordingSession)
+                );
+                screenRecordingButton.setText(result.getButtonText());
+                parent.consoleView.appendText(result.getMessage());
             } catch (RuntimeException ex) {
                 JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else if(recordingSession.getRecordingInProgress().get()) {
             try {
-                recordingLocation = screenRecordingService.stopScreenRecording(serial, deviceName, recordingSession);
-                screenRecordingButton.setText("Start Record");
-                parent.consoleView.appendText("Screen recording is stopped on " + deviceName + "." + "\n" + "Screen recording saved to:\n" + recordingLocation);
+                StopScreenRecordingResult result = deviceOperations.stopScreenRecording(
+                        new StopScreenRecordingRequest(serial, deviceName, recordingSession)
+                );
+                recordingLocation = result.getRecordingLocation();
+                screenRecordingButton.setText(result.getButtonText());
+                parent.consoleView.appendText(result.getMessage());
                 openExplorerToFolder(recordingLocation);
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
@@ -349,8 +372,9 @@ public class Device extends JPanel {
                 JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            JOptionPane.showMessageDialog(Device.this, "No active recording!", "Error", JOptionPane.ERROR_MESSAGE);
-            screenRecordingButton.setText("Start Record");
+            StopScreenRecordingResult result = new StopScreenRecordingResult(false, false, "No active recording!", "", "Start Record");
+            JOptionPane.showMessageDialog(Device.this, result.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            screenRecordingButton.setText(result.getButtonText());
         }
     }
 }
