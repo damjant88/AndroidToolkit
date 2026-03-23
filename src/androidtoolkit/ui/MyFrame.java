@@ -31,7 +31,7 @@ import javax.swing.JTextPane;
 import javax.swing.WindowConstants;
 import Buttons.*;
 
-public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi, DeviceMonitor.DeviceMonitorUi {
+public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi, DeviceMonitor.DeviceMonitorUi, BuildSelectionCoordinator.BuildSelectionUi {
 
 	private final AppServices appServices;
 	private final CommandExecutor commandExecutor;
@@ -55,6 +55,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	ConsoleView consoleView;
 	BuildInstaller buildInstaller;
 	BuildOperationCoordinator buildOperationCoordinator;
+	BuildSelectionCoordinator buildSelectionCoordinator;
 	DeviceCatalog deviceCatalog;
 	DeviceMonitor deviceMonitor;
 	DevicePanelFactory devicePanelFactory;
@@ -76,6 +77,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		this.buildSelectionStore = appServices.buildSelectionStore();
 		this.buildInstaller = appServices.buildInstaller();
 		this.buildOperationCoordinator = new BuildOperationCoordinator(buildInstaller);
+		this.buildSelectionCoordinator = new BuildSelectionCoordinator(buildSelectionStore);
 		this.deviceCatalog = appServices.deviceCatalog();
 		this.deviceMonitor = new DeviceMonitor(deviceCatalog, this::currentSerials, this, 3000);
 		this.devicePanelFactory = new DevicePanelFactory(appServices);
@@ -127,7 +129,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		staticPane = new StaticPane();
 		this.add(staticPane);
 
-		buildSelectionState = buildSelectionStore.loadBuildSelection();
+		buildSelectionState = buildSelectionCoordinator.loadInitialState();
 		System.out.println("Polazna lista buildova je : " + buildSelectionState.getBuildPaths());
 		System.out.println("Polazna lista imena je : " + buildSelectionState.getBuildNames());
 
@@ -191,20 +193,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			JFileChooser fileChooser = new JFileChooser();
-			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-			int response = fileChooser.showOpenDialog(null);
-			File file2 = null;
-			if (response == JFileChooser.APPROVE_OPTION) {
-				file2 = new File(fileChooser.getSelectedFile().getAbsolutePath());
-			}
-			try {
-				buildSelectionStore.saveDefaultBuildLocation(file2);
-				JOptionPane.showMessageDialog(null, "Default build location is set!" + "\n" + file2.getAbsolutePath(), "Default Build Location",
-						JOptionPane.INFORMATION_MESSAGE);
-			} catch (RuntimeException ex) {
-				throw new RuntimeException(ex);
-			}
+			buildSelectionCoordinator.chooseDefaultBuildLocation(MyFrame.this);
 		}
 	}
 
@@ -273,22 +262,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			File default_location = buildSelectionStore.loadDefaultBuildLocation();
-			JFileChooser fileChooser = new JFileChooser(default_location.getAbsolutePath());
-			int response = fileChooser.showOpenDialog(fileButton);
-			if (response == JFileChooser.APPROVE_OPTION) {
-				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				String build = file1.getAbsolutePath();
-				buildSelectionState.addBuild(build);
-				refreshBuildSelectionBox();
-				fileTextFieldBox.setSelectedIndex(0);
-				System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
-				System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
-				buildSelectionStore.saveBuildSelection(buildSelectionState);
-				applyFrameState(createFrameState());
-				progressBar.setBackground(new Color(238, 238, 238));
-				progressBar.setString("Waiting for build...");
-			}
+			buildSelectionCoordinator.chooseBuild(MyFrame.this);
+			buildSelectionState = buildSelectionCoordinator.currentState();
+			System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
+			System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
 		}
 	}
 
@@ -299,9 +276,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 			if (e.getSource() == fileTextFieldBox) {
 				int temp_index = fileTextFieldBox.getSelectedIndex();
 				System.out.println(fileTextFieldBox.getSelectedIndex());
-				buildSelectionState.selectBuild(temp_index);
-				refreshBuildSelectionBox();
-				buildSelectionStore.saveBuildSelection(buildSelectionState);
+				buildSelectionCoordinator.selectBuildAt(temp_index, MyFrame.this);
+				buildSelectionState = buildSelectionCoordinator.currentState();
 				System.out.println(buildSelectionState.getBuildPaths());
 				System.out.println(buildSelectionState.getBuildNames());
 			}
@@ -395,5 +371,55 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		} else {
 			setSize(width, height);
 		}
+	}
+
+	@Override
+	public File chooseBuildFile(File defaultLocation) {
+		JFileChooser fileChooser = new JFileChooser(defaultLocation.getAbsolutePath());
+		int response = fileChooser.showOpenDialog(fileButton);
+		if (response == JFileChooser.APPROVE_OPTION) {
+			file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
+			return file1;
+		}
+		return null;
+	}
+
+	@Override
+	public File chooseDefaultBuildLocation() {
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int response = fileChooser.showOpenDialog(null);
+		if (response == JFileChooser.APPROVE_OPTION) {
+			return new File(fileChooser.getSelectedFile().getAbsolutePath());
+		}
+		return null;
+	}
+
+	@Override
+	public void refreshBuildNames(java.util.List<String> buildNames) {
+		buildSelectionState = buildSelectionCoordinator.currentState();
+		fileTextFieldBox.removeAllItems();
+		for (String buildName : buildNames) {
+			fileTextFieldBox.addItem(buildName);
+		}
+	}
+
+	@Override
+	public void selectBuildIndex(int index) {
+		fileTextFieldBox.setSelectedIndex(index);
+	}
+
+	@Override
+	public void onBuildSelectionChanged() {
+		buildSelectionState = buildSelectionCoordinator.currentState();
+		applyFrameState(createFrameState());
+		progressBar.setBackground(new Color(238, 238, 238));
+		progressBar.setString("Waiting for build...");
+	}
+
+	@Override
+	public void showDefaultBuildLocationSaved(File location) {
+		JOptionPane.showMessageDialog(null, "Default build location is set!" + "\n" + location.getAbsolutePath(), "Default Build Location",
+				JOptionPane.INFORMATION_MESSAGE);
 	}
 }
