@@ -1,6 +1,8 @@
 package androidtoolkit.ui;
 
 import androidtoolkit.app.DeviceCatalog;
+import androidtoolkit.app.DeviceDiscoveryRequest;
+import androidtoolkit.app.DeviceDiscoveryResult;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -29,9 +31,9 @@ public class DeviceMonitor {
         Thread thread = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    ArrayList<String> latestSerials = deviceCatalog.connectedSerials();
-                    if (!latestSerials.equals(currentSerialsSupplier.get())) {
-                        deviceMonitorUi.onDeviceListChanged(latestSerials);
+                    DeviceDiscoveryResult discoveryResult = deviceCatalog.discoverDevices(new DeviceDiscoveryRequest());
+                    if (!discoveryResult.getSerials().equals(currentSerialsSupplier.get())) {
+                        deviceMonitorUi.onDeviceListChanged(discoveryResult);
                     }
                     Thread.sleep(pollIntervalMs);
                 } catch (InterruptedException e) {
@@ -43,6 +45,6 @@ public class DeviceMonitor {
     }
 
     public interface DeviceMonitorUi {
-        void onDeviceListChanged(ArrayList<String> latestSerials);
+        void onDeviceListChanged(DeviceDiscoveryResult discoveryResult);
     }
 }

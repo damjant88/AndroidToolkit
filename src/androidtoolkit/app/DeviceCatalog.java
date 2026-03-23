@@ -4,7 +4,6 @@ import androidtoolkit.service.DeviceInfoService;
 import androidtoolkit.service.DeviceGateway;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class DeviceCatalog {
 
@@ -16,13 +15,9 @@ public class DeviceCatalog {
         this.deviceInfoService = deviceInfoService;
     }
 
-    public ArrayList<String> connectedSerials() {
-        return deviceGateway.getConnectedDevices();
-    }
-
-    public List<ConnectedDevice> loadConnectedDevices() {
-        ArrayList<String> serials = connectedSerials();
-        List<ConnectedDevice> devices = new ArrayList<>();
+    public DeviceDiscoveryResult discoverDevices(DeviceDiscoveryRequest request) {
+        ArrayList<String> serials = deviceGateway.getConnectedDevices();
+        ArrayList<ConnectedDevice> devices = new ArrayList<>();
         for (int i = 0; i < serials.size(); i++) {
             String serial = serials.get(i);
             devices.add(new ConnectedDevice(
@@ -32,6 +27,6 @@ public class DeviceCatalog {
                     deviceInfoService.load(serial)
             ));
         }
-        return devices;
+        return new DeviceDiscoveryResult(serials, devices);
     }
 }

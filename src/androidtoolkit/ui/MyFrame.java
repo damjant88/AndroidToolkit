@@ -6,6 +6,8 @@ import androidtoolkit.app.BuildInstaller;
 import androidtoolkit.app.BuildUninstallRequest;
 import androidtoolkit.app.ConnectedDevice;
 import androidtoolkit.app.DeviceCatalog;
+import androidtoolkit.app.DeviceDiscoveryRequest;
+import androidtoolkit.app.DeviceDiscoveryResult;
 import androidtoolkit.domain.BuildSelectionState;
 import androidtoolkit.service.BuildSelectionStore;
 import androidtoolkit.service.CommandExecutor;
@@ -114,8 +116,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 
 		this.setJMenuBar(menuBar);
 
-		serialNumberList = deviceCatalog.connectedSerials();
-		numberOfDevices = serialNumberList.size();
+		DeviceDiscoveryResult discoveryResult = deviceCatalog.discoverDevices(new DeviceDiscoveryRequest());
+		serialNumberList = discoveryResult.getSerials();
+		numberOfDevices = discoveryResult.getDeviceCount();
 		installButton = new InstallButton();
 		installButton.addActionListener(new InstallSelectedDevicesAction(this));
 		this.add(installButton);
@@ -164,11 +167,12 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		}
 		listOfDevices.clear();
 		isInstalledList.clear();
-		java.util.List<ConnectedDevice> connectedDevices = deviceCatalog.loadConnectedDevices();
+		DeviceDiscoveryResult discoveryResult = deviceCatalog.discoverDevices(new DeviceDiscoveryRequest());
+		java.util.List<ConnectedDevice> connectedDevices = discoveryResult.getDevices();
 		serialNumberList = new ArrayList<>(connectedDevices.stream()
 				.map(ConnectedDevice::getSerial)
 				.collect(Collectors.toList()));
-		numberOfDevices = connectedDevices.size();
+		numberOfDevices = discoveryResult.getDeviceCount();
 		for (Device devicePanel : devicePanelFactory.createPanels(this, connectedDevices, this::refreshListOfDevices)) {
 			device = devicePanel;
 			listOfDevices.add(devicePanel);
@@ -257,9 +261,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	}
 
 	@Override
-	public void onDeviceListChanged(ArrayList<String> latestSerials) {
+	public void onDeviceListChanged(DeviceDiscoveryResult discoveryResult) {
 		SwingUtilities.invokeLater(() -> {
-			updateDeviceList(latestSerials);
+			updateDeviceList(discoveryResult.getSerials());
 			updatePanelSize();
 		});
 	}
