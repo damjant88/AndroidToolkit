@@ -14,8 +14,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	static Util utility = new Util();
 	private static final StoragePaths STORAGE_PATHS = new StoragePaths();
 	private static final BuildSelectionStore BUILD_SELECTION_STORE = new BuildSelectionStore(STORAGE_PATHS);
-	private static int counter = 0;
-	private static final Object lock = new Object();
 	File file1 = null;
 	DevicesButton devicesButton;
 	JButton fileButton;
@@ -32,6 +30,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	FileTextFieldBox fileTextFieldBox;
 	BuildSelectionState buildSelectionState;
 	ConsoleView consoleView;
+	DeviceCommandCoordinator deviceCommandCoordinator;
 	int height = 460;
 	int width;
 	Boolean isConsoleVisible = false;
@@ -45,6 +44,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			logs.mkdirs();
 		}
 		icon = new Icons();
+		deviceCommandCoordinator = new DeviceCommandCoordinator(utility);
 
 		setStaticElements();
 		refreshListOfDevices();
@@ -223,18 +223,20 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setIndeterminate(true);
 			progressBar.setBackground(Color.WHITE);
 			installButton.setEnabled(false);
-			for (int i = 0; i < numberOfDevices; i++) {
-				if (listOfDevices.get(i).radio.isSelected() && !listOfDevices.isEmpty()) {
-					listOfDevices.get(i).radioState = true;
-					Task task1 = new Task("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + buildSelectionState.getPrimaryBuildPath() + "\"");
-					task1.addPropertyChangeListener(null);
-					task1.execute();
-					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App installed: " + buildSelectionState.getPrimaryBuildName());
-				} else {
-					listOfDevices.get(i).radioState = false;
-				}
+			int tasksStarted = deviceCommandCoordinator.startInstallTasks(
+					listOfDevices,
+					buildSelectionState.getPrimaryBuildPath(),
+					buildSelectionState.getPrimaryBuildName(),
+					consoleView,
+					MyFrame.this::startTask
+			);
+			if (tasksStarted > 0) {
+				uninstallAllButton.setEnabled(true);
+			} else {
+				progressBar.setIndeterminate(false);
+				progressBar.setString("Waiting for build...");
+				installButton.setEnabled(true);
 			}
-			uninstallAllButton.setEnabled(true);
 		}
 	}
 
@@ -246,17 +248,16 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setIndeterminate(true);
 			progressBar.setBackground(new Color(238, 238, 238));
 			uninstallAllButton.setEnabled(false);
-			int i = 0;
-			Task[] task = new Task[numberOfDevices];
-			while (i < numberOfDevices) {
-				if(listOfDevices.get(i).appIsInstalled) {
-					task[i] = new Task("adb -s " + listOfDevices.get(i).serial + " shell pm uninstall "
-							+ utility.getSafePathPackage(listOfDevices.get(i).serial));
-					task[i].addPropertyChangeListener(null);
-					task[i].execute();
-					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App removed: " + buildSelectionState.getPrimaryBuildName());
-				}
-				i++;
+			int tasksStarted = deviceCommandCoordinator.startUninstallTasks(
+					listOfDevices,
+					buildSelectionState.getPrimaryBuildName(),
+					consoleView,
+					MyFrame.this::startTask
+			);
+			if (tasksStarted == 0) {
+				progressBar.setIndeterminate(false);
+				progressBar.setString("Done!");
+				uninstallAllButton.setEnabled(true);
 			}
 		}
 	}
@@ -302,19 +303,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
-	// Thread synchronization to determine the end of all processes
-	public void increaseCounter() {
-		synchronized (lock) {
-			counter++;
-		}
-	}
-
-	public void decreaseCounter() {
-		synchronized (lock) {
-			counter--;
-		}
-	}
-
 	class Task extends SwingWorker<Void, Void> {
 		private final String command;
 
@@ -324,19 +312,17 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		@Override
 		public Void doInBackground() {
-			increaseCounter();
-			utility.runCommand(command);
+			deviceCommandCoordinator.runCommand(command);
 			return null;
 		}
 
 		@Override
 		public void done() {
-			decreaseCounter();
-			if (counter == 0) {
+			if (deviceCommandCoordinator.finishTask() == 0) {
 				progressBar.setString("Done!");
 				progressBar.setBackground(Color.green);
 				refreshListOfDevices();
-				if (isInstalledList.contains(false) && !fileTextFieldBox.getItemAt(0).equals("")) {
+				if (isInstalledList.contains(false) && fileTextFieldBox.getItemCount() > 0 && !fileTextFieldBox.getItemAt(0).equals("")) {
 					installButton.setEnabled(true);
 				}
 				progressBar.setIndeterminate(false);
@@ -394,5 +380,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		for (String buildName : buildSelectionState.getBuildNames()) {
 			fileTextFieldBox.addItem(buildName);
 		}
+	}
+
+	private void startTask(String command) {
+		Task task = new Task(command);
+		task.addPropertyChangeListener(null);
+		task.execute();
 	}
 }
