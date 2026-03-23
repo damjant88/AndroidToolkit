@@ -19,10 +19,19 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+import javax.swing.JTextPane;
+import javax.swing.WindowConstants;
 import Buttons.*;
 
-public class MyFrame extends JFrame implements PropertyChangeListener {
+public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi {
 
 	private final AppServices appServices;
 	private final CommandExecutor commandExecutor;
@@ -45,6 +54,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	BuildSelectionState buildSelectionState;
 	ConsoleView consoleView;
 	BuildInstaller buildInstaller;
+	BuildOperationCoordinator buildOperationCoordinator;
 	DeviceCatalog deviceCatalog;
 	MyFrameStateFactory myFrameStateFactory;
 	int height = 460;
@@ -63,6 +73,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.storagePaths = appServices.storagePaths();
 		this.buildSelectionStore = appServices.buildSelectionStore();
 		this.buildInstaller = appServices.buildInstaller();
+		this.buildOperationCoordinator = new BuildOperationCoordinator(buildInstaller);
 		this.deviceCatalog = appServices.deviceCatalog();
 		this.myFrameStateFactory = new MyFrameStateFactory();
 
@@ -228,26 +239,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			progressBar.setString("Installing...");
-			progressBar.setIndeterminate(true);
-			progressBar.setBackground(Color.WHITE);
-			installButton.setEnabled(false);
-			int tasksStarted = buildInstaller.installSelectedDevices(
+			buildOperationCoordinator.startInstall(
 					new BuildInstallRequest(
 							listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
 							buildSelectionState.getPrimaryBuildPath(),
 							buildSelectionState.getPrimaryBuildName()
 					),
 					consoleView,
-					MyFrame.this::startTask
+					MyFrame.this
 			);
-			if (tasksStarted > 0) {
-				uninstallAllButton.setEnabled(true);
-			} else {
-				progressBar.setIndeterminate(false);
-				progressBar.setString("Waiting for build...");
-				applyFrameState(createFrameState());
-			}
 		}
 	}
 
@@ -255,23 +255,14 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			progressBar.setString("Uninstalling...");
-			progressBar.setIndeterminate(true);
-			progressBar.setBackground(new Color(238, 238, 238));
-			uninstallAllButton.setEnabled(false);
-			int tasksStarted = buildInstaller.uninstallInstalledDevices(
+			buildOperationCoordinator.startUninstall(
 					new BuildUninstallRequest(
 							listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
 							buildSelectionState.getPrimaryBuildName()
 					),
 					consoleView,
-					MyFrame.this::startTask
+					MyFrame.this
 			);
-			if (tasksStarted == 0) {
-				progressBar.setIndeterminate(false);
-				progressBar.setString("Done!");
-				applyFrameState(createFrameState());
-			}
 		}
 	}
 
@@ -310,31 +301,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				buildSelectionStore.saveBuildSelection(buildSelectionState);
 				System.out.println(buildSelectionState.getBuildPaths());
 				System.out.println(buildSelectionState.getBuildNames());
-			}
-		}
-	}
-
-	class Task extends SwingWorker<Void, Void> {
-		private final String command;
-
-		public Task(String command) {
-			this.command = command;
-		}
-
-		@Override
-		public Void doInBackground() {
-			buildInstaller.runCommand(command);
-			return null;
-		}
-
-		@Override
-		public void done() {
-			if (buildInstaller.finishTask() == 0) {
-				progressBar.setString("Done!");
-				progressBar.setBackground(Color.green);
-				refreshListOfDevices();
-				progressBar.setIndeterminate(false);
-				applyFrameState(createFrameState());
 			}
 		}
 	}
@@ -384,12 +350,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
-	private void startTask(String command) {
-		Task task = new Task(command);
-		task.addPropertyChangeListener(null);
-		task.execute();
-	}
-
 	private MyFrameState createFrameState() {
 		return myFrameStateFactory.create(
 				numberOfDevices,
@@ -404,6 +364,33 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		uninstallAllButton.setEnabled(frameState.isUninstallAllEnabled());
 		width = frameState.getWindowWidth();
 		applyWindowSize();
+	}
+
+	@Override
+	public void applyProgressState(BuildProgressState progressState) {
+		progressBar.setString(progressState.getMessage());
+		progressBar.setIndeterminate(progressState.isIndeterminate());
+		progressBar.setBackground(progressState.getBackgroundColor());
+	}
+
+	@Override
+	public void setInstallEnabled(boolean enabled) {
+		installButton.setEnabled(enabled);
+	}
+
+	@Override
+	public void setUninstallAllEnabled(boolean enabled) {
+		uninstallAllButton.setEnabled(enabled);
+	}
+
+	@Override
+	public void refreshDevices() {
+		refreshListOfDevices();
+	}
+
+	@Override
+	public void applyCurrentFrameState() {
+		applyFrameState(createFrameState());
 	}
 
 	private void applyWindowSize() {
