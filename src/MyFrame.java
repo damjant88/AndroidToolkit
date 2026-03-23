@@ -3,7 +3,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.*;
+import java.io.File;
 import java.util.ArrayList;
 import javax.swing.*;
 import Buttons.*;
@@ -13,6 +13,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	static Util utility = new Util();
 	private static final StoragePaths STORAGE_PATHS = new StoragePaths();
+	private static final BuildSelectionStore BUILD_SELECTION_STORE = new BuildSelectionStore(STORAGE_PATHS);
 	private static int counter = 0;
 	private static final Object lock = new Object();
 	File file1 = null;
@@ -29,8 +30,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	ArrayList<Boolean> isInstalledList = new ArrayList<>();
 	int numberOfDevices;
 	FileTextFieldBox fileTextFieldBox;
-	ArrayList<String> builds;
-	ArrayList<String> build_names;
+	BuildSelectionState buildSelectionState;
 	ConsoleView consoleView;
 	int height = 460;
 	int width;
@@ -94,39 +94,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		staticPane = new StaticPane();
 		this.add(staticPane);
 
-		File temp_builds = STORAGE_PATHS.buildsFile();
-		if (temp_builds.exists()) {
-			try {
-				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(temp_builds));
-				builds = (ArrayList<String>) objectInputStream.readObject();
-				objectInputStream.close();
-				build_names = new ArrayList<>();
-				for (int i = 0; i < builds.size(); i++) {
-					if (builds.get(i) != null) {
-						String separator = builds.get(i).contains("/") ? "/" : "\\"; // Check if path uses '/' or '\'
-						build_names.add(builds.get(i).substring(builds.get(i).lastIndexOf(separator) + 1));
-					}
-				}
-				System.out.println("Polazna lista buildova je : " + builds);
-				System.out.println("Polazna lista imena je : " + build_names);
+		buildSelectionState = BUILD_SELECTION_STORE.loadBuildSelection();
+		System.out.println("Polazna lista buildova je : " + buildSelectionState.getBuildPaths());
+		System.out.println("Polazna lista imena je : " + buildSelectionState.getBuildNames());
 
-			} catch (IOException | ClassNotFoundException ex) {
-				throw new RuntimeException(ex);
-			}
-			try {
-				FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.buildsFile());
-				ObjectOutputStream os = new ObjectOutputStream(fs);
-				os.writeObject(builds);
-				os.close();
-			} catch (IOException ex) {
-				throw new RuntimeException(ex);
-			}
-		} else{
-			builds = new ArrayList<>();
-			build_names = new ArrayList<>();
-		}
-
-		fileTextFieldBox = new FileTextFieldBox(build_names);
+		fileTextFieldBox = new FileTextFieldBox(buildSelectionState.getBuildNames());
 		fileTextFieldBox.addActionListener(new FileButtonBoxListener());
 		this.add(fileTextFieldBox);
 
@@ -159,6 +131,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			element.setVisible(false);
 		}
 		listOfDevices.clear();
+		isInstalledList.clear();
 		serialNumberList = utility.getConnectedDevices();
 		for (int i = 0; i < serialNumberList.size(); i++) {
 			device = new Device(this, i, this::refreshListOfDevices);
@@ -168,7 +141,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			isInstalledList.add(device.appIsInstalled);
 			numberOfDevices = listOfDevices.size();
 		}
-		if(isInstalledList.contains(false) && !fileTextFieldBox.getItemAt(0).equals("")){
+		if(isInstalledList.contains(false) && fileTextFieldBox.getItemCount() > 0 && !fileTextFieldBox.getItemAt(0).equals("")){
 			installButton.setEnabled(true);
 		}
 		if(!isInstalledList.contains(true)){
@@ -197,13 +170,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				file2 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 			}
 			try {
-				FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.locationFile());
-				ObjectOutputStream os = new ObjectOutputStream(fs);
-				os.writeObject(file2);
-				os.close();
+				BUILD_SELECTION_STORE.saveDefaultBuildLocation(file2);
 				JOptionPane.showMessageDialog(null, "Default build location is set!" + "\n" + file2.getAbsolutePath(), "Default Build Location",
 						JOptionPane.INFORMATION_MESSAGE);
-			} catch (IOException ex) {
+			} catch (RuntimeException ex) {
 				throw new RuntimeException(ex);
 			}
 		}
@@ -256,10 +226,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			for (int i = 0; i < numberOfDevices; i++) {
 				if (listOfDevices.get(i).radio.isSelected() && !listOfDevices.isEmpty()) {
 					listOfDevices.get(i).radioState = true;
-					Task task1 = new Task("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + builds.get(0) + "\"");
+					Task task1 = new Task("adb -s " + listOfDevices.get(i).serial + " install " + "\"" + buildSelectionState.getPrimaryBuildPath() + "\"");
 					task1.addPropertyChangeListener(null);
 					task1.execute();
-					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App installed: " + build_names.get(0));
+					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App installed: " + buildSelectionState.getPrimaryBuildName());
 				} else {
 					listOfDevices.get(i).radioState = false;
 				}
@@ -284,7 +254,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 							+ utility.getSafePathPackage(listOfDevices.get(i).serial));
 					task[i].addPropertyChangeListener(null);
 					task[i].execute();
-					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App removed: " + build_names.get(0));
+					consoleView.appendText(listOfDevices.get(i).deviceName + " (" + listOfDevices.get(i).serial + "):" + "\n" + "App removed: " + buildSelectionState.getPrimaryBuildName());
 				}
 				i++;
 			}
@@ -295,53 +265,18 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			File default_location = STORAGE_PATHS.locationFile();
-			if (default_location.exists()) {
-				try {
-					ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(STORAGE_PATHS.locationFile()));
-					default_location = (File) objectInputStream.readObject();
-				} catch (IOException | ClassNotFoundException ex) {
-					throw new RuntimeException(ex);
-				}
-			}
+			File default_location = BUILD_SELECTION_STORE.loadDefaultBuildLocation();
 			JFileChooser fileChooser = new JFileChooser(default_location.getAbsolutePath());
 			int response = fileChooser.showOpenDialog(fileButton);
 			if (response == JFileChooser.APPROVE_OPTION) {
 				file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
-				String name = file1.getAbsolutePath().substring(file1.getAbsolutePath().lastIndexOf("\\") + 1);
 				String build = file1.getAbsolutePath();
-				if (!builds.contains(build)) {
-					builds.add(0, build);
-					System.out.println("Novi build je: " + name);
-					build_names.add(0, name);
-				}
-				else {
-					int index = builds.indexOf(build);
-
-					// If element found, remove it and add it to index 0
-					if (index != -1) {
-						builds.remove(index);
-						build_names.remove(index);
-						builds.add(0, build);
-						build_names.add(0, name);
-					}
-				}
-				fileTextFieldBox.insertItemAt(file1.getName(), 0);
+				buildSelectionState.addBuild(build);
+				refreshBuildSelectionBox();
 				fileTextFieldBox.setSelectedIndex(0);
-				if (builds.size() > 5) {
-					builds.remove(5);
-					build_names.remove(5);
-				}
-				System.out.println("Lista buildova: " + builds);
-				System.out.println("Lista imena: " + build_names);
-				try {
-					FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.buildsFile());
-					ObjectOutputStream os = new ObjectOutputStream(fs);
-					os.writeObject(builds);
-					os.close();
-				} catch (IOException ex) {
-						throw new RuntimeException(ex);
-					}
+				System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
+				System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
+				BUILD_SELECTION_STORE.saveBuildSelection(buildSelectionState);
 				if (!serialNumberList.isEmpty() && isInstalledList.contains(false)){
 					installButton.setEnabled(true);
 				}
@@ -356,32 +291,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == fileTextFieldBox) {
-				//Swap current build at index 0
 				int temp_index = fileTextFieldBox.getSelectedIndex();
 				System.out.println(fileTextFieldBox.getSelectedIndex());
-				String temp_build = builds.get(temp_index);
-				String temp_build_name = build_names.get(temp_index);
-				builds.set(temp_index, builds.get(0));
-				build_names.set(temp_index, build_names.get(0));
-				builds.set(0, temp_build);
-				build_names.set(0, temp_build_name);
-				fileTextFieldBox.removeAllItems();
-
-				// Add new values to the combo box
-				for (String newValue : build_names) {
-					fileTextFieldBox.addItem(newValue);
-				}
-
-				System.out.println(builds);
-				System.out.println(build_names);
-				try {
-					FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.buildsFile());
-					ObjectOutputStream os = new ObjectOutputStream(fs);
-					os.writeObject(builds);
-					os.close();
-				} catch (IOException ex) {
-					throw new RuntimeException(ex);
-				}
+				buildSelectionState.selectBuild(temp_index);
+				refreshBuildSelectionBox();
+				BUILD_SELECTION_STORE.saveBuildSelection(buildSelectionState);
+				System.out.println(buildSelectionState.getBuildPaths());
+				System.out.println(buildSelectionState.getBuildNames());
 			}
 		}
 	}
@@ -471,5 +387,12 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			revalidate();
 			repaint();
 		});
+	}
+
+	private void refreshBuildSelectionBox() {
+		fileTextFieldBox.removeAllItems();
+		for (String buildName : buildSelectionState.getBuildNames()) {
+			fileTextFieldBox.addItem(buildName);
+		}
 	}
 }
