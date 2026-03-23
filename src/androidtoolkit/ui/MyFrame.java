@@ -31,7 +31,7 @@ import javax.swing.JTextPane;
 import javax.swing.WindowConstants;
 import Buttons.*;
 
-public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi {
+public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi, DeviceMonitor.DeviceMonitorUi {
 
 	private final AppServices appServices;
 	private final CommandExecutor commandExecutor;
@@ -56,6 +56,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	BuildInstaller buildInstaller;
 	BuildOperationCoordinator buildOperationCoordinator;
 	DeviceCatalog deviceCatalog;
+	DeviceMonitor deviceMonitor;
 	MyFrameStateFactory myFrameStateFactory;
 	int height = 460;
 	int width;
@@ -75,6 +76,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		this.buildInstaller = appServices.buildInstaller();
 		this.buildOperationCoordinator = new BuildOperationCoordinator(buildInstaller);
 		this.deviceCatalog = appServices.deviceCatalog();
+		this.deviceMonitor = new DeviceMonitor(deviceCatalog, this::currentSerials, this, 3000);
 		this.myFrameStateFactory = new MyFrameStateFactory();
 
 		File logs = storagePaths.logsDir();
@@ -86,7 +88,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		setStaticElements();
 		refreshListOfDevices();
 		this.setVisible(true);
-		startDeviceCheckThread();
+		deviceMonitor.start();
 	}
 
 	private void setStaticElements() {
@@ -305,26 +307,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		}
 	}
 
-	public void startDeviceCheckThread() {
-		Thread thread = new Thread(() -> {
-			while (!Thread.currentThread().isInterrupted()) {
-				try {
-					ArrayList<String> tempSerialNumberList = deviceCatalog.connectedSerials();
-					if (!tempSerialNumberList.equals(serialNumberList)) {
-						updateDeviceList(tempSerialNumberList);
-						updatePanelSize();
-					}
-					Thread.sleep(3000);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					e.printStackTrace();
-				}
-			}
-		});
-		thread.start();
-	}
-
-	public void updateDeviceList(ArrayList<String> tempListOfDevices) {
+	private void updateDeviceList(ArrayList<String> tempListOfDevices) {
 		for(Device element : listOfDevices) {
 			remove(element);
 		}
@@ -391,6 +374,18 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	@Override
 	public void applyCurrentFrameState() {
 		applyFrameState(createFrameState());
+	}
+
+	@Override
+	public void onDeviceListChanged(ArrayList<String> latestSerials) {
+		SwingUtilities.invokeLater(() -> {
+			updateDeviceList(latestSerials);
+			updatePanelSize();
+		});
+	}
+
+	private ArrayList<String> currentSerials() {
+		return new ArrayList<>(serialNumberList);
 	}
 
 	private void applyWindowSize() {
