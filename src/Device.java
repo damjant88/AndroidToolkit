@@ -3,7 +3,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -13,6 +12,7 @@ public class Device extends JPanel {
 
     private static final StoragePaths STORAGE_PATHS = new StoragePaths();
     Util utility;
+    DeviceActionService deviceActionService;
     File file = null;
     SaveSPLogsButtons saveLogsButton;
     LogLocationButtons logLocationButton;
@@ -51,6 +51,7 @@ public class Device extends JPanel {
         this.setLayout(null);
         icon = new Icons();
         utility = new Util();
+        deviceActionService = new DeviceActionService(utility, STORAGE_PATHS);
         serialNumberList = utility.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
         serial = serialNumberList.get(index);
@@ -321,11 +322,10 @@ public class Device extends JPanel {
             if (response == JFileChooser.APPROVE_OPTION) {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
                 logLocation = file.getAbsolutePath();
-                String appFlavour = utility.getSafePathPackage(serial);
-                utility.saveLogs(serial, appFlavour, file.getAbsolutePath());
+                String exportedLogsFolder = deviceActionService.saveLogs(serial, file.getAbsolutePath());
                 eventTrackerButton.setEnabled(true);
                 logLocationButton.setEnabled(true);
-                openExplorerToFolder(logLocation + "/logs/");
+                openExplorerToFolder(exportedLogsFolder);
                 parent.consoleView.appendText("SP logs from " + deviceName + " are saved to " + logLocation);
             }
         }
@@ -342,7 +342,7 @@ public class Device extends JPanel {
                         JOptionPane.INFORMATION_MESSAGE);
 
             } else if (!deviceInfo.serialNo.endsWith(":5555")) {
-                utility.startWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
+                deviceActionService.enableWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
                 if (parent.isConsoleVisible) {
                     parent.consoleView.appendText("WiFi debugging is enabled on " + deviceName + "!\n" +
                             "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
@@ -358,7 +358,7 @@ public class Device extends JPanel {
                     wifiDebug.setText("Disable WiFi");
                 }
             } else {
-                utility.stopWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
+                deviceActionService.disableWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
                 if (parent.isConsoleVisible) {
                     parent.consoleView.appendText("WiFi debugging is disabled on " + deviceName);
                 } else {
@@ -375,7 +375,7 @@ public class Device extends JPanel {
             int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Reboot the device",
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
-                utility.reboot(deviceInfo.serialNo);
+                deviceActionService.reboot(deviceInfo.serialNo);
             }
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText(deviceName + " is restarted!");
@@ -386,13 +386,8 @@ public class Device extends JPanel {
     class TakeScreenshotButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            String output = utility.takeScreenshot(deviceInfo.serialNo, "sdcard/", "screenshot.png");
-            File device = STORAGE_PATHS.screenshotDir(deviceName);
-            if (!device.exists()) {
-                device.mkdirs();
-            }
-            utility.pullFile(deviceInfo.serialNo, output, device.getPath());
-            ScreenshotFrame screenshotFrame = new ScreenshotFrame(deviceName, numberOfDevices);
+            deviceActionService.captureScreenshot(deviceInfo.serialNo, deviceName);
+            new ScreenshotFrame(deviceName, numberOfDevices);
             parent.consoleView.appendText("Screenhot is captured on " + deviceName);
         }
     }
@@ -400,7 +395,7 @@ public class Device extends JPanel {
     class EnableFirebaseListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            utility.enableAnalyticsDebug(deviceInfo.serialNo, deviceInfo.safePathPackage);
+            deviceActionService.enableFirebaseDebugging(deviceInfo.serialNo, deviceInfo.safePathPackage);
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText("Firebase Debugging enabled on " + deviceName + "!" + "\n"
                         + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.");
@@ -420,7 +415,7 @@ public class Device extends JPanel {
             int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Uninstall the app",
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
-                utility.uninstallApp(deviceInfo.serialNo, deviceInfo.safePathPackage);
+                deviceActionService.uninstallApp(deviceInfo.serialNo, deviceInfo.safePathPackage);
                 saveLogsButton.setEnabled(false);
                 enableFirebase.setEnabled(false);
                 labelIcon.setVisible(true);
@@ -446,15 +441,10 @@ public class Device extends JPanel {
     }
 
     public static void openExplorerToFolder(String folderPath) {
-        File folder = new File(folderPath);
-        if (folder.exists() && folder.isDirectory()) {
-            try {
-                Desktop.getDesktop().open(folder);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.err.println("Folder does not exist or is not a directory: " + folderPath);
+        try {
+            new DeviceActionService(new Util(), STORAGE_PATHS).openFolder(folderPath);
+        } catch (RuntimeException ex) {
+            System.err.println(ex.getMessage());
         }
     }
 
