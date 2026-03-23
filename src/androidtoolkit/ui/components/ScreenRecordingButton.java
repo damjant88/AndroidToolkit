@@ -4,12 +4,12 @@ package androidtoolkit.ui.components;
 import javax.swing.*;
 import java.awt.*;
 
-public class ScreenRecordingButtons extends DeviceButtons {
+public class ScreenRecordingButton extends DeviceActionButton {
 	/**
 	 *
 	 */
 
-	public ScreenRecordingButtons() {
+	public ScreenRecordingButton() {
 		this.setBounds(105, 280, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEmptyBorder());
@@ -20,4 +20,5 @@ public class ScreenRecordingButtons extends DeviceButtons {
 		this.setText("Start Record");
 	}
 }
+
 

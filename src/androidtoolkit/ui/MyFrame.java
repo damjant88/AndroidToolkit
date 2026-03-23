@@ -36,7 +36,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	private final StoragePaths storagePaths;
 	private final BuildSelectionStore buildSelectionStore;
 	File file1 = null;
-	DevicesButton devicesButton;
+	RefreshDevicesButton RefreshDevicesButton;
 	JButton fileButton;
 	InstallButton installButton;
 	UninstallAllButton uninstallAllButton;
@@ -135,9 +135,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		fileTextFieldBox.addActionListener(new SelectBuildAction(this));
 		this.add(fileTextFieldBox);
 
-		devicesButton = new DevicesButton(icon.display_icon);
-		devicesButton.addActionListener(new RefreshDevicesAction(this));
-		this.add(devicesButton);
+		RefreshDevicesButton = new RefreshDevicesButton(icon.display_icon);
+		RefreshDevicesButton.addActionListener(new RefreshDevicesAction(this));
+		this.add(RefreshDevicesButton);
 
 		fileButton = new FileButton("Select Build");
 		fileButton.addActionListener(new ChooseBuildAction(this));
@@ -391,4 +391,5 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		System.out.println(buildSelectionState.getBuildNames());
 	}
 }
+
 

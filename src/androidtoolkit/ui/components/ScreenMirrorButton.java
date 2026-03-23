@@ -4,12 +4,12 @@ package androidtoolkit.ui.components;
 import javax.swing.*;
 import java.awt.*;
 
-public class ScreenMirrorButtons extends DeviceButtons {
+public class ScreenMirrorButton extends DeviceActionButton {
 	/**
 	 *
 	 */
 
-	public ScreenMirrorButtons() {
+	public ScreenMirrorButton() {
 		this.setBounds(0, 280, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
@@ -20,4 +20,5 @@ public class ScreenMirrorButtons extends DeviceButtons {
 		this.setText("Screen Mirror");
 	}
 }
+
 

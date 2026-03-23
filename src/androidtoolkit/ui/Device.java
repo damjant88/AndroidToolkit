@@ -29,14 +29,14 @@ public class Device extends JPanel {
     LogExporter logExporter;
     DevicePanelStateFactory devicePanelStateFactory;
     File file = null;
-    SaveSPLogsButtons saveLogsButton;
-    LogLocationButtons logLocationButton;
-    WifiDebugButtons wifiDebug;
-    EnableFirebaseButtons enableFirebase;
-    RebootButtons reboot;
-    TakeScreenshotButtons takeScreenshotButton;
-    UninstallAppButtons uninstallApp;
-    RadioButtons radio;
+    SaveSpLogsButton saveLogsButton;
+    LogLocationButton logLocationButton;
+    WifiDebugButton wifiDebug;
+    EnableFirebaseButton enableFirebase;
+    RebootButton reboot;
+    TakeScreenshotButton takeScreenshotButton;
+    UninstallAppButton uninstallApp;
+    DeviceSelectionRadioButton radio;
     boolean radioState = false;
     LogoIconLabels labelIcon;
     DeviceTextPanes deviceTextPane;
@@ -50,9 +50,9 @@ public class Device extends JPanel {
     Runnable refreshDevicesMethod;
     String logLocation;
     String recordingLocation;
-    EventTrackerButtons eventTrackerButton;
-    ScreenMirrorButtons screenMirrorButton;
-    ScreenRecordingButtons screenRecordingButton;
+    EventTrackerButton eventTrackerButton;
+    ScreenMirrorButton screenMirrorButton;
+    ScreenRecordingButton screenRecordingButton;
     private final RecordingSession recordingSession = new RecordingSession();
     ConsoleView consoleView;
     LiveEventTracker liveEventTracker;
@@ -87,7 +87,7 @@ public class Device extends JPanel {
 
     private void setIconAndButtons(int totalDeviceCount) {
         System.out.println(deviceName);
-        radio = new RadioButtons(deviceName);
+        radio = new DeviceSelectionRadioButton(deviceName);
         radio.setVisible(true);
         this.add(radio);
 
@@ -100,43 +100,43 @@ public class Device extends JPanel {
         deviceTextPane.setVisible(true);
         this.add(deviceTextPane);
 
-        eventTrackerButton = new EventTrackerButtons();
+        eventTrackerButton = new EventTrackerButton();
         eventTrackerButton.addActionListener(new DeviceEventTrackerAction(this));
         this.add(eventTrackerButton);
 
-        saveLogsButton = new SaveSPLogsButtons();
+        saveLogsButton = new SaveSpLogsButton();
         saveLogsButton.addActionListener(new DeviceSaveLogsAction(this));
         this.add(saveLogsButton);
 
-        logLocationButton = new LogLocationButtons();
+        logLocationButton = new LogLocationButton();
         logLocationButton.addActionListener(new DeviceLogLocationAction(this));
         this.add(logLocationButton);
 
-        screenMirrorButton = new ScreenMirrorButtons();
+        screenMirrorButton = new ScreenMirrorButton();
         screenMirrorButton.addActionListener(new DeviceScreenMirrorAction(this));
         this.add(screenMirrorButton);
 
-        screenRecordingButton = new ScreenRecordingButtons();
+        screenRecordingButton = new ScreenRecordingButton();
         screenRecordingButton.addActionListener(new DeviceScreenRecordingAction(this));
         this.add(screenRecordingButton);
 
-        wifiDebug = new WifiDebugButtons();
+        wifiDebug = new WifiDebugButton();
         wifiDebug.addActionListener(new DeviceToggleWifiDebugAction(this));
         this.add(wifiDebug);
 
-        enableFirebase = new EnableFirebaseButtons();
+        enableFirebase = new EnableFirebaseButton();
         enableFirebase.addActionListener(new DeviceEnableFirebaseAction(this));
         this.add(enableFirebase);
 
-        reboot = new RebootButtons();
+        reboot = new RebootButton();
         reboot.addActionListener(new DeviceRebootAction(this));
         this.add(reboot);
 
-        takeScreenshotButton = new TakeScreenshotButtons();
+        takeScreenshotButton = new TakeScreenshotButton();
         takeScreenshotButton.addActionListener(new DeviceTakeScreenshotAction(this));
         this.add(takeScreenshotButton);
 
-        uninstallApp = new UninstallAppButtons();
+        uninstallApp = new UninstallAppButton();
         uninstallApp.addActionListener(new DeviceUninstallAppAction(this));
         this.add(uninstallApp);
 
@@ -354,4 +354,5 @@ public class Device extends JPanel {
         }
     }
 }
+
 

@@ -4,12 +4,12 @@ import java.awt.*;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 
-public class UninstallAppButtons extends DeviceButtons {
+public class UninstallAppButton extends DeviceActionButton {
 	/**
 	 * 
 	 */
 
-	public UninstallAppButtons() {
+	public UninstallAppButton() {
 		this.setBounds(105, 220, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
@@ -21,4 +21,5 @@ public class UninstallAppButtons extends DeviceButtons {
 		this.setText("Uninstall");
 	}
 }
+
 

@@ -4,12 +4,12 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 
-public class DevicesButton extends JButton{
+public class RefreshDevicesButton extends JButton{
 	/**
 	 * 
 	 */
 
-	public DevicesButton(ImageIcon buttonIcon) {
+	public RefreshDevicesButton(ImageIcon buttonIcon) {
 		this.setBounds(0, 0, 199, 50);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
@@ -22,4 +22,5 @@ public class DevicesButton extends JButton{
 		this.setIcon(buttonIcon);
 	}
 }
+
 

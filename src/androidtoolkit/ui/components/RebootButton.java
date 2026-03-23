@@ -1,21 +1,24 @@
 package androidtoolkit.ui.components;
 
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
 
-public class DefaultBuildLocationButton extends JButton{
+public class RebootButton extends DeviceActionButton {
 	/**
-	 *
+	 * 
 	 */
 
-	public DefaultBuildLocationButton(String text) {
-		this.setBounds(0, 0, 50, 20);
+	public RebootButton() {
+		this.setBounds(0, 250, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
 //		this.setBackground(Color.lightGray);
 		this.setMargin(new Insets(0, 0, 0, 0));
 		this.setFont(new Font("Calibri", Font.BOLD, 15));
-		this.setText(text);
-		this.setVisible(true);
+		this.setVisible(false);
+		this.setText("Reboot");
 	}
 }
+
+

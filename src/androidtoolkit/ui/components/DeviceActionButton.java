@@ -3,12 +3,12 @@ import java.awt.*;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 
-public class DeviceButtons extends JButton {
+public class DeviceActionButton extends JButton {
     /**
      *
      */
 
-    public DeviceButtons() {
+    public DeviceActionButton() {
 //      this.setBounds(0, 220, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
@@ -20,4 +20,5 @@ public class DeviceButtons extends JButton {
 //      this.setText("Firebase");
     }
 }
+
 

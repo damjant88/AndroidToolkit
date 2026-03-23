@@ -12,8 +12,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-import androidtoolkit.ui.components.CopyScreenshotButtons;
-import androidtoolkit.ui.components.ScreenshotLocationButtons;
+import androidtoolkit.ui.components.CopyScreenshotButton;
+import androidtoolkit.ui.components.ScreenshotLocationButton;
 
 public class ScreenshotFrame extends JFrame {
 
@@ -21,21 +21,21 @@ public class ScreenshotFrame extends JFrame {
 	String deviceName;
 	int numberOfDevices;
 	Icons icon;
-	ScreenshotLocationButtons screenshotLocationButton;
-	CopyScreenshotButtons copyScreenshotButton;
+	ScreenshotLocationButton screenshotLocationButton;
+	CopyScreenshotButton copyScreenshotButton;
 
 	public ScreenshotFrame(String deviceName, int numberOfDevices) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JLabel imageLabel = new JLabel();
 		imageLabel.setBounds(0, 30, 240, 520);
 		icon = new Icons();
-		screenshotLocationButton = new ScreenshotLocationButtons();
+		screenshotLocationButton = new ScreenshotLocationButton();
 		screenshotLocationButton.addActionListener(new ScreenshotLocationButtonListener());
 		screenshotLocationButton.setVisible(true);
 		screenshotLocationButton.setOpaque(true);
 		this.add(screenshotLocationButton);
 
-		copyScreenshotButton = new CopyScreenshotButtons();
+		copyScreenshotButton = new CopyScreenshotButton();
 		copyScreenshotButton.addActionListener(new CopyScreenshotButtonListener());
 		copyScreenshotButton.setVisible(true);
 		copyScreenshotButton.setOpaque(true);
@@ -136,6 +136,7 @@ public class ScreenshotFrame extends JFrame {
 		}
 	}
 }
+
 
 
 

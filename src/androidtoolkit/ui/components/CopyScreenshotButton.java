@@ -1,23 +1,23 @@
 package androidtoolkit.ui.components;
 
+import javax.swing.*;
 import java.awt.*;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
 
-public class RebootButtons extends DeviceButtons {
+public class CopyScreenshotButton extends JButton{
 	/**
-	 * 
+	 *
 	 */
 
-	public RebootButtons() {
-		this.setBounds(0, 250, 100, 30);
+	public CopyScreenshotButton() {
+		this.setBounds(125, 0, 120, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
 //		this.setBackground(Color.lightGray);
 		this.setMargin(new Insets(0, 0, 0, 0));
-		this.setFont(new Font("Calibri", Font.BOLD, 15));
+		this.setFont(new Font("Calibri", Font.BOLD, 14));
 		this.setVisible(false);
-		this.setText("Reboot");
+		this.setText("Copy to clipboard");
 	}
 }
+
 
