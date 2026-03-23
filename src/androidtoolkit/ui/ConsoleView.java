@@ -8,7 +8,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-class ConsoleView extends JPanel {
+public class ConsoleView extends JPanel {
     private final CommandExecutor commandExecutor;
     JTextArea textArea;
     private JScrollPane scrollPane;

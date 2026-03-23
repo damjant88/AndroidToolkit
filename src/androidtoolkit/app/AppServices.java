@@ -26,6 +26,9 @@ public class AppServices {
     private final DeviceActionService deviceActionService;
     private final DeviceInfoService deviceInfoService;
     private final ScreenRecordingService screenRecordingService;
+    private final BuildInstaller buildInstaller;
+    private final DeviceCatalog deviceCatalog;
+    private final LogExporter logExporter;
 
     public AppServices() {
         this.storagePaths = new StoragePaths();
@@ -38,6 +41,9 @@ public class AppServices {
         this.deviceActionService = new DeviceActionService(deviceGateway, storageService, hostToolsGateway);
         this.deviceInfoService = new DeviceInfoService(deviceGateway, commandExecutor);
         this.screenRecordingService = new ScreenRecordingService(commandExecutor, deviceGateway, storageService, hostToolsGateway);
+        this.buildInstaller = new BuildInstaller(deviceGateway, commandExecutor);
+        this.deviceCatalog = new DeviceCatalog(deviceGateway);
+        this.logExporter = new LogExporter(deviceActionService);
     }
 
     public StoragePaths storagePaths() {
@@ -74,5 +80,17 @@ public class AppServices {
 
     public ScreenRecordingService screenRecordingService() {
         return screenRecordingService;
+    }
+
+    public BuildInstaller buildInstaller() {
+        return buildInstaller;
+    }
+
+    public DeviceCatalog deviceCatalog() {
+        return deviceCatalog;
+    }
+
+    public LogExporter logExporter() {
+        return logExporter;
     }
 }

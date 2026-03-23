@@ -1,6 +1,7 @@
 package androidtoolkit.ui;
 
 import androidtoolkit.app.AppServices;
+import androidtoolkit.app.LogExporter;
 import androidtoolkit.domain.DeviceInfo;
 import androidtoolkit.domain.RecordingSession;
 import androidtoolkit.service.CommandExecutor;
@@ -26,6 +27,7 @@ public class Device extends JPanel {
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
     DeviceInfoService deviceInfoService;
+    LogExporter logExporter;
     DevicePanelStateFactory devicePanelStateFactory;
     File file = null;
     SaveSPLogsButtons saveLogsButton;
@@ -70,6 +72,7 @@ public class Device extends JPanel {
         deviceActionService = appServices.deviceActionService();
         screenRecordingService = appServices.screenRecordingService();
         deviceInfoService = appServices.deviceInfoService();
+        logExporter = appServices.logExporter();
         devicePanelStateFactory = new DevicePanelStateFactory();
         serialNumberList = deviceGateway.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
@@ -165,7 +168,7 @@ public class Device extends JPanel {
             if (response == JFileChooser.APPROVE_OPTION) {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
                 logLocation = file.getAbsolutePath();
-                String exportedLogsFolder = deviceActionService.saveLogs(serial, file.getAbsolutePath());
+                String exportedLogsFolder = logExporter.exportDeviceLogs(serial, file.getAbsolutePath());
                 eventTrackerButton.setEnabled(true);
                 logLocationButton.setEnabled(true);
                 openExplorerToFolder(exportedLogsFolder);
@@ -289,6 +292,26 @@ public class Device extends JPanel {
         } catch (RuntimeException ex) {
             System.err.println(ex.getMessage());
         }
+    }
+
+    public boolean isSelectedForInstall() {
+        return radio.isSelected();
+    }
+
+    public void setRadioState(boolean radioState) {
+        this.radioState = radioState;
+    }
+
+    public String getSerial() {
+        return serial;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public boolean isAppInstalled() {
+        return appIsInstalled;
     }
 
     private void applyPanelState(DevicePanelState panelState) {

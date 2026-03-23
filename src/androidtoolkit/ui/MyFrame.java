@@ -1,10 +1,11 @@
 package androidtoolkit.ui;
 
 import androidtoolkit.app.AppServices;
+import androidtoolkit.app.BuildInstaller;
+import androidtoolkit.app.DeviceCatalog;
 import androidtoolkit.domain.BuildSelectionState;
 import androidtoolkit.service.BuildSelectionStore;
 import androidtoolkit.service.CommandExecutor;
-import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.StoragePaths;
 
 import java.awt.*;
@@ -20,7 +21,6 @@ import Buttons.*;
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	private final AppServices appServices;
-	private final DeviceGateway deviceGateway;
 	private final CommandExecutor commandExecutor;
 	private final StoragePaths storagePaths;
 	private final BuildSelectionStore buildSelectionStore;
@@ -40,7 +40,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	FileTextFieldBox fileTextFieldBox;
 	BuildSelectionState buildSelectionState;
 	ConsoleView consoleView;
-	DeviceCommandCoordinator deviceCommandCoordinator;
+	BuildInstaller buildInstaller;
+	DeviceCatalog deviceCatalog;
 	int height = 460;
 	int width;
 	Boolean isConsoleVisible = false;
@@ -53,17 +54,17 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	public MyFrame(AppServices appServices) {
 		this.appServices = appServices;
-		this.deviceGateway = appServices.deviceGateway();
 		this.commandExecutor = appServices.commandExecutor();
 		this.storagePaths = appServices.storagePaths();
 		this.buildSelectionStore = appServices.buildSelectionStore();
+		this.buildInstaller = appServices.buildInstaller();
+		this.deviceCatalog = appServices.deviceCatalog();
 
 		File logs = storagePaths.logsDir();
 		if (!logs.exists()) {
 			logs.mkdirs();
 		}
 		icon = new Icons();
-		deviceCommandCoordinator = new DeviceCommandCoordinator(deviceGateway, commandExecutor);
 
 		setStaticElements();
 		refreshListOfDevices();
@@ -92,7 +93,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		this.setJMenuBar(menuBar);
 
-		serialNumberList = deviceGateway.getConnectedDevices();
+		serialNumberList = deviceCatalog.connectedSerials();
 		numberOfDevices = serialNumberList.size();
 		installButton = new InstallButton();
 		installButton.addActionListener(new InstallButtonListener());
@@ -151,7 +152,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 		listOfDevices.clear();
 		isInstalledList.clear();
-		serialNumberList = deviceGateway.getConnectedDevices();
+		serialNumberList = deviceCatalog.connectedSerials();
 		for (int i = 0; i < serialNumberList.size(); i++) {
 			device = new Device(this, i, this::refreshListOfDevices, appServices);
 			device.setVisible(true);
@@ -242,10 +243,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setIndeterminate(true);
 			progressBar.setBackground(Color.WHITE);
 			installButton.setEnabled(false);
-			int tasksStarted = deviceCommandCoordinator.startInstallTasks(
+			int tasksStarted = buildInstaller.installSelectedDevices(
 					listOfDevices,
-					buildSelectionState.getPrimaryBuildPath(),
-					buildSelectionState.getPrimaryBuildName(),
+					buildSelectionState,
 					consoleView,
 					MyFrame.this::startTask
 			);
@@ -267,7 +267,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setIndeterminate(true);
 			progressBar.setBackground(new Color(238, 238, 238));
 			uninstallAllButton.setEnabled(false);
-			int tasksStarted = deviceCommandCoordinator.startUninstallTasks(
+			int tasksStarted = buildInstaller.uninstallInstalledDevices(
 					listOfDevices,
 					buildSelectionState.getPrimaryBuildName(),
 					consoleView,
@@ -331,13 +331,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		@Override
 		public Void doInBackground() {
-			deviceCommandCoordinator.runCommand(command);
+			buildInstaller.runCommand(command);
 			return null;
 		}
 
 		@Override
 		public void done() {
-			if (deviceCommandCoordinator.finishTask() == 0) {
+			if (buildInstaller.finishTask() == 0) {
 				progressBar.setString("Done!");
 				progressBar.setBackground(Color.green);
 				refreshListOfDevices();
@@ -354,7 +354,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		Thread thread = new Thread(() -> {
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
-					ArrayList<String> tempSerialNumberList = deviceGateway.getConnectedDevices();
+					ArrayList<String> tempSerialNumberList = deviceCatalog.connectedSerials();
 					if (!tempSerialNumberList.equals(serialNumberList)) {
 						updateDeviceList(tempSerialNumberList);
 						updatePanelSize();
