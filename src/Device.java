@@ -12,6 +12,7 @@ public class Device extends JPanel {
     Util utility;
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
+    DeviceInfoService deviceInfoService;
     File file = null;
     SaveSPLogsButtons saveLogsButton;
     LogLocationButtons logLocationButton;
@@ -50,12 +51,13 @@ public class Device extends JPanel {
         utility = new Util();
         deviceActionService = new DeviceActionService(utility, STORAGE_PATHS);
         screenRecordingService = new ScreenRecordingService(utility, STORAGE_PATHS);
+        deviceInfoService = new DeviceInfoService(utility);
         serialNumberList = utility.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
         serial = serialNumberList.get(index);
         System.out.println(serial);
-        deviceInfo = new DeviceInfo(serial);
-        appIsInstalled = deviceInfo.appIsInstalled;
+        deviceInfo = deviceInfoService.load(serial);
+        appIsInstalled = deviceInfo.isAppInstalled();
         System.out.println(appIsInstalled);
         setIconAndButtons(index);
         this.setVisible(false);
@@ -76,9 +78,7 @@ public class Device extends JPanel {
         this.add(labelIcon);
 
         deviceTextPane = new DeviceTextPanes();
-        deviceTextPane.setText(deviceInfo.serialNo + "\n" + deviceInfo.manufacturer + "\n"
-                + deviceInfo.model + "\n" + "Android "
-                + deviceInfo.OSVersion + "\n" + deviceInfo.ip);
+        deviceTextPane.setText(deviceInfo.toDisplayText());
         deviceTextPane.setVisible(true);
         this.add(deviceTextPane);
 
@@ -124,7 +124,7 @@ public class Device extends JPanel {
 
         radio.setSelected(true);
 
-        switch (deviceInfo.safePathPackage) {
+        switch (deviceInfo.getSafePathPackage()) {
             case "com.smithmicro.tmobile.familymode.test":
             case "com.tmobile.familycontrols": {
                 labelIcon.setIcon(icon.logo_tmo);
@@ -298,15 +298,13 @@ public class Device extends JPanel {
         screenMirrorButton.setVisible(true);
         screenRecordingButton.setVisible(true);
         wifiDebug.setText("WiFi Debug");
-        if (deviceInfo.serialNo.endsWith(":5555")) {
+        if (deviceInfo.isWifiDebugSession()) {
             wifiDebug.setText("Disable WiFi");
         }
         wifiDebug.setVisible(true);
         enableFirebase.setVisible(true);
         reboot.setVisible(true);
-        deviceTextPane.setText(deviceInfo.serialNo + "\n" + deviceInfo.manufacturer + "\n"
-                + deviceInfo.model + "\n" + "Android "
-                + deviceInfo.OSVersion + "\n" + deviceInfo.ip);
+        deviceTextPane.setText(deviceInfo.toDisplayText());
         deviceTextPane.setVisible(true);
         takeScreenshotButton.setVisible(true);
     }
@@ -332,15 +330,15 @@ public class Device extends JPanel {
     class WifiDebugListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (deviceInfo.wifiIP.isEmpty()) {
+            if (!deviceInfo.hasWifiIp()) {
                 JOptionPane.showMessageDialog(
                         parent,
                         "Connect the device " + deviceName + " to WiFi and click on 'Display Connected Devices' button to refresh IP! ",
                         "Enable WiFi Debugging",
                         JOptionPane.INFORMATION_MESSAGE);
 
-            } else if (!deviceInfo.serialNo.endsWith(":5555")) {
-                deviceActionService.enableWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
+            } else if (!deviceInfo.isWifiDebugSession()) {
+                deviceActionService.enableWifiDebugging(deviceInfo.getSerialNumber(), deviceInfo.getIpAddress());
                 if (parent.isConsoleVisible) {
                     parent.consoleView.appendText("WiFi debugging is enabled on " + deviceName + "!\n" +
                             "If prompted on the device, allow wireless debugging on specific wifi network.\n" +
@@ -356,7 +354,7 @@ public class Device extends JPanel {
                     wifiDebug.setText("Disable WiFi");
                 }
             } else {
-                deviceActionService.disableWifiDebugging(deviceInfo.serialNo, deviceInfo.ip);
+                deviceActionService.disableWifiDebugging(deviceInfo.getSerialNumber(), deviceInfo.getIpAddress());
                 if (parent.isConsoleVisible) {
                     parent.consoleView.appendText("WiFi debugging is disabled on " + deviceName);
                 } else {
@@ -373,7 +371,7 @@ public class Device extends JPanel {
             int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Reboot the device",
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
-                deviceActionService.reboot(deviceInfo.serialNo);
+                deviceActionService.reboot(deviceInfo.getSerialNumber());
             }
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText(deviceName + " is restarted!");
@@ -384,7 +382,7 @@ public class Device extends JPanel {
     class TakeScreenshotButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            deviceActionService.captureScreenshot(deviceInfo.serialNo, deviceName);
+            deviceActionService.captureScreenshot(deviceInfo.getSerialNumber(), deviceName);
             new ScreenshotFrame(deviceName, numberOfDevices);
             parent.consoleView.appendText("Screenhot is captured on " + deviceName);
         }
@@ -393,7 +391,7 @@ public class Device extends JPanel {
     class EnableFirebaseListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            deviceActionService.enableFirebaseDebugging(deviceInfo.serialNo, deviceInfo.safePathPackage);
+            deviceActionService.enableFirebaseDebugging(deviceInfo.getSerialNumber(), deviceInfo.getSafePathPackage());
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText("Firebase Debugging enabled on " + deviceName + "!" + "\n"
                         + "Make sure 'Logging Analytics Events' toggle button is also enabled in Debug menu.");
@@ -413,7 +411,7 @@ public class Device extends JPanel {
             int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Uninstall the app",
                     JOptionPane.YES_NO_OPTION);
             if (response == JOptionPane.YES_OPTION) {
-                deviceActionService.uninstallApp(deviceInfo.serialNo, deviceInfo.safePathPackage);
+                deviceActionService.uninstallApp(deviceInfo.getSerialNumber(), deviceInfo.getSafePathPackage());
                 saveLogsButton.setEnabled(false);
                 enableFirebase.setEnabled(false);
                 labelIcon.setVisible(true);
@@ -452,7 +450,7 @@ public class Device extends JPanel {
         public void actionPerformed(ActionEvent e) {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    liveEventTracker = new LiveEventTracker(serial, deviceInfo.pid);
+                    liveEventTracker = new LiveEventTracker(serial, deviceInfo.getPid());
                     System.out.println("Tracker Opened!");
                 }
             });
