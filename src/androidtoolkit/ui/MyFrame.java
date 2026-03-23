@@ -57,6 +57,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	BuildOperationCoordinator buildOperationCoordinator;
 	DeviceCatalog deviceCatalog;
 	DeviceMonitor deviceMonitor;
+	DevicePanelFactory devicePanelFactory;
 	MyFrameStateFactory myFrameStateFactory;
 	int height = 460;
 	int width;
@@ -77,6 +78,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		this.buildOperationCoordinator = new BuildOperationCoordinator(buildInstaller);
 		this.deviceCatalog = appServices.deviceCatalog();
 		this.deviceMonitor = new DeviceMonitor(deviceCatalog, this::currentSerials, this, 3000);
+		this.devicePanelFactory = new DevicePanelFactory(appServices);
 		this.myFrameStateFactory = new MyFrameStateFactory();
 
 		File logs = storagePaths.logsDir();
@@ -167,12 +169,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 				.map(ConnectedDevice::getSerial)
 				.collect(Collectors.toList()));
 		numberOfDevices = connectedDevices.size();
-		for (ConnectedDevice connectedDevice : connectedDevices) {
-			device = new Device(this, connectedDevice, numberOfDevices, this::refreshListOfDevices, appServices);
-			device.setVisible(true);
-			listOfDevices.add(device);
-			this.add(device);
-			isInstalledList.add(device.appIsInstalled);
+		for (Device devicePanel : devicePanelFactory.createPanels(this, connectedDevices, this::refreshListOfDevices)) {
+			device = devicePanel;
+			listOfDevices.add(devicePanel);
+			this.add(devicePanel);
+			isInstalledList.add(devicePanel.appIsInstalled);
 		}
 		applyFrameState(createFrameState());
 	}
