@@ -1,6 +1,7 @@
 package androidtoolkit.ui;
 
 import androidtoolkit.app.AppServices;
+import androidtoolkit.app.ConnectedDevice;
 import androidtoolkit.app.DeviceTarget;
 import androidtoolkit.app.LogExportRequest;
 import androidtoolkit.app.LogExporter;
@@ -18,7 +19,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.util.ArrayList;
 import Buttons.*;
 
 public class Device extends JPanel {
@@ -28,7 +28,6 @@ public class Device extends JPanel {
     private final CommandExecutor commandExecutor;
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
-    DeviceInfoService deviceInfoService;
     LogExporter logExporter;
     DevicePanelStateFactory devicePanelStateFactory;
     File file = null;
@@ -45,12 +44,11 @@ public class Device extends JPanel {
     DeviceTextPanes deviceTextPane;
     DeviceInfo deviceInfo;
     Icons icon;
-    int numberOfDevices;
+    int totalDeviceCount;
     String serial;
     Boolean appIsInstalled;
     String deviceName;
     MyFrame parent;
-    ArrayList<String> serialNumberList;
     Runnable refreshDevicesMethod;
     String logLocation;
     String recordingLocation;
@@ -61,10 +59,11 @@ public class Device extends JPanel {
     ConsoleView consoleView;
     LiveEventTracker liveEventTracker;
 
-    public Device(MyFrame parent, int index, Runnable refreshDevicesMethod, AppServices appServices) {
+    public Device(MyFrame parent, ConnectedDevice connectedDevice, int totalDeviceCount, Runnable refreshDevicesMethod, AppServices appServices) {
 
-        this.setBounds((index+1)*210, 0, 210, 310);
+        this.setBounds((connectedDevice.getIndex()+1)*210, 0, 210, 310);
         this.setLayout(null);
+        this.totalDeviceCount = totalDeviceCount;
         this.storagePaths = appServices.storagePaths();
         this.deviceGateway = appServices.deviceGateway();
         this.commandExecutor = appServices.commandExecutor();
@@ -73,25 +72,22 @@ public class Device extends JPanel {
         icon = new Icons();
         deviceActionService = appServices.deviceActionService();
         screenRecordingService = appServices.screenRecordingService();
-        deviceInfoService = appServices.deviceInfoService();
         logExporter = appServices.logExporter();
         devicePanelStateFactory = new DevicePanelStateFactory();
-        serialNumberList = deviceGateway.getConnectedDevices();
-        numberOfDevices = serialNumberList.size();
-        serial = serialNumberList.get(index);
+        serial = connectedDevice.getSerial();
         System.out.println(serial);
-        deviceInfo = deviceInfoService.load(serial);
+        deviceName = connectedDevice.getDeviceName();
+        deviceInfo = connectedDevice.getDeviceInfo();
         appIsInstalled = deviceInfo.isAppInstalled();
         System.out.println(appIsInstalled);
-        setIconAndButtons(index);
+        setIconAndButtons(totalDeviceCount);
         this.setVisible(false);
         this.parent = parent;
         this.refreshDevicesMethod = refreshDevicesMethod;
         consoleView = new ConsoleView(parent, commandExecutor);
     }
 
-    private void setIconAndButtons(int i) {
-        deviceName = "Device"+(i+1);
+    private void setIconAndButtons(int totalDeviceCount) {
         System.out.println(deviceName);
         radio = new RadioButtons(deviceName);
         radio.setVisible(true);
@@ -235,7 +231,7 @@ public class Device extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             deviceActionService.captureScreenshot(deviceInfo.getSerialNumber(), deviceName);
-            new ScreenshotFrame(deviceName, numberOfDevices);
+            new ScreenshotFrame(deviceName, Device.this.totalDeviceCount);
             parent.consoleView.appendText("Screenhot is captured on " + deviceName);
         }
     }

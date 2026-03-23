@@ -3,8 +3,9 @@ package androidtoolkit.ui;
 import androidtoolkit.app.AppServices;
 import androidtoolkit.app.BuildInstallRequest;
 import androidtoolkit.app.BuildInstaller;
-import androidtoolkit.app.DeviceCatalog;
 import androidtoolkit.app.BuildUninstallRequest;
+import androidtoolkit.app.ConnectedDevice;
+import androidtoolkit.app.DeviceCatalog;
 import androidtoolkit.domain.BuildSelectionState;
 import androidtoolkit.service.BuildSelectionStore;
 import androidtoolkit.service.CommandExecutor;
@@ -155,14 +156,17 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 		listOfDevices.clear();
 		isInstalledList.clear();
-		serialNumberList = deviceCatalog.connectedSerials();
-		for (int i = 0; i < serialNumberList.size(); i++) {
-			device = new Device(this, i, this::refreshListOfDevices, appServices);
+		java.util.List<ConnectedDevice> connectedDevices = deviceCatalog.loadConnectedDevices();
+		serialNumberList = new ArrayList<>(connectedDevices.stream()
+				.map(ConnectedDevice::getSerial)
+				.collect(Collectors.toList()));
+		numberOfDevices = connectedDevices.size();
+		for (ConnectedDevice connectedDevice : connectedDevices) {
+			device = new Device(this, connectedDevice, numberOfDevices, this::refreshListOfDevices, appServices);
 			device.setVisible(true);
 			listOfDevices.add(device);
 			this.add(device);
 			isInstalledList.add(device.appIsInstalled);
-			numberOfDevices = listOfDevices.size();
 		}
 		if(isInstalledList.contains(false) && fileTextFieldBox.getItemCount() > 0 && !fileTextFieldBox.getItemAt(0).equals("")){
 			installButton.setEnabled(true);

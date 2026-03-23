@@ -42,7 +42,7 @@ public class AppServices {
         this.deviceInfoService = new DeviceInfoService(deviceGateway, commandExecutor);
         this.screenRecordingService = new ScreenRecordingService(commandExecutor, deviceGateway, storageService, hostToolsGateway);
         this.buildInstaller = new BuildInstaller(deviceGateway, commandExecutor);
-        this.deviceCatalog = new DeviceCatalog(deviceGateway);
+        this.deviceCatalog = new DeviceCatalog(deviceGateway, deviceInfoService);
         this.logExporter = new LogExporter(deviceActionService);
     }
 
