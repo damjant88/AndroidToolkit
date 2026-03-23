@@ -12,8 +12,6 @@ import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.StoragePaths;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
@@ -108,22 +106,22 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 
 		JMenuItem defaultBuildLocation = new JMenuItem("Set Default 'Select Build' Location");
 		editMenu.add(defaultBuildLocation);
-		defaultBuildLocation.addActionListener(new DefaultBuildLocationListener());
+		defaultBuildLocation.addActionListener(new DefaultBuildLocationAction(this));
 
 		consoleViewMenu = new JMenuItem("Show Console View");
 		toolsMenu.add(consoleViewMenu);
-		consoleViewMenu.addActionListener(new ConsoleViewActionListener());
+		consoleViewMenu.addActionListener(new ConsoleViewToggleAction(this));
 
 		this.setJMenuBar(menuBar);
 
 		serialNumberList = deviceCatalog.connectedSerials();
 		numberOfDevices = serialNumberList.size();
 		installButton = new InstallButton();
-		installButton.addActionListener(new InstallButtonListener());
+		installButton.addActionListener(new InstallSelectedDevicesAction(this));
 		this.add(installButton);
 
 		uninstallAllButton = new UninstallAllButton();
-		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
+		uninstallAllButton.addActionListener(new UninstallAllDevicesAction(this));
 		this.add(uninstallAllButton);
 
 		staticPane = new StaticPane();
@@ -134,15 +132,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		System.out.println("Polazna lista imena je : " + buildSelectionState.getBuildNames());
 
 		fileTextFieldBox = new FileTextFieldBox(buildSelectionState.getBuildNames());
-		fileTextFieldBox.addActionListener(new FileButtonBoxListener());
+		fileTextFieldBox.addActionListener(new SelectBuildAction(this));
 		this.add(fileTextFieldBox);
 
 		devicesButton = new DevicesButton(icon.display_icon);
-		devicesButton.addActionListener(new DevicesButtonListener());
+		devicesButton.addActionListener(new RefreshDevicesAction(this));
 		this.add(devicesButton);
 
 		fileButton = new FileButton("Select Build");
-		fileButton.addActionListener(new FileButtonListener());
+		fileButton.addActionListener(new ChooseBuildAction(this));
 		this.add(fileButton);
 
 		progressBar = new ProgressBar();
@@ -186,101 +184,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 			int progress = (Integer) evt.getNewValue();
 			progressBar.setIndeterminate(false);
 			progressBar.setValue(progress);
-		}
-	}
-
-	class DefaultBuildLocationListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			buildSelectionCoordinator.chooseDefaultBuildLocation(MyFrame.this);
-		}
-	}
-
-	class ConsoleViewActionListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			if (!consoleView.isVisible()) {
-				consoleView.setVisible(true);
-				isConsoleVisible = true;
-				consoleViewMenu.setText("Hide Console View");
-			} else {
-				consoleView.setVisible(false);
-				isConsoleVisible = false;
-				consoleViewMenu.setText("Show Console View");
-			}
-			applyWindowSize();
-		}
-	}
-
-	class DevicesButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			for (Device element : listOfDevices) {
-				element.setVisible(false);
-			}
-			refreshListOfDevices();
-			applyWindowSize();
-			setVisible(true);
-		}
-	}
-
-	class InstallButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			buildOperationCoordinator.startInstall(
-					new BuildInstallRequest(
-							listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
-							buildSelectionState.getPrimaryBuildPath(),
-							buildSelectionState.getPrimaryBuildName()
-					),
-					consoleView,
-					MyFrame.this
-			);
-		}
-	}
-
-	class UninstallAllButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			buildOperationCoordinator.startUninstall(
-					new BuildUninstallRequest(
-							listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
-							buildSelectionState.getPrimaryBuildName()
-					),
-					consoleView,
-					MyFrame.this
-			);
-		}
-	}
-
-	class FileButtonListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			buildSelectionCoordinator.chooseBuild(MyFrame.this);
-			buildSelectionState = buildSelectionCoordinator.currentState();
-			System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
-			System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
-		}
-	}
-
-	class FileButtonBoxListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			if (e.getSource() == fileTextFieldBox) {
-				int temp_index = fileTextFieldBox.getSelectedIndex();
-				System.out.println(fileTextFieldBox.getSelectedIndex());
-				buildSelectionCoordinator.selectBuildAt(temp_index, MyFrame.this);
-				buildSelectionState = buildSelectionCoordinator.currentState();
-				System.out.println(buildSelectionState.getBuildPaths());
-				System.out.println(buildSelectionState.getBuildNames());
-			}
 		}
 	}
 
@@ -421,5 +324,70 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	public void showDefaultBuildLocationSaved(File location) {
 		JOptionPane.showMessageDialog(null, "Default build location is set!" + "\n" + location.getAbsolutePath(), "Default Build Location",
 				JOptionPane.INFORMATION_MESSAGE);
+	}
+
+	void chooseDefaultBuildLocationSetting() {
+		buildSelectionCoordinator.chooseDefaultBuildLocation(this);
+	}
+
+	void toggleConsoleView() {
+		if (!consoleView.isVisible()) {
+			consoleView.setVisible(true);
+			isConsoleVisible = true;
+			consoleViewMenu.setText("Hide Console View");
+		} else {
+			consoleView.setVisible(false);
+			isConsoleVisible = false;
+			consoleViewMenu.setText("Show Console View");
+		}
+		applyWindowSize();
+	}
+
+	void showRefreshedDevices() {
+		for (Device element : listOfDevices) {
+			element.setVisible(false);
+		}
+		refreshListOfDevices();
+		applyWindowSize();
+		setVisible(true);
+	}
+
+	void startInstallSelectedDevices() {
+		buildOperationCoordinator.startInstall(
+				new BuildInstallRequest(
+						listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
+						buildSelectionState.getPrimaryBuildPath(),
+						buildSelectionState.getPrimaryBuildName()
+				),
+				consoleView,
+				this
+		);
+	}
+
+	void startUninstallInstalledDevices() {
+		buildOperationCoordinator.startUninstall(
+				new BuildUninstallRequest(
+						listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
+						buildSelectionState.getPrimaryBuildName()
+				),
+				consoleView,
+				this
+		);
+	}
+
+	void chooseBuild() {
+		buildSelectionCoordinator.chooseBuild(this);
+		buildSelectionState = buildSelectionCoordinator.currentState();
+		System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
+		System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
+	}
+
+	void selectBuildFromDropdown() {
+		int selectedIndex = fileTextFieldBox.getSelectedIndex();
+		System.out.println(fileTextFieldBox.getSelectedIndex());
+		buildSelectionCoordinator.selectBuildAt(selectedIndex, this);
+		buildSelectionState = buildSelectionCoordinator.currentState();
+		System.out.println(buildSelectionState.getBuildPaths());
+		System.out.println(buildSelectionState.getBuildNames());
 	}
 }
