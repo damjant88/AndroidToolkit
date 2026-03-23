@@ -12,6 +12,7 @@ import Buttons.*;
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	static Util utility = new Util();
+	private static final StoragePaths STORAGE_PATHS = new StoragePaths();
 	private static int counter = 0;
 	private static final Object lock = new Object();
 	File file1 = null;
@@ -39,7 +40,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	public MyFrame() {
 
-		File logs = new File("C:/AdbToolkit/Logs");
+		File logs = STORAGE_PATHS.logsDir();
 		if (!logs.exists()) {
 			logs.mkdirs();
 		}
@@ -93,7 +94,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		staticPane = new StaticPane();
 		this.add(staticPane);
 
-		File temp_builds = new File("C:/AdbToolkit/builds.ser");
+		File temp_builds = STORAGE_PATHS.buildsFile();
 		if (temp_builds.exists()) {
 			try {
 				ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(temp_builds));
@@ -113,7 +114,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				throw new RuntimeException(ex);
 			}
 			try {
-				FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
+				FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.buildsFile());
 				ObjectOutputStream os = new ObjectOutputStream(fs);
 				os.writeObject(builds);
 				os.close();
@@ -196,7 +197,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				file2 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 			}
 			try {
-				FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/location.ser");
+				FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.locationFile());
 				ObjectOutputStream os = new ObjectOutputStream(fs);
 				os.writeObject(file2);
 				os.close();
@@ -294,10 +295,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			File default_location = new File("C:/AdbToolkit/location.ser");
+			File default_location = STORAGE_PATHS.locationFile();
 			if (default_location.exists()) {
 				try {
-					ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream("C:/AdbToolkit/location.ser"));
+					ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(STORAGE_PATHS.locationFile()));
 					default_location = (File) objectInputStream.readObject();
 				} catch (IOException | ClassNotFoundException ex) {
 					throw new RuntimeException(ex);
@@ -334,7 +335,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				System.out.println("Lista buildova: " + builds);
 				System.out.println("Lista imena: " + build_names);
 				try {
-					FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
+					FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.buildsFile());
 					ObjectOutputStream os = new ObjectOutputStream(fs);
 					os.writeObject(builds);
 					os.close();
@@ -374,7 +375,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				System.out.println(builds);
 				System.out.println(build_names);
 				try {
-					FileOutputStream fs = new FileOutputStream("C:/AdbToolkit/builds.ser");
+					FileOutputStream fs = new FileOutputStream(STORAGE_PATHS.buildsFile());
 					ObjectOutputStream os = new ObjectOutputStream(fs);
 					os.writeObject(builds);
 					os.close();

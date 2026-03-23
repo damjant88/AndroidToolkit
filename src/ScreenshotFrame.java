@@ -13,6 +13,7 @@ import Buttons.ScreenshotLocationButtons;
 
 public class ScreenshotFrame extends JFrame {
 
+	private static final StoragePaths STORAGE_PATHS = new StoragePaths();
 	String deviceName;
 	int numberOfDevices;
 	Icons icon;
@@ -43,7 +44,7 @@ public class ScreenshotFrame extends JFrame {
 		this.numberOfDevices = numberOfDevices;
 		int x = numberOfDevices * 210 + 220;
 		try {
-				BufferedImage image = ImageIO.read(new File("C:/AdbToolkit/Screenshots/" + deviceName + "/screenshot.png"));
+				BufferedImage image = ImageIO.read(STORAGE_PATHS.screenshotFile(deviceName));
 				ImageIcon icon = new ImageIcon(image);
 				Image scaledImage = icon.getImage().getScaledInstance(330, 740, Image.SCALE_SMOOTH);
 				ImageIcon scaledIcon = new ImageIcon(scaledImage); // Create a new ImageIcon from the scaled Image
@@ -70,7 +71,7 @@ public class ScreenshotFrame extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			openExplorerToFolder("C:/AdbToolkit/Screenshots/" + deviceName);
+			openExplorerToFolder(STORAGE_PATHS.screenshotDir(deviceName).getPath());
 		}
 	}
 
@@ -78,7 +79,7 @@ public class ScreenshotFrame extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
-			File imageFile = new File("C:/AdbToolkit/Screenshots/" + deviceName + "/screenshot.png");
+			File imageFile = STORAGE_PATHS.screenshotFile(deviceName);
 			if (!imageFile.exists()) {
 				System.err.println("Image file does not exist.");
 				return;

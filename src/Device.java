@@ -11,6 +11,7 @@ import Buttons.*;
 
 public class Device extends JPanel {
 
+    private static final StoragePaths STORAGE_PATHS = new StoragePaths();
     Util utility;
     File file = null;
     SaveSPLogsButtons saveLogsButton;
@@ -33,8 +34,8 @@ public class Device extends JPanel {
     MyFrame parent;
     ArrayList<String> serialNumberList;
     Runnable refreshDevicesMethod;
-    String logLocation = "C:/AdbToolkit/Logs/";
-    String recordingLocation = "C:/AdbToolkit/Screen_Recordings/";
+    String logLocation = STORAGE_PATHS.logsDir().getPath();
+    String recordingLocation = STORAGE_PATHS.screenRecordingsDir().getPath();
     EventTrackerButtons eventTrackerButton;
     ScreenMirrorButtons screenMirrorButton;
     ScreenRecordingButtons screenRecordingButton;
@@ -314,7 +315,7 @@ public class Device extends JPanel {
     class SaveSPLogsButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            JFileChooser fileChooser = new JFileChooser("C:/AdbToolkit/Logs");
+            JFileChooser fileChooser = new JFileChooser(STORAGE_PATHS.logsDir());
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int response = fileChooser.showSaveDialog(parent);
             if (response == JFileChooser.APPROVE_OPTION) {
@@ -386,11 +387,11 @@ public class Device extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             String output = utility.takeScreenshot(deviceInfo.serialNo, "sdcard/", "screenshot.png");
-            File device = new File("C:/AdbToolkit/Screenshots/" + deviceName);
+            File device = STORAGE_PATHS.screenshotDir(deviceName);
             if (!device.exists()) {
                 device.mkdirs();
             }
-            utility.pullFile(deviceInfo.serialNo, output, "C:/AdbToolkit/Screenshots/" + deviceName);
+            utility.pullFile(deviceInfo.serialNo, output, device.getPath());
             ScreenshotFrame screenshotFrame = new ScreenshotFrame(deviceName, numberOfDevices);
             parent.consoleView.appendText("Screenhot is captured on " + deviceName);
         }
@@ -508,7 +509,7 @@ public class Device extends JPanel {
 
     private void startScreenRecording(String serial) {
         // Check if Adb Toolkit directory exists, if not, create it
-        File toolkitDir = new File("C:/AdbToolkit/Screen_Recordings");
+        File toolkitDir = STORAGE_PATHS.screenRecordingsDir();
         if (!toolkitDir.exists()) {
             toolkitDir.mkdirs();
         }
@@ -549,8 +550,8 @@ public class Device extends JPanel {
                 // Wait for the process to terminate
                 LocalDate currentDate = LocalDate.now();
                 String dateString = currentDate.toString();
-                recordingLocation = "C:/AdbToolkit/Screen_Recordings/" + deviceName + "/" + dateString ;
-                File device = new File(recordingLocation);
+                File device = STORAGE_PATHS.recordingDir(deviceName, dateString);
+                recordingLocation = device.getPath();
                 if (!device.exists()) {
                     device.mkdirs();
                 }
