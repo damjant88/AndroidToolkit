@@ -3,9 +3,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 import Buttons.*;
 
 public class Device extends JPanel {
@@ -13,6 +11,7 @@ public class Device extends JPanel {
     private static final StoragePaths STORAGE_PATHS = new StoragePaths();
     Util utility;
     DeviceActionService deviceActionService;
+    ScreenRecordingService screenRecordingService;
     File file = null;
     SaveSPLogsButtons saveLogsButton;
     LogLocationButtons logLocationButton;
@@ -39,9 +38,7 @@ public class Device extends JPanel {
     EventTrackerButtons eventTrackerButton;
     ScreenMirrorButtons screenMirrorButton;
     ScreenRecordingButtons screenRecordingButton;
-    private String recordingFileName;
-    private AtomicBoolean recordingInProgress = new AtomicBoolean(false);
-    private Process recordingProcess;
+    private final RecordingSession recordingSession = new RecordingSession();
     ConsoleView consoleView;
     LiveEventTracker liveEventTracker;
 
@@ -52,6 +49,7 @@ public class Device extends JPanel {
         icon = new Icons();
         utility = new Util();
         deviceActionService = new DeviceActionService(utility, STORAGE_PATHS);
+        screenRecordingService = new ScreenRecordingService(utility, STORAGE_PATHS);
         serialNumberList = utility.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
         serial = serialNumberList.get(index);
@@ -461,107 +459,16 @@ public class Device extends JPanel {
         }
     }
 
-    private void startScreenMirror(String serial) {
-        // Check if scrcpy executable exists in PATH
-
-        String[] pathDirectories = System.getenv("PATH").split(File.pathSeparator);
-        File scrcpyExecutable = null;
-        boolean found = false;
-        for (String directory : pathDirectories) {
-            scrcpyExecutable = new File(directory, "scrcpy.exe");
-            if (scrcpyExecutable.exists()) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            JOptionPane.showMessageDialog(parent, "scrcpy executable not found in System variables Path!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-
-        // Run scrcpy for the specific device
-        File finalScrcpyExecutable = scrcpyExecutable;
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                try {
-                    ProcessBuilder pb = new ProcessBuilder(finalScrcpyExecutable.getAbsolutePath(), "-s", serial);
-                    pb.redirectErrorStream(true);
-                    pb.start().waitFor();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(Device.this, "Failed to start scrcpy for device with serial: " + serial, "Error", JOptionPane.ERROR_MESSAGE);
-                }
-                return null;
-            }
-        };
-        worker.execute();
-    }
-
-    private void startScreenRecording(String serial) {
-        // Check if Adb Toolkit directory exists, if not, create it
-        File toolkitDir = STORAGE_PATHS.screenRecordingsDir();
-        if (!toolkitDir.exists()) {
-            toolkitDir.mkdirs();
-        }
-
-        // Generate recording file name
-        recordingFileName = "screen_record_" + System.currentTimeMillis() + ".mp4";
-        startScreenMirror(serial);
-
-        // Start screen recording on the device
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                recordingInProgress.set(true);
-                try {
-                    ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", "screenrecord", "/sdcard/" + recordingFileName);
-                    pb.redirectErrorStream(true);
-                    recordingProcess = pb.start();
-                    recordingProcess.waitFor();
-                } catch (InterruptedException ex) {
-                    System.out.println("Screen recording interrupted.");
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(Device.this, "Failed to start screen recording for device with serial: " + serial, "Error", JOptionPane.ERROR_MESSAGE);
-                } finally {
-                    recordingInProgress.set(false);
-                }
-                return null;
-            }
-        };
-        worker.execute();
-        screenRecordingButton.setText("Stop Record");
-    }
-
-    private void stopScreenRecording(String serial, String recordingFileName, String deviceName) throws InterruptedException {
-        if (recordingProcess != null) {
-            recordingProcess.destroy();
-            try {
-                // Wait for the process to terminate
-                LocalDate currentDate = LocalDate.now();
-                String dateString = currentDate.toString();
-                File device = STORAGE_PATHS.recordingDir(deviceName, dateString);
-                recordingLocation = device.getPath();
-                if (!device.exists()) {
-                    device.mkdirs();
-                }
-                Thread.sleep(300);
-                utility.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingFileName + " " + recordingLocation);
-                recordingProcess = null;
-                recordingInProgress.set(false);
-                screenRecordingButton.setText("Start Record");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
     class ScreenMirrorButtonsListener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            startScreenMirror(serial);
-            parent.consoleView.appendText("Screen mirror is started on " + deviceName);
+            try {
+                screenRecordingService.startScreenMirrorAsync(serial);
+                parent.consoleView.appendText("Screen mirror is started on " + deviceName);
+            } catch (RuntimeException ex) {
+                JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -570,30 +477,23 @@ public class Device extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (screenRecordingButton.getText().equals("Start Record")) {
-                startScreenRecording(serial);
-                parent.consoleView.appendText("Screen recording is started on " + deviceName + ".");
-            } else if(recordingInProgress.get()) {
                 try {
-                    stopScreenRecording(serial, recordingFileName, deviceName);
-                    utility.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingFileName);
-                    String appFlavour = utility.getSafePathPackage(serial);
-                    utility.saveLogs(serial, appFlavour, recordingLocation);
-                    File logsFolder = new File(recordingLocation + "/logs");
-                    File[] logFiles = logsFolder.listFiles((dir, name) -> name.endsWith(".log"));
-
-                    if (logFiles != null) {
-                        for (File logFile : logFiles) {
-                            if (logFile.isFile()) {
-                                File destination = new File(recordingLocation, recordingFileName + ".log");
-                                logFile.renameTo(destination);
-                            }
-                        }
-                    }
-                    logsFolder.delete();
+                    screenRecordingService.startScreenRecording(serial, recordingSession);
+                    screenRecordingButton.setText("Stop Record");
+                    parent.consoleView.appendText("Screen recording is started on " + deviceName + ".");
+                } catch (RuntimeException ex) {
+                    JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else if(recordingSession.getRecordingInProgress().get()) {
+                try {
+                    recordingLocation = screenRecordingService.stopScreenRecording(serial, deviceName, recordingSession);
+                    screenRecordingButton.setText("Start Record");
                     parent.consoleView.appendText("Screen recording is stopped on " + deviceName + "." + "\n" + "Screen recording saved to:\n" + recordingLocation);
                     openExplorerToFolder(recordingLocation);
                 } catch (InterruptedException ex) {
                     throw new RuntimeException(ex);
+                } catch (RuntimeException ex) {
+                    JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(Device.this, "No active recording!", "Error", JOptionPane.ERROR_MESSAGE);
