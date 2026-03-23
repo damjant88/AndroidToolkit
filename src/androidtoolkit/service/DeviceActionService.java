@@ -5,48 +5,48 @@ import java.io.IOException;
 
 public class DeviceActionService {
 
-    private final AdbDeviceService adbDeviceService;
+    private final DeviceGateway deviceGateway;
     private final StoragePaths storagePaths;
 
-    public DeviceActionService(AdbDeviceService adbDeviceService, StoragePaths storagePaths) {
-        this.adbDeviceService = adbDeviceService;
+    public DeviceActionService(DeviceGateway deviceGateway, StoragePaths storagePaths) {
+        this.deviceGateway = deviceGateway;
         this.storagePaths = storagePaths;
     }
 
     public String saveLogs(String serial, String selectedFolder) {
-        String appFlavour = adbDeviceService.getSafePathPackage(serial);
-        adbDeviceService.saveLogs(serial, appFlavour, selectedFolder);
+        String appFlavour = deviceGateway.getSafePathPackage(serial);
+        deviceGateway.saveLogs(serial, appFlavour, selectedFolder);
         return selectedFolder + "/logs/";
     }
 
     public void enableWifiDebugging(String serial, String ip) {
-        adbDeviceService.startWifiDebugging(serial, ip);
+        deviceGateway.startWifiDebugging(serial, ip);
     }
 
     public void disableWifiDebugging(String serial, String ip) {
-        adbDeviceService.stopWifiDebugging(serial, ip);
+        deviceGateway.stopWifiDebugging(serial, ip);
     }
 
     public void reboot(String serial) {
-        adbDeviceService.reboot(serial);
+        deviceGateway.reboot(serial);
     }
 
     public File captureScreenshot(String serial, String deviceName) {
-        String output = adbDeviceService.takeScreenshot(serial, "sdcard/", "screenshot.png");
+        String output = deviceGateway.takeScreenshot(serial, "sdcard/", "screenshot.png");
         File screenshotDir = storagePaths.screenshotDir(deviceName);
         if (!screenshotDir.exists()) {
             screenshotDir.mkdirs();
         }
-        adbDeviceService.pullFile(serial, output, screenshotDir.getPath());
+        deviceGateway.pullFile(serial, output, screenshotDir.getPath());
         return screenshotDir;
     }
 
     public void enableFirebaseDebugging(String serial, String packageName) {
-        adbDeviceService.enableAnalyticsDebug(serial, packageName);
+        deviceGateway.enableAnalyticsDebug(serial, packageName);
     }
 
     public void uninstallApp(String serial, String packageName) {
-        adbDeviceService.uninstallApp(serial, packageName);
+        deviceGateway.uninstallApp(serial, packageName);
     }
 
     public void openFolder(String folderPath) {

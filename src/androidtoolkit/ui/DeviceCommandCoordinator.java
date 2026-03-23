@@ -3,17 +3,17 @@ package androidtoolkit.ui;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import androidtoolkit.service.AdbDeviceService;
 import androidtoolkit.service.CommandExecutor;
+import androidtoolkit.service.DeviceGateway;
 
 public class DeviceCommandCoordinator {
 
-    private final AdbDeviceService adbDeviceService;
+    private final DeviceGateway deviceGateway;
     private final CommandExecutor commandExecutor;
     private final AtomicInteger runningTaskCount = new AtomicInteger();
 
-    public DeviceCommandCoordinator(AdbDeviceService adbDeviceService, CommandExecutor commandExecutor) {
-        this.adbDeviceService = adbDeviceService;
+    public DeviceCommandCoordinator(DeviceGateway deviceGateway, CommandExecutor commandExecutor) {
+        this.deviceGateway = deviceGateway;
         this.commandExecutor = commandExecutor;
     }
 
@@ -39,7 +39,7 @@ public class DeviceCommandCoordinator {
         for (Device device : devices) {
             if (device.appIsInstalled) {
                 tasksStarted++;
-                String command = "adb -s " + device.serial + " shell pm uninstall " + adbDeviceService.getSafePathPackage(device.serial);
+                String command = "adb -s " + device.serial + " shell pm uninstall " + deviceGateway.getSafePathPackage(device.serial);
                 runningTaskCount.incrementAndGet();
                 taskLauncher.launch(command);
                 consoleView.appendText(device.deviceName + " (" + device.serial + "):" + "\n" + "App removed: " + buildName);

@@ -9,12 +9,12 @@ import java.time.LocalDate;
 public class ScreenRecordingService {
 
     private final CommandExecutor commandExecutor;
-    private final AdbDeviceService adbDeviceService;
+    private final DeviceGateway deviceGateway;
     private final StoragePaths storagePaths;
 
-    public ScreenRecordingService(CommandExecutor commandExecutor, AdbDeviceService adbDeviceService, StoragePaths storagePaths) {
+    public ScreenRecordingService(CommandExecutor commandExecutor, DeviceGateway deviceGateway, StoragePaths storagePaths) {
         this.commandExecutor = commandExecutor;
-        this.adbDeviceService = adbDeviceService;
+        this.deviceGateway = deviceGateway;
         this.storagePaths = storagePaths;
     }
 
@@ -90,8 +90,8 @@ public class ScreenRecordingService {
         commandExecutor.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingSession.getRecordingFileName() + " " + recordingLocation);
         commandExecutor.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingSession.getRecordingFileName());
 
-        String appFlavour = adbDeviceService.getSafePathPackage(serial);
-        adbDeviceService.saveLogs(serial, appFlavour, recordingLocation);
+        String appFlavour = deviceGateway.getSafePathPackage(serial);
+        deviceGateway.saveLogs(serial, appFlavour, recordingLocation);
 
         File logsFolder = new File(recordingLocation + "/logs");
         File[] logFiles = logsFolder.listFiles((dir, name) -> name.endsWith(".log"));

@@ -2,9 +2,9 @@ package androidtoolkit.ui;
 
 import androidtoolkit.app.AppServices;
 import androidtoolkit.domain.BuildSelectionState;
-import androidtoolkit.service.AdbDeviceService;
 import androidtoolkit.service.BuildSelectionStore;
 import androidtoolkit.service.CommandExecutor;
+import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.StoragePaths;
 
 import java.awt.*;
@@ -20,7 +20,7 @@ import Buttons.*;
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	private final AppServices appServices;
-	private final AdbDeviceService adbDeviceService;
+	private final DeviceGateway deviceGateway;
 	private final CommandExecutor commandExecutor;
 	private final StoragePaths storagePaths;
 	private final BuildSelectionStore buildSelectionStore;
@@ -53,7 +53,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	public MyFrame(AppServices appServices) {
 		this.appServices = appServices;
-		this.adbDeviceService = appServices.adbDeviceService();
+		this.deviceGateway = appServices.deviceGateway();
 		this.commandExecutor = appServices.commandExecutor();
 		this.storagePaths = appServices.storagePaths();
 		this.buildSelectionStore = appServices.buildSelectionStore();
@@ -63,7 +63,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			logs.mkdirs();
 		}
 		icon = new Icons();
-		deviceCommandCoordinator = new DeviceCommandCoordinator(adbDeviceService, commandExecutor);
+		deviceCommandCoordinator = new DeviceCommandCoordinator(deviceGateway, commandExecutor);
 
 		setStaticElements();
 		refreshListOfDevices();
@@ -92,7 +92,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		this.setJMenuBar(menuBar);
 
-		serialNumberList = adbDeviceService.getConnectedDevices();
+		serialNumberList = deviceGateway.getConnectedDevices();
 		numberOfDevices = serialNumberList.size();
 		installButton = new InstallButton();
 		installButton.addActionListener(new InstallButtonListener());
@@ -151,7 +151,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 		listOfDevices.clear();
 		isInstalledList.clear();
-		serialNumberList = adbDeviceService.getConnectedDevices();
+		serialNumberList = deviceGateway.getConnectedDevices();
 		for (int i = 0; i < serialNumberList.size(); i++) {
 			device = new Device(this, i, this::refreshListOfDevices, appServices);
 			device.setVisible(true);
@@ -354,7 +354,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		Thread thread = new Thread(() -> {
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
-					ArrayList<String> tempSerialNumberList = adbDeviceService.getConnectedDevices();
+					ArrayList<String> tempSerialNumberList = deviceGateway.getConnectedDevices();
 					if (!tempSerialNumberList.equals(serialNumberList)) {
 						updateDeviceList(tempSerialNumberList);
 						updatePanelSize();

@@ -3,9 +3,9 @@ package androidtoolkit.ui;
 import androidtoolkit.app.AppServices;
 import androidtoolkit.domain.DeviceInfo;
 import androidtoolkit.domain.RecordingSession;
-import androidtoolkit.service.AdbDeviceService;
 import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.DeviceActionService;
+import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.DeviceInfoService;
 import androidtoolkit.service.ScreenRecordingService;
 import androidtoolkit.service.StoragePaths;
@@ -21,7 +21,7 @@ import Buttons.*;
 public class Device extends JPanel {
 
     private final StoragePaths storagePaths;
-    private final AdbDeviceService adbDeviceService;
+    private final DeviceGateway deviceGateway;
     private final CommandExecutor commandExecutor;
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
@@ -62,7 +62,7 @@ public class Device extends JPanel {
         this.setBounds((index+1)*210, 0, 210, 310);
         this.setLayout(null);
         this.storagePaths = appServices.storagePaths();
-        this.adbDeviceService = appServices.adbDeviceService();
+        this.deviceGateway = appServices.deviceGateway();
         this.commandExecutor = appServices.commandExecutor();
         this.logLocation = storagePaths.logsDir().getPath();
         this.recordingLocation = storagePaths.screenRecordingsDir().getPath();
@@ -71,7 +71,7 @@ public class Device extends JPanel {
         screenRecordingService = appServices.screenRecordingService();
         deviceInfoService = appServices.deviceInfoService();
         devicePanelStateFactory = new DevicePanelStateFactory();
-        serialNumberList = adbDeviceService.getConnectedDevices();
+        serialNumberList = deviceGateway.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
         serial = serialNumberList.get(index);
         System.out.println(serial);

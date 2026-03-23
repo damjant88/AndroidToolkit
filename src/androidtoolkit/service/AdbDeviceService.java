@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AdbDeviceService {
+public class AdbDeviceService implements DeviceGateway {
 
     private final CommandExecutor commandExecutor;
     private final PackageClassifier packageClassifier;

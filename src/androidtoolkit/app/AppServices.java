@@ -4,6 +4,7 @@ import androidtoolkit.service.AdbDeviceService;
 import androidtoolkit.service.BuildSelectionStore;
 import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.DeviceActionService;
+import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.DeviceInfoService;
 import androidtoolkit.service.PackageClassifier;
 import androidtoolkit.service.ScreenRecordingService;
@@ -14,7 +15,7 @@ public class AppServices {
     private final StoragePaths storagePaths;
     private final CommandExecutor commandExecutor;
     private final PackageClassifier packageClassifier;
-    private final AdbDeviceService adbDeviceService;
+    private final DeviceGateway deviceGateway;
     private final BuildSelectionStore buildSelectionStore;
     private final DeviceActionService deviceActionService;
     private final DeviceInfoService deviceInfoService;
@@ -24,11 +25,11 @@ public class AppServices {
         this.storagePaths = new StoragePaths();
         this.commandExecutor = new CommandExecutor();
         this.packageClassifier = new PackageClassifier();
-        this.adbDeviceService = new AdbDeviceService(commandExecutor, packageClassifier, storagePaths);
+        this.deviceGateway = new AdbDeviceService(commandExecutor, packageClassifier, storagePaths);
         this.buildSelectionStore = new BuildSelectionStore(storagePaths);
-        this.deviceActionService = new DeviceActionService(adbDeviceService, storagePaths);
-        this.deviceInfoService = new DeviceInfoService(adbDeviceService, commandExecutor);
-        this.screenRecordingService = new ScreenRecordingService(commandExecutor, adbDeviceService, storagePaths);
+        this.deviceActionService = new DeviceActionService(deviceGateway, storagePaths);
+        this.deviceInfoService = new DeviceInfoService(deviceGateway, commandExecutor);
+        this.screenRecordingService = new ScreenRecordingService(commandExecutor, deviceGateway, storagePaths);
     }
 
     public StoragePaths storagePaths() {
@@ -39,8 +40,8 @@ public class AppServices {
         return commandExecutor;
     }
 
-    public AdbDeviceService adbDeviceService() {
-        return adbDeviceService;
+    public DeviceGateway deviceGateway() {
+        return deviceGateway;
     }
 
     public BuildSelectionStore buildSelectionStore() {
