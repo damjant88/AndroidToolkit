@@ -1,3 +1,7 @@
+package androidtoolkit.ui;
+
+import androidtoolkit.service.StoragePaths;
+
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.ActionEvent;

@@ -1,3 +1,5 @@
+package androidtoolkit.ui;
+
 import javax.swing.*;
 
 public class DevicePanelState {

@@ -1,3 +1,7 @@
+package androidtoolkit.ui;
+
+import androidtoolkit.domain.DeviceInfo;
+
 import javax.swing.*;
 import java.util.Set;
 

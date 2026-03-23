@@ -1,3 +1,13 @@
+package androidtoolkit.ui;
+
+import androidtoolkit.domain.DeviceInfo;
+import androidtoolkit.domain.RecordingSession;
+import androidtoolkit.service.DeviceActionService;
+import androidtoolkit.service.DeviceInfoService;
+import androidtoolkit.service.ScreenRecordingService;
+import androidtoolkit.service.StoragePaths;
+import androidtoolkit.service.Util;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;

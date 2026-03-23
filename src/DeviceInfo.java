@@ -1,3 +1,5 @@
+package androidtoolkit.domain;
+
 public class DeviceInfo {
 
     private final String serialNumber;

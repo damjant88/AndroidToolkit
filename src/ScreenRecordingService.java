@@ -1,3 +1,7 @@
+package androidtoolkit.service;
+
+import androidtoolkit.domain.RecordingSession;
+
 import javax.swing.*;
 import java.io.File;
 import java.time.LocalDate;

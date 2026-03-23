@@ -1,3 +1,5 @@
+package androidtoolkit.ui;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.Objects;
@@ -29,7 +31,7 @@ public class Icons extends JPanel {
     }
 
     public ImageIcon scaleImageIcon(String imageName, int width, int height) {
-        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource(imageName)));
+        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/" + imageName)));
         Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(image);
     }

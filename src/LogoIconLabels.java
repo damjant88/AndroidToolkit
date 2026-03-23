@@ -1,3 +1,5 @@
+package androidtoolkit.ui;
+
 import java.awt.Font;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;

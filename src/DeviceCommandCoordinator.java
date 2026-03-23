@@ -1,5 +1,9 @@
+package androidtoolkit.ui;
+
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import androidtoolkit.service.Util;
 
 public class DeviceCommandCoordinator {
 

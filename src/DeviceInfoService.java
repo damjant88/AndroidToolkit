@@ -1,3 +1,7 @@
+package androidtoolkit.service;
+
+import androidtoolkit.domain.DeviceInfo;
+
 public class DeviceInfoService {
 
     private final Util utility;

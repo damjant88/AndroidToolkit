@@ -1,3 +1,5 @@
+package androidtoolkit.service;
+
 import java.io.File;
 
 public class StoragePaths {
