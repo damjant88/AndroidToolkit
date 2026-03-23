@@ -8,11 +8,13 @@ import java.time.LocalDate;
 
 public class ScreenRecordingService {
 
-    private final Util utility;
+    private final CommandExecutor commandExecutor;
+    private final AdbDeviceService adbDeviceService;
     private final StoragePaths storagePaths;
 
-    public ScreenRecordingService(Util utility, StoragePaths storagePaths) {
-        this.utility = utility;
+    public ScreenRecordingService(CommandExecutor commandExecutor, AdbDeviceService adbDeviceService, StoragePaths storagePaths) {
+        this.commandExecutor = commandExecutor;
+        this.adbDeviceService = adbDeviceService;
         this.storagePaths = storagePaths;
     }
 
@@ -85,11 +87,11 @@ public class ScreenRecordingService {
 
         Thread.sleep(300);
         String recordingLocation = deviceDir.getPath();
-        utility.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingSession.getRecordingFileName() + " " + recordingLocation);
-        utility.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingSession.getRecordingFileName());
+        commandExecutor.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingSession.getRecordingFileName() + " " + recordingLocation);
+        commandExecutor.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingSession.getRecordingFileName());
 
-        String appFlavour = utility.getSafePathPackage(serial);
-        utility.saveLogs(serial, appFlavour, recordingLocation);
+        String appFlavour = adbDeviceService.getSafePathPackage(serial);
+        adbDeviceService.saveLogs(serial, appFlavour, recordingLocation);
 
         File logsFolder = new File(recordingLocation + "/logs");
         File[] logFiles = logsFolder.listFiles((dir, name) -> name.endsWith(".log"));

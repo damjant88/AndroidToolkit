@@ -4,22 +4,24 @@ import androidtoolkit.domain.DeviceInfo;
 
 public class DeviceInfoService {
 
-    private final Util utility;
+    private final AdbDeviceService adbDeviceService;
+    private final CommandExecutor commandExecutor;
 
-    public DeviceInfoService(Util utility) {
-        this.utility = utility;
+    public DeviceInfoService(AdbDeviceService adbDeviceService, CommandExecutor commandExecutor) {
+        this.adbDeviceService = adbDeviceService;
+        this.commandExecutor = commandExecutor;
     }
 
     public DeviceInfo load(String serial) {
-        String manufacturer = utility.getDeviceManufacturer(serial);
-        String model = utility.getDeviceModel(serial);
-        String osVersion = utility.getDeviceOSVersion(serial);
-        String safePathPackage = utility.getSafePathPackage(serial);
-        boolean appInstalled = utility.checkIfInstalled(serial);
-        String wifiIp = utility.getWlanIp(serial);
-        String mobileIp = utility.getMobileIp(serial);
+        String manufacturer = adbDeviceService.getDeviceManufacturer(serial);
+        String model = adbDeviceService.getDeviceModel(serial);
+        String osVersion = adbDeviceService.getDeviceOSVersion(serial);
+        String safePathPackage = adbDeviceService.getSafePathPackage(serial);
+        boolean appInstalled = adbDeviceService.checkIfInstalled(serial);
+        String wifiIp = adbDeviceService.getWlanIp(serial);
+        String mobileIp = adbDeviceService.getMobileIp(serial);
         String ipAddress = wifiIp.isEmpty() ? mobileIp : wifiIp;
-        String pid = utility.runCommand("adb -s " + serial + " shell pidof -s com.smithmicro.safepath.family");
+        String pid = commandExecutor.runCommand("adb -s " + serial + " shell pidof -s com.smithmicro.safepath.family");
         System.out.println(pid);
 
         return new DeviceInfo(

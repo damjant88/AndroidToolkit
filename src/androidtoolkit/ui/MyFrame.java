@@ -1,9 +1,11 @@
 package androidtoolkit.ui;
 
+import androidtoolkit.app.AppServices;
 import androidtoolkit.domain.BuildSelectionState;
+import androidtoolkit.service.AdbDeviceService;
 import androidtoolkit.service.BuildSelectionStore;
+import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.StoragePaths;
-import androidtoolkit.service.Util;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -15,12 +17,13 @@ import java.util.ArrayList;
 import javax.swing.*;
 import Buttons.*;
 
-
 public class MyFrame extends JFrame implements PropertyChangeListener {
 
-	static Util utility = new Util();
-	private static final StoragePaths STORAGE_PATHS = new StoragePaths();
-	private static final BuildSelectionStore BUILD_SELECTION_STORE = new BuildSelectionStore(STORAGE_PATHS);
+	private final AppServices appServices;
+	private final AdbDeviceService adbDeviceService;
+	private final CommandExecutor commandExecutor;
+	private final StoragePaths storagePaths;
+	private final BuildSelectionStore buildSelectionStore;
 	File file1 = null;
 	DevicesButton devicesButton;
 	JButton fileButton;
@@ -45,13 +48,22 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	static LiveEventTracker liveEventTracker;
 
 	public MyFrame() {
+		this(new AppServices());
+	}
 
-		File logs = STORAGE_PATHS.logsDir();
+	public MyFrame(AppServices appServices) {
+		this.appServices = appServices;
+		this.adbDeviceService = appServices.adbDeviceService();
+		this.commandExecutor = appServices.commandExecutor();
+		this.storagePaths = appServices.storagePaths();
+		this.buildSelectionStore = appServices.buildSelectionStore();
+
+		File logs = storagePaths.logsDir();
 		if (!logs.exists()) {
 			logs.mkdirs();
 		}
 		icon = new Icons();
-		deviceCommandCoordinator = new DeviceCommandCoordinator(utility);
+		deviceCommandCoordinator = new DeviceCommandCoordinator(adbDeviceService, commandExecutor);
 
 		setStaticElements();
 		refreshListOfDevices();
@@ -80,7 +92,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		this.setJMenuBar(menuBar);
 
-		serialNumberList = utility.getConnectedDevices();
+		serialNumberList = adbDeviceService.getConnectedDevices();
 		numberOfDevices = serialNumberList.size();
 		installButton = new InstallButton();
 		installButton.addActionListener(new InstallButtonListener());
@@ -101,7 +113,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		staticPane = new StaticPane();
 		this.add(staticPane);
 
-		buildSelectionState = BUILD_SELECTION_STORE.loadBuildSelection();
+		buildSelectionState = buildSelectionStore.loadBuildSelection();
 		System.out.println("Polazna lista buildova je : " + buildSelectionState.getBuildPaths());
 		System.out.println("Polazna lista imena je : " + buildSelectionState.getBuildNames());
 
@@ -121,7 +133,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.add(progressBar);
 
 		width = numberOfDevices * 210 + 230;
-		consoleView = new ConsoleView(this);
+		consoleView = new ConsoleView(this, commandExecutor);
 		this.add(consoleView);
 		this.setTitle("Adb Toolkit");
 		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -139,9 +151,9 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 		listOfDevices.clear();
 		isInstalledList.clear();
-		serialNumberList = utility.getConnectedDevices();
+		serialNumberList = adbDeviceService.getConnectedDevices();
 		for (int i = 0; i < serialNumberList.size(); i++) {
-			device = new Device(this, i, this::refreshListOfDevices);
+			device = new Device(this, i, this::refreshListOfDevices, appServices);
 			device.setVisible(true);
 			listOfDevices.add(device);
 			this.add(device);
@@ -165,7 +177,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
-	static class DefaultBuildLocationListener implements ActionListener {
+	class DefaultBuildLocationListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -177,7 +189,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				file2 = new File(fileChooser.getSelectedFile().getAbsolutePath());
 			}
 			try {
-				BUILD_SELECTION_STORE.saveDefaultBuildLocation(file2);
+				buildSelectionStore.saveDefaultBuildLocation(file2);
 				JOptionPane.showMessageDialog(null, "Default build location is set!" + "\n" + file2.getAbsolutePath(), "Default Build Location",
 						JOptionPane.INFORMATION_MESSAGE);
 			} catch (RuntimeException ex) {
@@ -273,7 +285,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			File default_location = BUILD_SELECTION_STORE.loadDefaultBuildLocation();
+			File default_location = buildSelectionStore.loadDefaultBuildLocation();
 			JFileChooser fileChooser = new JFileChooser(default_location.getAbsolutePath());
 			int response = fileChooser.showOpenDialog(fileButton);
 			if (response == JFileChooser.APPROVE_OPTION) {
@@ -284,7 +296,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				fileTextFieldBox.setSelectedIndex(0);
 				System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
 				System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
-				BUILD_SELECTION_STORE.saveBuildSelection(buildSelectionState);
+				buildSelectionStore.saveBuildSelection(buildSelectionState);
 				if (!serialNumberList.isEmpty() && isInstalledList.contains(false)){
 					installButton.setEnabled(true);
 				}
@@ -303,7 +315,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				System.out.println(fileTextFieldBox.getSelectedIndex());
 				buildSelectionState.selectBuild(temp_index);
 				refreshBuildSelectionBox();
-				BUILD_SELECTION_STORE.saveBuildSelection(buildSelectionState);
+				buildSelectionStore.saveBuildSelection(buildSelectionState);
 				System.out.println(buildSelectionState.getBuildPaths());
 				System.out.println(buildSelectionState.getBuildNames());
 			}
@@ -338,19 +350,18 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		}
 	}
 
-
 	public void startDeviceCheckThread() {
 		Thread thread = new Thread(() -> {
 			while (!Thread.currentThread().isInterrupted()) {
 				try {
-					ArrayList<String> tempSerialNumberList = utility.getConnectedDevices();
+					ArrayList<String> tempSerialNumberList = adbDeviceService.getConnectedDevices();
 					if (!tempSerialNumberList.equals(serialNumberList)) {
 						updateDeviceList(tempSerialNumberList);
 						updatePanelSize();
 					}
-					Thread.sleep(3000); // Sleep for 3 seconds
+					Thread.sleep(3000);
 				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt(); // Restore interrupted status
+					Thread.currentThread().interrupt();
 					e.printStackTrace();
 				}
 			}

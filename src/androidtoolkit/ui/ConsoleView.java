@@ -1,6 +1,6 @@
 package androidtoolkit.ui;
 
-import androidtoolkit.service.Util;
+import androidtoolkit.service.CommandExecutor;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -9,11 +9,13 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 class ConsoleView extends JPanel {
+    private final CommandExecutor commandExecutor;
     JTextArea textArea;
     private JScrollPane scrollPane;
     private JTextField commandField;
 
-    public ConsoleView(MyFrame frame) {
+    public ConsoleView(MyFrame frame, CommandExecutor commandExecutor) {
+        this.commandExecutor = commandExecutor;
         this.setBounds(0, 400, 630, 200);
         this.setBorder(new EtchedBorder());
         this.setBorder(BorderFactory.createEtchedBorder());
@@ -52,8 +54,7 @@ class ConsoleView extends JPanel {
             if (command.equals("clear")) {
                 textArea.setText("");
             } else {
-                Util utility = new Util();
-                String output = utility.runCommand(command);
+                String output = commandExecutor.runCommand(command);
                 appendText(output);
             }
         } catch (RuntimeException e) {

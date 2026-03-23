@@ -3,15 +3,18 @@ package androidtoolkit.ui;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import androidtoolkit.service.Util;
+import androidtoolkit.service.AdbDeviceService;
+import androidtoolkit.service.CommandExecutor;
 
 public class DeviceCommandCoordinator {
 
-    private final Util utility;
+    private final AdbDeviceService adbDeviceService;
+    private final CommandExecutor commandExecutor;
     private final AtomicInteger runningTaskCount = new AtomicInteger();
 
-    public DeviceCommandCoordinator(Util utility) {
-        this.utility = utility;
+    public DeviceCommandCoordinator(AdbDeviceService adbDeviceService, CommandExecutor commandExecutor) {
+        this.adbDeviceService = adbDeviceService;
+        this.commandExecutor = commandExecutor;
     }
 
     public int startInstallTasks(List<Device> devices, String buildPath, String buildName, ConsoleView consoleView, TaskLauncher taskLauncher) {
@@ -36,7 +39,7 @@ public class DeviceCommandCoordinator {
         for (Device device : devices) {
             if (device.appIsInstalled) {
                 tasksStarted++;
-                String command = "adb -s " + device.serial + " shell pm uninstall " + utility.getSafePathPackage(device.serial);
+                String command = "adb -s " + device.serial + " shell pm uninstall " + adbDeviceService.getSafePathPackage(device.serial);
                 runningTaskCount.incrementAndGet();
                 taskLauncher.launch(command);
                 consoleView.appendText(device.deviceName + " (" + device.serial + "):" + "\n" + "App removed: " + buildName);
@@ -46,7 +49,7 @@ public class DeviceCommandCoordinator {
     }
 
     public void runCommand(String command) {
-        utility.runCommand(command);
+        commandExecutor.runCommand(command);
     }
 
     public int finishTask() {

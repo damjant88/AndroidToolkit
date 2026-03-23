@@ -1,12 +1,14 @@
 package androidtoolkit.ui;
 
+import androidtoolkit.app.AppServices;
 import androidtoolkit.domain.DeviceInfo;
 import androidtoolkit.domain.RecordingSession;
+import androidtoolkit.service.AdbDeviceService;
+import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.DeviceActionService;
 import androidtoolkit.service.DeviceInfoService;
 import androidtoolkit.service.ScreenRecordingService;
 import androidtoolkit.service.StoragePaths;
-import androidtoolkit.service.Util;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,8 +20,9 @@ import Buttons.*;
 
 public class Device extends JPanel {
 
-    private static final StoragePaths STORAGE_PATHS = new StoragePaths();
-    Util utility;
+    private final StoragePaths storagePaths;
+    private final AdbDeviceService adbDeviceService;
+    private final CommandExecutor commandExecutor;
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
     DeviceInfoService deviceInfoService;
@@ -45,8 +48,8 @@ public class Device extends JPanel {
     MyFrame parent;
     ArrayList<String> serialNumberList;
     Runnable refreshDevicesMethod;
-    String logLocation = STORAGE_PATHS.logsDir().getPath();
-    String recordingLocation = STORAGE_PATHS.screenRecordingsDir().getPath();
+    String logLocation;
+    String recordingLocation;
     EventTrackerButtons eventTrackerButton;
     ScreenMirrorButtons screenMirrorButton;
     ScreenRecordingButtons screenRecordingButton;
@@ -54,17 +57,21 @@ public class Device extends JPanel {
     ConsoleView consoleView;
     LiveEventTracker liveEventTracker;
 
-    public Device(MyFrame parent, int index, Runnable refreshDevicesMethod) {
+    public Device(MyFrame parent, int index, Runnable refreshDevicesMethod, AppServices appServices) {
 
         this.setBounds((index+1)*210, 0, 210, 310);
         this.setLayout(null);
+        this.storagePaths = appServices.storagePaths();
+        this.adbDeviceService = appServices.adbDeviceService();
+        this.commandExecutor = appServices.commandExecutor();
+        this.logLocation = storagePaths.logsDir().getPath();
+        this.recordingLocation = storagePaths.screenRecordingsDir().getPath();
         icon = new Icons();
-        utility = new Util();
-        deviceActionService = new DeviceActionService(utility, STORAGE_PATHS);
-        screenRecordingService = new ScreenRecordingService(utility, STORAGE_PATHS);
-        deviceInfoService = new DeviceInfoService(utility);
+        deviceActionService = appServices.deviceActionService();
+        screenRecordingService = appServices.screenRecordingService();
+        deviceInfoService = appServices.deviceInfoService();
         devicePanelStateFactory = new DevicePanelStateFactory();
-        serialNumberList = utility.getConnectedDevices();
+        serialNumberList = adbDeviceService.getConnectedDevices();
         numberOfDevices = serialNumberList.size();
         serial = serialNumberList.get(index);
         System.out.println(serial);
@@ -75,7 +82,7 @@ public class Device extends JPanel {
         this.setVisible(false);
         this.parent = parent;
         this.refreshDevicesMethod = refreshDevicesMethod;
-        consoleView = new ConsoleView(parent);
+        consoleView = new ConsoleView(parent, commandExecutor);
     }
 
     private void setIconAndButtons(int i) {
@@ -114,7 +121,7 @@ public class Device extends JPanel {
         screenRecordingButton.addActionListener(new ScreenRecordingButtonsListener());
         this.add(screenRecordingButton);
 
-                wifiDebug = new WifiDebugButtons();
+        wifiDebug = new WifiDebugButtons();
         wifiDebug.addActionListener(new WifiDebugListener());
         this.add(wifiDebug);
 
@@ -152,7 +159,7 @@ public class Device extends JPanel {
     class SaveSPLogsButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            JFileChooser fileChooser = new JFileChooser(STORAGE_PATHS.logsDir());
+            JFileChooser fileChooser = new JFileChooser(storagePaths.logsDir());
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int response = fileChooser.showSaveDialog(parent);
             if (response == JFileChooser.APPROVE_OPTION) {
@@ -276,9 +283,9 @@ public class Device extends JPanel {
         }
     }
 
-    public static void openExplorerToFolder(String folderPath) {
+    public void openExplorerToFolder(String folderPath) {
         try {
-            new DeviceActionService(new Util(), STORAGE_PATHS).openFolder(folderPath);
+            deviceActionService.openFolder(folderPath);
         } catch (RuntimeException ex) {
             System.err.println(ex.getMessage());
         }
@@ -309,7 +316,7 @@ public class Device extends JPanel {
         public void actionPerformed(ActionEvent e) {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    liveEventTracker = new LiveEventTracker(serial, deviceInfo.getPid());
+                    liveEventTracker = new LiveEventTracker(serial, deviceInfo.getPid(), commandExecutor);
                     System.out.println("Tracker Opened!");
                 }
             });

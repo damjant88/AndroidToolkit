@@ -5,48 +5,48 @@ import java.io.IOException;
 
 public class DeviceActionService {
 
-    private final Util utility;
+    private final AdbDeviceService adbDeviceService;
     private final StoragePaths storagePaths;
 
-    public DeviceActionService(Util utility, StoragePaths storagePaths) {
-        this.utility = utility;
+    public DeviceActionService(AdbDeviceService adbDeviceService, StoragePaths storagePaths) {
+        this.adbDeviceService = adbDeviceService;
         this.storagePaths = storagePaths;
     }
 
     public String saveLogs(String serial, String selectedFolder) {
-        String appFlavour = utility.getSafePathPackage(serial);
-        utility.saveLogs(serial, appFlavour, selectedFolder);
+        String appFlavour = adbDeviceService.getSafePathPackage(serial);
+        adbDeviceService.saveLogs(serial, appFlavour, selectedFolder);
         return selectedFolder + "/logs/";
     }
 
     public void enableWifiDebugging(String serial, String ip) {
-        utility.startWifiDebugging(serial, ip);
+        adbDeviceService.startWifiDebugging(serial, ip);
     }
 
     public void disableWifiDebugging(String serial, String ip) {
-        utility.stopWifiDebugging(serial, ip);
+        adbDeviceService.stopWifiDebugging(serial, ip);
     }
 
     public void reboot(String serial) {
-        utility.reboot(serial);
+        adbDeviceService.reboot(serial);
     }
 
     public File captureScreenshot(String serial, String deviceName) {
-        String output = utility.takeScreenshot(serial, "sdcard/", "screenshot.png");
+        String output = adbDeviceService.takeScreenshot(serial, "sdcard/", "screenshot.png");
         File screenshotDir = storagePaths.screenshotDir(deviceName);
         if (!screenshotDir.exists()) {
             screenshotDir.mkdirs();
         }
-        utility.pullFile(serial, output, screenshotDir.getPath());
+        adbDeviceService.pullFile(serial, output, screenshotDir.getPath());
         return screenshotDir;
     }
 
     public void enableFirebaseDebugging(String serial, String packageName) {
-        utility.enableAnalyticsDebug(serial, packageName);
+        adbDeviceService.enableAnalyticsDebug(serial, packageName);
     }
 
     public void uninstallApp(String serial, String packageName) {
-        utility.uninstallApp(serial, packageName);
+        adbDeviceService.uninstallApp(serial, packageName);
     }
 
     public void openFolder(String folderPath) {

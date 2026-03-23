@@ -1,6 +1,6 @@
 package androidtoolkit.ui;
 
-import androidtoolkit.service.Util;
+import androidtoolkit.service.CommandExecutor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,14 +13,15 @@ public class LiveEventTracker extends JFrame {
     private JTextField eventTextField;
     private JButton trackButton;
     private JTextArea logTextArea;
-    Util utility = new Util();
+    private final CommandExecutor commandExecutor;
     String serial;
     String pid;
     String event;
 
-    public LiveEventTracker(String serial, String pid) {
+    public LiveEventTracker(String serial, String pid, CommandExecutor commandExecutor) {
         this.serial = serial;
         this.pid = pid;
+        this.commandExecutor = commandExecutor;
         event = "Adjust";
         setTitle("Live Event Tracker");
         setSize(500, 400);
@@ -64,7 +65,7 @@ public class LiveEventTracker extends JFrame {
         @Override
         protected Void doInBackground() throws Exception {
             String command = "adb -s " + serial + " logcat --pid=" + pid;
-            output = utility.runLiveLogs(command, event);
+            output = commandExecutor.runLiveLogs(command, event);
             return null;
         }
 
@@ -78,7 +79,7 @@ public class LiveEventTracker extends JFrame {
         }
 
         public void stopTracking() {
-            utility.stopTracking(); // Call the stopTracking method of RunLiveLogs
+            commandExecutor.stopTracking();
         }
     }
 
