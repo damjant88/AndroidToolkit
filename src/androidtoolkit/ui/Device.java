@@ -1,6 +1,8 @@
 package androidtoolkit.ui;
 
 import androidtoolkit.app.AppServices;
+import androidtoolkit.app.DeviceTarget;
+import androidtoolkit.app.LogExportRequest;
 import androidtoolkit.app.LogExporter;
 import androidtoolkit.domain.DeviceInfo;
 import androidtoolkit.domain.RecordingSession;
@@ -168,7 +170,7 @@ public class Device extends JPanel {
             if (response == JFileChooser.APPROVE_OPTION) {
                 file = new File(fileChooser.getSelectedFile().getAbsolutePath());
                 logLocation = file.getAbsolutePath();
-                String exportedLogsFolder = logExporter.exportDeviceLogs(serial, file.getAbsolutePath());
+                String exportedLogsFolder = logExporter.exportDeviceLogs(new LogExportRequest(serial, file.getAbsolutePath())).getExportedFolder();
                 eventTrackerButton.setEnabled(true);
                 logLocationButton.setEnabled(true);
                 openExplorerToFolder(exportedLogsFolder);
@@ -312,6 +314,10 @@ public class Device extends JPanel {
 
     public boolean isAppInstalled() {
         return appIsInstalled;
+    }
+
+    public DeviceTarget toDeviceTarget() {
+        return new DeviceTarget(serial, deviceName, isSelectedForInstall(), isAppInstalled());
     }
 
     private void applyPanelState(DevicePanelState panelState) {

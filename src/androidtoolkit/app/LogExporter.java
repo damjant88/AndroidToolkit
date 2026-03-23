@@ -10,7 +10,7 @@ public class LogExporter {
         this.deviceActionService = deviceActionService;
     }
 
-    public String exportDeviceLogs(String serial, String targetFolder) {
-        return deviceActionService.saveLogs(serial, targetFolder);
+    public LogExportResult exportDeviceLogs(LogExportRequest request) {
+        return new LogExportResult(deviceActionService.saveLogs(request.getSerial(), request.getTargetFolder()));
     }
 }

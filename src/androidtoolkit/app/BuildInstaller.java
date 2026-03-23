@@ -1,10 +1,8 @@
 package androidtoolkit.app;
 
-import androidtoolkit.domain.BuildSelectionState;
 import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.ui.ConsoleView;
-import androidtoolkit.ui.Device;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,41 +19,36 @@ public class BuildInstaller {
     }
 
     public int installSelectedDevices(
-            List<Device> devices,
-            BuildSelectionState buildSelectionState,
+            BuildInstallRequest request,
             ConsoleView consoleView,
             TaskLauncher taskLauncher
     ) {
         int tasksStarted = 0;
-        for (Device device : devices) {
-            if (device.isSelectedForInstall()) {
-                device.setRadioState(true);
+        for (DeviceTarget deviceTarget : request.getDeviceTargets()) {
+            if (deviceTarget.isSelectedForInstall()) {
                 tasksStarted++;
-                String command = "adb -s " + device.getSerial() + " install " + "\"" + buildSelectionState.getPrimaryBuildPath() + "\"";
+                String command = "adb -s " + deviceTarget.getSerial() + " install " + "\"" + request.getBuildPath() + "\"";
                 runningTaskCount.incrementAndGet();
                 taskLauncher.launch(command);
-                consoleView.appendText(device.getDeviceName() + " (" + device.getSerial() + "):" + "\n" + "App installed: " + buildSelectionState.getPrimaryBuildName());
-            } else {
-                device.setRadioState(false);
+                consoleView.appendText(deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App installed: " + request.getBuildName());
             }
         }
         return tasksStarted;
     }
 
     public int uninstallInstalledDevices(
-            List<Device> devices,
-            String buildName,
+            BuildUninstallRequest request,
             ConsoleView consoleView,
             TaskLauncher taskLauncher
     ) {
         int tasksStarted = 0;
-        for (Device device : devices) {
-            if (device.isAppInstalled()) {
+        for (DeviceTarget deviceTarget : request.getDeviceTargets()) {
+            if (deviceTarget.isAppInstalled()) {
                 tasksStarted++;
-                String command = "adb -s " + device.getSerial() + " shell pm uninstall " + deviceGateway.getSafePathPackage(device.getSerial());
+                String command = "adb -s " + deviceTarget.getSerial() + " shell pm uninstall " + deviceGateway.getSafePathPackage(deviceTarget.getSerial());
                 runningTaskCount.incrementAndGet();
                 taskLauncher.launch(command);
-                consoleView.appendText(device.getDeviceName() + " (" + device.getSerial() + "):" + "\n" + "App removed: " + buildName);
+                consoleView.appendText(deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App removed: " + request.getBuildName());
             }
         }
         return tasksStarted;

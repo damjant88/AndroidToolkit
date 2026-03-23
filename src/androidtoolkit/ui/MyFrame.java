@@ -1,8 +1,10 @@
 package androidtoolkit.ui;
 
 import androidtoolkit.app.AppServices;
+import androidtoolkit.app.BuildInstallRequest;
 import androidtoolkit.app.BuildInstaller;
 import androidtoolkit.app.DeviceCatalog;
+import androidtoolkit.app.BuildUninstallRequest;
 import androidtoolkit.domain.BuildSelectionState;
 import androidtoolkit.service.BuildSelectionStore;
 import androidtoolkit.service.CommandExecutor;
@@ -15,6 +17,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import javax.swing.*;
 import Buttons.*;
 
@@ -244,8 +247,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setBackground(Color.WHITE);
 			installButton.setEnabled(false);
 			int tasksStarted = buildInstaller.installSelectedDevices(
-					listOfDevices,
-					buildSelectionState,
+					new BuildInstallRequest(
+							listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
+							buildSelectionState.getPrimaryBuildPath(),
+							buildSelectionState.getPrimaryBuildName()
+					),
 					consoleView,
 					MyFrame.this::startTask
 			);
@@ -268,8 +274,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			progressBar.setBackground(new Color(238, 238, 238));
 			uninstallAllButton.setEnabled(false);
 			int tasksStarted = buildInstaller.uninstallInstalledDevices(
-					listOfDevices,
-					buildSelectionState.getPrimaryBuildName(),
+					new BuildUninstallRequest(
+							listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
+							buildSelectionState.getPrimaryBuildName()
+					),
 					consoleView,
 					MyFrame.this::startTask
 			);
