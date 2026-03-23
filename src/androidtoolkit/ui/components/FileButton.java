@@ -1,4 +1,4 @@
-package Buttons;
+package androidtoolkit.ui.components;
 import java.awt.*;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;

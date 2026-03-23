@@ -17,7 +17,7 @@ import androidtoolkit.service.StoragePaths;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import Buttons.*;
+import androidtoolkit.ui.components.*;
 
 public class Device extends JPanel {
 
@@ -354,3 +354,4 @@ public class Device extends JPanel {
         }
     }
 }
+

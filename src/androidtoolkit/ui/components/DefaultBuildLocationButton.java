@@ -1,4 +1,4 @@
-package Buttons;
+package androidtoolkit.ui.components;
 
 import javax.swing.*;
 import java.awt.*;

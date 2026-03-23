@@ -1,5 +1,4 @@
-package Buttons;
-import Buttons.DeviceButtons;
+package androidtoolkit.ui.components;
 
 import java.awt.*;
 import javax.swing.BorderFactory;
@@ -22,3 +21,4 @@ public class UninstallAppButtons extends DeviceButtons {
 		this.setText("Uninstall");
 	}
 }
+

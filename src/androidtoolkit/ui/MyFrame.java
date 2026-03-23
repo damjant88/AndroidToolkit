@@ -27,7 +27,7 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.JTextPane;
 import javax.swing.WindowConstants;
-import Buttons.*;
+import androidtoolkit.ui.components.*;
 
 public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi, DeviceMonitor.DeviceMonitorUi, BuildSelectionCoordinator.BuildSelectionUi {
 
@@ -391,3 +391,4 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		System.out.println(buildSelectionState.getBuildNames());
 	}
 }
+

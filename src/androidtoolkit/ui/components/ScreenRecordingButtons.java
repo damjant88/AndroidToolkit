@@ -1,6 +1,5 @@
-package Buttons;
+package androidtoolkit.ui.components;
 
-import Buttons.DeviceButtons;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,3 +20,4 @@ public class ScreenRecordingButtons extends DeviceButtons {
 		this.setText("Start Record");
 	}
 }
+

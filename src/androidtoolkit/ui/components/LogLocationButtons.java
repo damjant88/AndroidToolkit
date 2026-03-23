@@ -1,5 +1,4 @@
-package Buttons;
-import Buttons.DeviceButtons;
+package androidtoolkit.ui.components;
 
 import java.awt.*;
 import javax.swing.BorderFactory;
@@ -21,3 +20,4 @@ public class LogLocationButtons extends DeviceButtons {
 		this.setText("Log Location");
 	}
 }
+

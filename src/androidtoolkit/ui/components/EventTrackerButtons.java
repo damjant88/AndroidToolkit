@@ -1,17 +1,12 @@
-package Buttons;
-import Buttons.DeviceButtons;
+package androidtoolkit.ui.components;
 
-import java.awt.*;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-
-public class EnableFirebaseButtons extends DeviceButtons {
+public class EventTrackerButtons extends DeviceButtons {
 	/**
-	 * 
+	 *
 	 */
 
-	public EnableFirebaseButtons() {
-		this.setBounds(0, 220, 100, 30);
+	public EventTrackerButtons() {
+		this.setBounds(105, 190, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
 //		this.setBackground(Color.lightGray);
@@ -19,8 +14,7 @@ public class EnableFirebaseButtons extends DeviceButtons {
 //		this.setFont(new Font("Calibri", Font.BOLD, 15));
 //		this.setEnabled(false);
 //		this.setVisible(false);
-		this.setText("Firebase");
+		this.setText("Event Tracker");
 	}
 }
-
 

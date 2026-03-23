@@ -1,4 +1,4 @@
-package Buttons;
+package androidtoolkit.ui.components;
 
 import java.awt.*;
 import javax.swing.JRadioButton;
@@ -25,3 +25,4 @@ public class RadioButtons extends JRadioButton{
 		this.setText(text);
 	}
 }
+

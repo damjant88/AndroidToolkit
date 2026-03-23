@@ -12,8 +12,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
-import Buttons.CopyScreenshotButtons;
-import Buttons.ScreenshotLocationButtons;
+import androidtoolkit.ui.components.CopyScreenshotButtons;
+import androidtoolkit.ui.components.ScreenshotLocationButtons;
 
 public class ScreenshotFrame extends JFrame {
 
@@ -136,5 +136,6 @@ public class ScreenshotFrame extends JFrame {
 		}
 	}
 }
+
 
 

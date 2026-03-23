@@ -1,4 +1,4 @@
-package Buttons;
+package androidtoolkit.ui.components;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,3 +19,4 @@ public class CopyScreenshotButtons extends JButton{
 		this.setText("Copy to clipboard");
 	}
 }
+

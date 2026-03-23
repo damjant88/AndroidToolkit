@@ -1,22 +1,23 @@
-package Buttons;
+package androidtoolkit.ui.components;
+
 import java.awt.*;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 
-public class UninstallAllButton extends JButton{
+public class RebootButtons extends DeviceButtons {
 	/**
 	 * 
 	 */
 
-	public UninstallAllButton() {
-		this.setBounds(0, 261, 100, 50);
+	public RebootButtons() {
+		this.setBounds(0, 250, 100, 30);
 //		this.setFocusable(false);
 //		this.setBorder(BorderFactory.createEtchedBorder());
 //		this.setBackground(Color.lightGray);
 		this.setMargin(new Insets(0, 0, 0, 0));
 		this.setFont(new Font("Calibri", Font.BOLD, 15));
-		this.setEnabled(true);
-		this.setText("Uninstall All");
+		this.setVisible(false);
+		this.setText("Reboot");
 	}
 }
 

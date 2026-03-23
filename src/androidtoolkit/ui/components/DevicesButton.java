@@ -1,4 +1,4 @@
-package Buttons;
+package androidtoolkit.ui.components;
 import java.awt.*;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -22,3 +22,4 @@ public class DevicesButton extends JButton{
 		this.setIcon(buttonIcon);
 	}
 }
+
