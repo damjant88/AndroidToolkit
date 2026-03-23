@@ -36,6 +36,13 @@ public class DeviceMonitor {
                         deviceMonitorUi.onDeviceListChanged(discoveryResult);
                     }
                     Thread.sleep(pollIntervalMs);
+                } catch (RuntimeException e) {
+                    System.err.println("Device monitor refresh failed: " + e.getMessage());
+                    try {
+                        Thread.sleep(pollIntervalMs);
+                    } catch (InterruptedException interruptedException) {
+                        Thread.currentThread().interrupt();
+                    }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }

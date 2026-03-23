@@ -87,7 +87,8 @@ public class DeviceOperations {
     }
 
     public StopScreenRecordingResult stopScreenRecording(StopScreenRecordingRequest request) throws InterruptedException {
-        if (!request.getRecordingSession().getRecordingInProgress().get()) {
+        if (!request.getRecordingSession().getRecordingInProgress().get()
+                || request.getRecordingSession().getRecordingProcess() == null) {
             return new StopScreenRecordingResult(
                     false,
                     false,
@@ -102,6 +103,16 @@ public class DeviceOperations {
                 request.getDeviceName(),
                 request.getRecordingSession()
         );
+
+        if (recordingLocation == null || recordingLocation.isBlank()) {
+            return new StopScreenRecordingResult(
+                    false,
+                    false,
+                    "No active recording!",
+                    "",
+                    "Start Record"
+            );
+        }
 
         return new StopScreenRecordingResult(
                 true,

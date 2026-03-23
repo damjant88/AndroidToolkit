@@ -21,7 +21,9 @@ public class DeviceInfoService {
         String wifiIp = deviceGateway.getWlanIp(serial);
         String mobileIp = deviceGateway.getMobileIp(serial);
         String ipAddress = wifiIp.isEmpty() ? mobileIp : wifiIp;
-        String pid = commandExecutor.runCommand("adb -s " + serial + " shell pidof -s com.smithmicro.safepath.family");
+        String pid = safePathPackage.isEmpty()
+                ? ""
+                : commandExecutor.runCommand("adb -s " + serial + " shell pidof -s " + safePathPackage).trim();
         System.out.println(pid);
 
         return new DeviceInfo(

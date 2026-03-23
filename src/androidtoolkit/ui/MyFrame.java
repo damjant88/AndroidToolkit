@@ -90,7 +90,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		icon = new Icons();
 
 		setStaticElements();
-		refreshListOfDevices();
+		refreshListOfDevices(deviceCatalog.discoverDevices(new DeviceDiscoveryRequest()));
 		this.setVisible(true);
 		deviceMonitor.start();
 	}
@@ -162,12 +162,11 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	}
 
 	public void refreshListOfDevices() {
-		for (Device element : listOfDevices) {
-			element.setVisible(false);
-		}
-		listOfDevices.clear();
-		isInstalledList.clear();
-		DeviceDiscoveryResult discoveryResult = deviceCatalog.discoverDevices(new DeviceDiscoveryRequest());
+		refreshListOfDevices(deviceCatalog.discoverDevices(new DeviceDiscoveryRequest()));
+	}
+
+	private void refreshListOfDevices(DeviceDiscoveryResult discoveryResult) {
+		clearDevicePanels();
 		java.util.List<ConnectedDevice> connectedDevices = discoveryResult.getDevices();
 		serialNumberList = new ArrayList<>(connectedDevices.stream()
 				.map(ConnectedDevice::getSerial)
@@ -189,17 +188,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 			progressBar.setIndeterminate(false);
 			progressBar.setValue(progress);
 		}
-	}
-
-	private void updateDeviceList(ArrayList<String> tempListOfDevices) {
-		for(Device element : listOfDevices) {
-			remove(element);
-		}
-		refreshListOfDevices();
-		for(Device element : listOfDevices) {
-			element.setVisible(true);
-		}
-		serialNumberList = tempListOfDevices;
 	}
 
 	private void updatePanelSize() {
@@ -263,7 +251,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	@Override
 	public void onDeviceListChanged(DeviceDiscoveryResult discoveryResult) {
 		SwingUtilities.invokeLater(() -> {
-			updateDeviceList(discoveryResult.getSerials());
+			refreshListOfDevices(discoveryResult);
 			updatePanelSize();
 		});
 	}
@@ -348,9 +336,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	}
 
 	void showRefreshedDevices() {
-		for (Device element : listOfDevices) {
-			element.setVisible(false);
-		}
 		refreshListOfDevices();
 		applyWindowSize();
 		setVisible(true);
@@ -393,6 +378,14 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		buildSelectionState = buildSelectionCoordinator.currentState();
 		System.out.println(buildSelectionState.getBuildPaths());
 		System.out.println(buildSelectionState.getBuildNames());
+	}
+
+	private void clearDevicePanels() {
+		for (Device element : listOfDevices) {
+			remove(element);
+		}
+		listOfDevices.clear();
+		isInstalledList.clear();
 	}
 }
 

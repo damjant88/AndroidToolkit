@@ -38,6 +38,7 @@ public class Device extends JPanel {
 
     private final StoragePaths storagePaths;
     private final DeviceGateway deviceGateway;
+    private final DeviceInfoService deviceInfoService;
     private final CommandExecutor commandExecutor;
     DeviceActionService deviceActionService;
     ScreenRecordingService screenRecordingService;
@@ -70,7 +71,6 @@ public class Device extends JPanel {
     ScreenMirrorButton screenMirrorButton;
     ScreenRecordingButton screenRecordingButton;
     private final RecordingSession recordingSession = new RecordingSession();
-    ConsoleView consoleView;
     LiveEventTracker liveEventTracker;
 
     public Device(MyFrame parent, ConnectedDevice connectedDevice, int totalDeviceCount, Runnable refreshDevicesMethod, AppServices appServices) {
@@ -80,6 +80,7 @@ public class Device extends JPanel {
         this.totalDeviceCount = totalDeviceCount;
         this.storagePaths = appServices.storagePaths();
         this.deviceGateway = appServices.deviceGateway();
+        this.deviceInfoService = appServices.deviceInfoService();
         this.commandExecutor = appServices.commandExecutor();
         this.logLocation = storagePaths.logsDir().getPath();
         this.recordingLocation = storagePaths.screenRecordingsDir().getPath();
@@ -99,7 +100,6 @@ public class Device extends JPanel {
         this.setVisible(false);
         this.parent = parent;
         this.refreshDevicesMethod = refreshDevicesMethod;
-        consoleView = new ConsoleView(parent, commandExecutor);
     }
 
     private void setIconAndButtons(int totalDeviceCount) {
@@ -256,6 +256,7 @@ public class Device extends JPanel {
                     "Enable WiFi Debugging",
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
+            reloadDeviceInfo();
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText(result.getMessage());
             } else {
@@ -362,10 +363,14 @@ public class Device extends JPanel {
                 StopScreenRecordingResult result = deviceOperations.stopScreenRecording(
                         new StopScreenRecordingRequest(serial, deviceName, recordingSession)
                 );
-                recordingLocation = result.getRecordingLocation();
                 screenRecordingButton.setText(result.getButtonText());
-                parent.consoleView.appendText(result.getMessage());
-                openExplorerToFolder(recordingLocation);
+                if (result.isStopped()) {
+                    recordingLocation = result.getRecordingLocation();
+                    parent.consoleView.appendText(result.getMessage());
+                    openExplorerToFolder(recordingLocation);
+                } else {
+                    JOptionPane.showMessageDialog(Device.this, result.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             } catch (RuntimeException ex) {
@@ -376,6 +381,13 @@ public class Device extends JPanel {
             JOptionPane.showMessageDialog(Device.this, result.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             screenRecordingButton.setText(result.getButtonText());
         }
+    }
+
+    private void reloadDeviceInfo() {
+        deviceInfo = deviceInfoService.load(serial);
+        appIsInstalled = deviceInfo.isAppInstalled();
+        deviceTextPane.setText(deviceInfo.toDisplayText());
+        applyPanelState(devicePanelStateFactory.create(deviceInfo, icon));
     }
 }
 
