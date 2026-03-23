@@ -46,6 +46,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 	ConsoleView consoleView;
 	BuildInstaller buildInstaller;
 	DeviceCatalog deviceCatalog;
+	MyFrameStateFactory myFrameStateFactory;
 	int height = 460;
 	int width;
 	Boolean isConsoleVisible = false;
@@ -63,6 +64,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.buildSelectionStore = appServices.buildSelectionStore();
 		this.buildInstaller = appServices.buildInstaller();
 		this.deviceCatalog = appServices.deviceCatalog();
+		this.myFrameStateFactory = new MyFrameStateFactory();
 
 		File logs = storagePaths.logsDir();
 		if (!logs.exists()) {
@@ -105,14 +107,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 		uninstallAllButton = new UninstallAllButton();
 		uninstallAllButton.addActionListener(new UninstallAllButtonListener());
-		int j = 0;
-		while (j < numberOfDevices) {
-			if (!isInstalledList.contains(true)) {
-				uninstallAllButton.setEnabled(true);
-				break;
-			}
-			j++;
-		}
 		this.add(uninstallAllButton);
 
 		staticPane = new StaticPane();
@@ -137,7 +131,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		progressBar = new ProgressBar();
 		this.add(progressBar);
 
-		width = numberOfDevices * 210 + 230;
 		consoleView = new ConsoleView(this, commandExecutor);
 		this.add(consoleView);
 		this.setTitle("Adb Toolkit");
@@ -146,7 +139,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		this.setResizable(false);
 
 		this.setMinimumSize(new Dimension(650, 460));
-		this.setSize(width, height);
+		applyFrameState(createFrameState());
 		this.setIconImage(icon.frameIcon.getImage());
 	}
 
@@ -168,12 +161,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			this.add(device);
 			isInstalledList.add(device.appIsInstalled);
 		}
-		if(isInstalledList.contains(false) && fileTextFieldBox.getItemCount() > 0 && !fileTextFieldBox.getItemAt(0).equals("")){
-			installButton.setEnabled(true);
-		}
-		if(!isInstalledList.contains(true)){
-			uninstallAllButton.setEnabled(false);
-		}
+		applyFrameState(createFrameState());
 	}
 
 	@Override
@@ -213,14 +201,13 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (!consoleView.isVisible()) {
 				consoleView.setVisible(true);
 				isConsoleVisible = true;
-				setSize(width, height + 200);
 				consoleViewMenu.setText("Hide Console View");
 			} else {
 				consoleView.setVisible(false);
 				isConsoleVisible = false;
 				consoleViewMenu.setText("Show Console View");
-				setSize(width, height);
 			}
+			applyWindowSize();
 		}
 	}
 
@@ -232,12 +219,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				element.setVisible(false);
 			}
 			refreshListOfDevices();
-			int width = numberOfDevices * 210 + 230;
-			if (consoleView.isVisible()) {
-				setSize(width, height + 200);
-			} else {
-				setSize(width, height);
-			}
+			applyWindowSize();
 			setVisible(true);
 		}
 	}
@@ -264,7 +246,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			} else {
 				progressBar.setIndeterminate(false);
 				progressBar.setString("Waiting for build...");
-				installButton.setEnabled(true);
+				applyFrameState(createFrameState());
 			}
 		}
 	}
@@ -288,7 +270,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 			if (tasksStarted == 0) {
 				progressBar.setIndeterminate(false);
 				progressBar.setString("Done!");
-				uninstallAllButton.setEnabled(true);
+				applyFrameState(createFrameState());
 			}
 		}
 	}
@@ -309,9 +291,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
 				System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
 				buildSelectionStore.saveBuildSelection(buildSelectionState);
-				if (!serialNumberList.isEmpty() && isInstalledList.contains(false)){
-					installButton.setEnabled(true);
-				}
+				applyFrameState(createFrameState());
 				progressBar.setBackground(new Color(238, 238, 238));
 				progressBar.setString("Waiting for build...");
 			}
@@ -353,11 +333,8 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 				progressBar.setString("Done!");
 				progressBar.setBackground(Color.green);
 				refreshListOfDevices();
-				if (isInstalledList.contains(false) && fileTextFieldBox.getItemCount() > 0 && !fileTextFieldBox.getItemAt(0).equals("")) {
-					installButton.setEnabled(true);
-				}
 				progressBar.setIndeterminate(false);
-				uninstallAllButton.setEnabled(true);
+				applyFrameState(createFrameState());
 			}
 		}
 	}
@@ -394,12 +371,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 
 	private void updatePanelSize() {
 		SwingUtilities.invokeLater(() -> {
-			width = numberOfDevices * 210 + 230;
-			if (consoleView.isVisible()) {
-				setSize(width, height + 200);
-			} else {
-				setSize(width, height);
-			}
+			applyFrameState(createFrameState());
 			revalidate();
 			repaint();
 		});
@@ -416,5 +388,29 @@ public class MyFrame extends JFrame implements PropertyChangeListener {
 		Task task = new Task(command);
 		task.addPropertyChangeListener(null);
 		task.execute();
+	}
+
+	private MyFrameState createFrameState() {
+		return myFrameStateFactory.create(
+				numberOfDevices,
+				buildSelectionState != null && buildSelectionState.hasBuilds(),
+				isInstalledList.contains(false),
+				isInstalledList.contains(true)
+		);
+	}
+
+	private void applyFrameState(MyFrameState frameState) {
+		installButton.setEnabled(frameState.isInstallEnabled());
+		uninstallAllButton.setEnabled(frameState.isUninstallAllEnabled());
+		width = frameState.getWindowWidth();
+		applyWindowSize();
+	}
+
+	private void applyWindowSize() {
+		if (consoleView != null && consoleView.isVisible()) {
+			setSize(width, height + 200);
+		} else {
+			setSize(width, height);
+		}
 	}
 }
