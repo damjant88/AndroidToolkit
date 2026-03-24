@@ -26,6 +26,7 @@ public class PackageClassifier {
             "com.smithmicro.safepath.family",
             "com.smithmicro.safepath.family.light",
             "com.smithmicro.safepath.family.speakeasy",
+            "com.smithmicro.cci.test",
             "com.smithmicro.sprint.safeandfound.test",
             "com.sprint.safefound",
             "com.tmobile.familycontrols",
