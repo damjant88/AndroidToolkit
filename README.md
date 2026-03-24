@@ -70,3 +70,9 @@ Expected future runtime shape:
 ## Notes
 
 This repo is intended to preserve a working migration path rather than attempt a one-shot rewrite.
+
+## Local Build And Run
+
+- Build from PowerShell with `.\build.ps1`
+- Run the desktop app with `.\run.ps1`
+- The run script creates `C:\AdbToolkit` if it does not already exist because the app stores local state there
