@@ -253,12 +253,22 @@ public class Device extends JPanel {
                     "Enable WiFi Debugging",
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
-            reloadDeviceInfo();
+            boolean disablingWifiDebug = deviceInfo.isWifiDebugSession() && !result.isWifiEnabled();
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText(result.getMessage());
+                if (disablingWifiDebug) {
+                    refreshDevicesMethod.run();
+                } else {
+                    reloadDeviceInfo();
+                }
             } else {
                 JOptionPane.showMessageDialog(parent, result.getMessage(), result.isWifiEnabled() ? "Enable WiFi Debugging" : "Disable WiFi Debugging.",
                         JOptionPane.INFORMATION_MESSAGE);
+                if (disablingWifiDebug) {
+                    refreshDevicesMethod.run();
+                } else {
+                    reloadDeviceInfo();
+                }
             }
             wifiDebug.setText(result.getButtonText());
         }
