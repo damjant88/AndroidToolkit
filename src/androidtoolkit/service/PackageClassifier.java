@@ -37,6 +37,12 @@ public class PackageClassifier {
 
     public String detectSafePathPackage(List<String> installedPackages) {
         for (String installedPackage : installedPackages) {
+            if (SUPPORTED_PACKAGES.contains(installedPackage)) {
+                return installedPackage;
+            }
+        }
+
+        for (String installedPackage : installedPackages) {
             if (PACKAGE_HINTS.stream().anyMatch(installedPackage::contains)) {
                 return installedPackage;
             }
