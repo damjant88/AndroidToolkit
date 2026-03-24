@@ -172,7 +172,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 				.map(ConnectedDevice::getSerial)
 				.collect(Collectors.toList()));
 		numberOfDevices = discoveryResult.getDeviceCount();
-		for (Device devicePanel : devicePanelFactory.createPanels(this, connectedDevices, this::refreshListOfDevices)) {
+		for (Device devicePanel : devicePanelFactory.createPanels(this, connectedDevices, this::refreshDevices)) {
 			device = devicePanel;
 			listOfDevices.add(devicePanel);
 			this.add(devicePanel);
