@@ -75,4 +75,5 @@ This repo is intended to preserve a working migration path rather than attempt a
 
 - Build from PowerShell with `.\build.ps1`
 - Run the desktop app with `.\run.ps1`
+- Package a Windows launcher with `.\package.ps1`
 - The run script creates `C:\AdbToolkit` if it does not already exist because the app stores local state there

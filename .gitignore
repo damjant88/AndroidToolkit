@@ -2,6 +2,7 @@
 .idea/
 *.iml
 out/
+dist/
 !**/src/main/**/out/
 !**/src/test/**/out/
 

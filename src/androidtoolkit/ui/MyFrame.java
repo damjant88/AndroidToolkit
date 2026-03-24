@@ -190,12 +190,10 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		}
 	}
 
-	private void updatePanelSize() {
-		SwingUtilities.invokeLater(() -> {
-			applyFrameState(createFrameState());
-			revalidate();
-			repaint();
-		});
+	private void refreshDevicePanelsUi() {
+		applyFrameState(createFrameState());
+		revalidate();
+		repaint();
 	}
 
 	private void refreshBuildSelectionBox() {
@@ -241,6 +239,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	@Override
 	public void refreshDevices() {
 		refreshListOfDevices();
+		refreshDevicePanelsUi();
 	}
 
 	@Override
@@ -252,7 +251,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	public void onDeviceListChanged(DeviceDiscoveryResult discoveryResult) {
 		SwingUtilities.invokeLater(() -> {
 			refreshListOfDevices(discoveryResult);
-			updatePanelSize();
+			refreshDevicePanelsUi();
 		});
 	}
 
@@ -337,8 +336,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 
 	void showRefreshedDevices() {
 		refreshListOfDevices();
-		applyWindowSize();
-		setVisible(true);
+		refreshDevicePanelsUi();
 	}
 
 	void startInstallSelectedDevices() {
