@@ -20,7 +20,8 @@ public class DevicePanelStateFactory {
             "com.smithmicro.safepath.family.child"
     );
     private static final Set<String> SENIOR_PACKAGES = Set.of(
-            "com.smithmicro.safepath.family.light"
+            "com.smithmicro.safepath.family.light",
+            "com.smithmicro.safepath.family.speakeasy"
     );
     private static final Set<String> ATT_IAP_PACKAGES = Set.of("com.smithmicro.att.securefamily");
     private static final Set<String> ATT_EAP_PACKAGES = Set.of("com.wavemarket.waplauncher");
