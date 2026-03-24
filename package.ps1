@@ -7,6 +7,7 @@ $stagingRoot = Join-Path $distRoot "staging"
 $inputRoot = Join-Path $distRoot "input"
 $jarPath = Join-Path $inputRoot "AndroidToolkit.jar"
 $assetsRoot = Join-Path $projectRoot "Assets"
+$iconPath = Join-Path $assetsRoot "favicon.ico"
 
 & (Join-Path $projectRoot "build.ps1")
 
@@ -36,6 +37,7 @@ jpackage `
     --name AndroidToolkit `
     --input $inputRoot `
     --main-jar AndroidToolkit.jar `
+    --icon $iconPath `
     --dest $distRoot
 
 if ($LASTEXITCODE -ne 0) {
