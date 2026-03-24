@@ -9,6 +9,7 @@ public class Icons extends JPanel {
     public ImageIcon logo_tmo;
     public ImageIcon logo_att;
     public ImageIcon logo_product;
+    public ImageIcon logo_senior;
     public ImageIcon frameIcon;
     public ImageIcon notInstalled;
     public ImageIcon logo_sprint;
@@ -25,6 +26,7 @@ public class Icons extends JPanel {
         logo_tmo = scaleImageIcon("tmo.png", 45, 45);
         logo_att = scaleImageIcon("att.png", 45, 45);
         logo_product = scaleImageIcon("product.png", 45, 45);
+        logo_senior = scaleImageIcon("Senior.png", 45, 45);
         logo_sprint = scaleImageIcon("sprint.png", 45, 45);
         logo_orange = scaleImageIcon("toyo.png", 45, 45);
         notInstalled = scaleImageIcon("Android.png", 45, 45);

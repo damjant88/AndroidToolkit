@@ -24,6 +24,7 @@ public class PackageClassifier {
             "com.att.securefamilycompanion",
             "com.wavemarket.waplauncher",
             "com.smithmicro.safepath.family",
+            "micro.safepath.family.light",
             "com.smithmicro.sprint.safeandfound.test",
             "com.sprint.safefound",
             "com.tmobile.familycontrols",

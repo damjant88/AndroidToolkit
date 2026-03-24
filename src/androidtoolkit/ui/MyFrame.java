@@ -27,6 +27,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.JTextPane;
 import javax.swing.WindowConstants;
 import androidtoolkit.ui.components.*;
@@ -240,6 +241,15 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	public void refreshDevices() {
 		refreshListOfDevices();
 		refreshDevicePanelsUi();
+	}
+
+	@Override
+	public void refreshDevicesAfterBuildOperation() {
+		refreshDevices();
+		// Package visibility can lag slightly after adb install/uninstall, especially with multiple devices.
+		Timer timer = new Timer(1000, event -> refreshDevices());
+		timer.setRepeats(false);
+		timer.start();
 	}
 
 	@Override

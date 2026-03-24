@@ -61,7 +61,7 @@ public class BuildOperationCoordinator {
     public void finishTask(BuildOperationUi ui) {
         if (buildInstaller.finishTask() == 0) {
             ui.applyProgressState(DONE_STATE);
-            ui.refreshDevices();
+            ui.refreshDevicesAfterBuildOperation();
             ui.applyCurrentFrameState();
         }
     }
@@ -76,6 +76,7 @@ public class BuildOperationCoordinator {
         void setInstallEnabled(boolean enabled);
         void setUninstallAllEnabled(boolean enabled);
         void refreshDevices();
+        void refreshDevicesAfterBuildOperation();
         void applyCurrentFrameState();
     }
 }
