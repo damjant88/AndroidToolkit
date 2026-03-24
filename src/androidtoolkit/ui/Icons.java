@@ -2,7 +2,8 @@ package androidtoolkit.ui;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Objects;
+import java.io.File;
+import java.net.URL;
 
 public class Icons extends JPanel {
 
@@ -33,8 +34,22 @@ public class Icons extends JPanel {
     }
 
     public ImageIcon scaleImageIcon(String imageName, int width, int height) {
-        ImageIcon icon = new ImageIcon(Objects.requireNonNull(getClass().getResource("/" + imageName)));
+        ImageIcon icon = loadImageIcon(imageName);
         Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_SMOOTH);
         return new ImageIcon(image);
+    }
+
+    private ImageIcon loadImageIcon(String imageName) {
+        URL resource = getClass().getResource("/" + imageName);
+        if (resource != null) {
+            return new ImageIcon(resource);
+        }
+
+        File assetFile = new File("Assets", imageName);
+        if (assetFile.isFile()) {
+            return new ImageIcon(assetFile.getAbsolutePath());
+        }
+
+        throw new IllegalArgumentException("Could not load icon: " + imageName);
     }
 }
