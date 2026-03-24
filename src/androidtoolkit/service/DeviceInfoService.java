@@ -24,7 +24,6 @@ public class DeviceInfoService {
         String pid = safePathPackage.isEmpty()
                 ? ""
                 : commandExecutor.runCommand("adb -s " + serial + " shell pidof -s " + safePathPackage).trim();
-        System.out.println(pid);
 
         return new DeviceInfo(
                 serial,

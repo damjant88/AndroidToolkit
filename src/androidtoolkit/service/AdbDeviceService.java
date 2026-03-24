@@ -108,11 +108,7 @@ public class AdbDeviceService implements DeviceGateway {
 
     public String getSafePathPackage(String id) {
         List<String> installedPackages = getInstalledPackages(id);
-        String installedPackage = packageClassifier.detectSafePathPackage(installedPackages);
-        if (!installedPackage.isEmpty()) {
-            System.out.println(installedPackage);
-        }
-        return installedPackage;
+        return packageClassifier.detectSafePathPackage(installedPackages);
     }
 
     public boolean checkIfInstalled(String id) {

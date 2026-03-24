@@ -67,7 +67,6 @@ public class ScreenRecordingService {
                     process.waitFor();
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
-                    System.out.println("Screen recording interrupted.");
                 } finally {
                     recordingSession.getRecordingInProgress().set(false);
                 }

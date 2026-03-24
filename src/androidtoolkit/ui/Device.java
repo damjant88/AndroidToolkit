@@ -91,11 +91,9 @@ public class Device extends JPanel {
         logExporter = appServices.logExporter();
         devicePanelStateFactory = new DevicePanelStateFactory();
         serial = connectedDevice.getSerial();
-        System.out.println(serial);
         deviceName = connectedDevice.getDeviceName();
         deviceInfo = connectedDevice.getDeviceInfo();
         appIsInstalled = deviceInfo.isAppInstalled();
-        System.out.println(appIsInstalled);
         setIconAndButtons(totalDeviceCount);
         this.setVisible(false);
         this.parent = parent;
@@ -103,7 +101,6 @@ public class Device extends JPanel {
     }
 
     private void setIconAndButtons(int totalDeviceCount) {
-        System.out.println(deviceName);
         radio = new DeviceSelectionRadioButton(deviceName);
         radio.setVisible(true);
         this.add(radio);
@@ -314,11 +311,9 @@ public class Device extends JPanel {
             refreshDevicesMethod.run();
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText(result.getMessage());
-                System.out.println(parent.isConsoleVisible);
             } else {
                 JOptionPane.showMessageDialog(parent, result.getMessage(), "Uninstall the app.",
                         JOptionPane.INFORMATION_MESSAGE);
-                System.out.println(parent.isConsoleVisible);
             }
         }
     }
@@ -331,7 +326,6 @@ public class Device extends JPanel {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 liveEventTracker = new LiveEventTracker(serial, deviceInfo.getPid(), commandExecutor);
-                System.out.println("Tracker Opened!");
             }
         });
     }

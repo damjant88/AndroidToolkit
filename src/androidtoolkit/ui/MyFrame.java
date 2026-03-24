@@ -132,8 +132,6 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		this.add(staticPane);
 
 		buildSelectionState = buildSelectionCoordinator.loadInitialState();
-		System.out.println("Polazna lista buildova je : " + buildSelectionState.getBuildPaths());
-		System.out.println("Polazna lista imena je : " + buildSelectionState.getBuildNames());
 
 		fileTextFieldBox = new FileTextFieldBox(buildSelectionState.getBuildNames());
 		fileTextFieldBox.addActionListener(new SelectBuildAction(this));
@@ -375,17 +373,12 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	void chooseBuild() {
 		buildSelectionCoordinator.chooseBuild(this);
 		buildSelectionState = buildSelectionCoordinator.currentState();
-		System.out.println("Lista buildova: " + buildSelectionState.getBuildPaths());
-		System.out.println("Lista imena: " + buildSelectionState.getBuildNames());
 	}
 
 	void selectBuildFromDropdown() {
 		int selectedIndex = fileTextFieldBox.getSelectedIndex();
-		System.out.println(fileTextFieldBox.getSelectedIndex());
 		buildSelectionCoordinator.selectBuildAt(selectedIndex, this);
 		buildSelectionState = buildSelectionCoordinator.currentState();
-		System.out.println(buildSelectionState.getBuildPaths());
-		System.out.println(buildSelectionState.getBuildNames());
 	}
 
 	private void clearDevicePanels() {
