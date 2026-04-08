@@ -8,6 +8,9 @@ import androidtoolkit.app.DeviceOperations;
 import androidtoolkit.app.FirebaseDebugRequest;
 import androidtoolkit.app.LogExportRequest;
 import androidtoolkit.app.LogExporter;
+import androidtoolkit.app.PermissionCatalog;
+import androidtoolkit.app.PermissionDefinition;
+import androidtoolkit.app.PermissionUpdateResult;
 import androidtoolkit.app.RebootDeviceRequest;
 import androidtoolkit.app.ScreenMirrorRequest;
 import androidtoolkit.app.ScreenshotRequest;
@@ -26,6 +29,7 @@ import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.DeviceActionService;
 import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.DeviceInfoService;
+import androidtoolkit.service.DevicePermissionService;
 import androidtoolkit.service.ScreenRecordingService;
 import androidtoolkit.service.StoragePaths;
 
@@ -70,12 +74,15 @@ public class Device extends JPanel {
     EventTrackerButton eventTrackerButton;
     ScreenMirrorButton screenMirrorButton;
     ScreenRecordingButton screenRecordingButton;
+    PermissionsButton permissionsButton;
     private final RecordingSession recordingSession = new RecordingSession();
     LiveEventTracker liveEventTracker;
+    DevicePermissionService devicePermissionService;
+    PermissionCatalog permissionCatalog;
 
     public Device(MyFrame parent, ConnectedDevice connectedDevice, int totalDeviceCount, Runnable refreshDevicesMethod, AppServices appServices) {
 
-        this.setBounds((connectedDevice.getIndex()+1)*210, 0, 210, 310);
+        this.setBounds((connectedDevice.getIndex()+1)*210, 0, 210, 345);
         this.setLayout(null);
         this.totalDeviceCount = totalDeviceCount;
         this.storagePaths = appServices.storagePaths();
@@ -87,8 +94,10 @@ public class Device extends JPanel {
         icon = new Icons();
         deviceActionService = appServices.deviceActionService();
         screenRecordingService = appServices.screenRecordingService();
+        devicePermissionService = appServices.devicePermissionService();
         deviceOperations = appServices.deviceOperations();
         logExporter = appServices.logExporter();
+        permissionCatalog = appServices.permissionCatalog();
         devicePanelStateFactory = new DevicePanelStateFactory();
         serial = connectedDevice.getSerial();
         deviceName = connectedDevice.getDeviceName();
@@ -134,6 +143,10 @@ public class Device extends JPanel {
         screenRecordingButton.addActionListener(new DeviceScreenRecordingAction(this));
         this.add(screenRecordingButton);
 
+        permissionsButton = new PermissionsButton();
+        permissionsButton.addActionListener(new DevicePermissionsAction(this));
+        this.add(permissionsButton);
+
         wifiDebug = new WifiDebugButton();
         wifiDebug.addActionListener(new DeviceToggleWifiDebugAction(this));
         this.add(wifiDebug);
@@ -164,6 +177,7 @@ public class Device extends JPanel {
         wifiDebug.setVisible(true);
         enableFirebase.setVisible(true);
         reboot.setVisible(true);
+        permissionsButton.setVisible(true);
         deviceTextPane.setText(deviceInfo.toDisplayText());
         deviceTextPane.setVisible(true);
         takeScreenshotButton.setVisible(true);
@@ -217,7 +231,46 @@ public class Device extends JPanel {
         takeScreenshotButton.setEnabled(panelState.isScreenshotEnabled());
         wifiDebug.setEnabled(panelState.isWifiDebugEnabled());
         reboot.setEnabled(panelState.isRebootEnabled());
+        permissionsButton.setEnabled(panelState.isPermissionsEnabled());
         wifiDebug.setText(panelState.getWifiButtonText());
+    }
+
+    void openPermissionsDialog() {
+        java.util.List<PermissionDefinition> supportedPermissions = permissionCatalog.supportedPermissionsFor(deviceInfo.getSafePathPackage());
+        if (supportedPermissions.isEmpty()) {
+            JOptionPane.showMessageDialog(parent, "No predefined permissions are available for this package.", "Permissions",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        PermissionsDialog dialog = new PermissionsDialog(parent, deviceName, deviceInfo.getSafePathPackage(), supportedPermissions);
+        dialog.setApplyAction(event -> {
+            java.util.List<PermissionDefinition> selectedPermissions = dialog.selectedDefinitions();
+            dialog.setApplyEnabled(false);
+            SwingWorker<PermissionUpdateResult, Void> worker = new SwingWorker<PermissionUpdateResult, Void>() {
+                @Override
+                protected PermissionUpdateResult doInBackground() {
+                    return devicePermissionService.applyPermissions(serial, deviceInfo.getSafePathPackage(), selectedPermissions);
+                }
+
+                @Override
+                protected void done() {
+                    dialog.setApplyEnabled(true);
+                    try {
+                        PermissionUpdateResult result = get();
+                        parent.consoleView.appendText(result.toDisplayMessage(deviceName));
+                        dialog.showResult(result, deviceName);
+                        if (result.isSuccessful()) {
+                            dialog.dispose();
+                        }
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Permissions", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            worker.execute();
+        });
+        dialog.setVisible(true);
     }
 
     void saveLogs() {

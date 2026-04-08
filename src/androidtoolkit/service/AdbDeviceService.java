@@ -82,6 +82,18 @@ public class AdbDeviceService implements DeviceGateway {
         commandExecutor.runCommandAndSave(command, fileName);
     }
 
+    public void grantPermission(String id, String appPackage, String permission) {
+        commandExecutor.runCommand("adb -s " + id + " shell pm grant " + appPackage + " " + permission);
+    }
+
+    public void addToDeviceIdleWhitelist(String id, String appPackage) {
+        commandExecutor.runCommand("adb -s " + id + " shell cmd deviceidle whitelist +" + appPackage);
+    }
+
+    public void ignoreAutoRevokePermissions(String id, String appPackage) {
+        commandExecutor.runCommand("adb -s " + id + " shell cmd appops set " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore");
+    }
+
     public void startWifiDebugging(String id, String ip) {
         commandExecutor.runCommand("adb -s " + id + " shell settings put global adb_wifi_enabled 1");
         commandExecutor.runCommand("adb -s " + id + " tcpip 5555");

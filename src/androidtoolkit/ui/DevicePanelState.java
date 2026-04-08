@@ -16,6 +16,7 @@ public class DevicePanelState {
     private final boolean screenshotEnabled;
     private final boolean wifiDebugEnabled;
     private final boolean rebootEnabled;
+    private final boolean permissionsEnabled;
     private final String wifiButtonText;
 
     public DevicePanelState(
@@ -31,6 +32,7 @@ public class DevicePanelState {
             boolean screenshotEnabled,
             boolean wifiDebugEnabled,
             boolean rebootEnabled,
+            boolean permissionsEnabled,
             String wifiButtonText
     ) {
         this.icon = icon;
@@ -45,6 +47,7 @@ public class DevicePanelState {
         this.screenshotEnabled = screenshotEnabled;
         this.wifiDebugEnabled = wifiDebugEnabled;
         this.rebootEnabled = rebootEnabled;
+        this.permissionsEnabled = permissionsEnabled;
         this.wifiButtonText = wifiButtonText;
     }
 
@@ -94,6 +97,10 @@ public class DevicePanelState {
 
     public boolean isRebootEnabled() {
         return rebootEnabled;
+    }
+
+    public boolean isPermissionsEnabled() {
+        return permissionsEnabled;
     }
 
     public String getWifiButtonText() {

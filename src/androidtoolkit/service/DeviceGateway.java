@@ -26,6 +26,12 @@ public interface DeviceGateway {
 
     void saveScreenRecordingLogs(String id, String pid, String deviceName, String name);
 
+    void grantPermission(String id, String appPackage, String permission);
+
+    void addToDeviceIdleWhitelist(String id, String appPackage);
+
+    void ignoreAutoRevokePermissions(String id, String appPackage);
+
     void startWifiDebugging(String id, String ip);
 
     void stopWifiDebugging(String id, String ip);

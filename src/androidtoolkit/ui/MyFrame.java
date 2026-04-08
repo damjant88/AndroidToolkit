@@ -61,7 +61,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	DeviceMonitor deviceMonitor;
 	DevicePanelFactory devicePanelFactory;
 	MyFrameStateFactory myFrameStateFactory;
-	int height = 460;
+	int height = 500;
 	int width;
 	Boolean isConsoleVisible = false;
 	JMenuItem consoleViewMenu;
@@ -155,7 +155,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		this.setLayout(null);
 		this.setResizable(false);
 
-		this.setMinimumSize(new Dimension(650, 460));
+		this.setMinimumSize(new Dimension(650, 500));
 		applyFrameState(createFrameState());
 		this.setIconImage(icon.frameIcon.getImage());
 	}

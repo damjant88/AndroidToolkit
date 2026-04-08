@@ -81,6 +81,7 @@ public class DevicePanelStateFactory {
                 true,
                 true,
                 true,
+                true,
                 wifiButtonText
         );
     }
@@ -93,6 +94,7 @@ public class DevicePanelStateFactory {
                 true,
                 true,
                 false,
+                true,
                 true,
                 true,
                 true,

@@ -1,0 +1,69 @@
+package androidtoolkit.app;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class PermissionCatalog {
+
+    private static final String CCI_PACKAGE = "com.smithmicro.cci.test";
+
+    public List<PermissionDefinition> supportedPermissionsFor(String packageName) {
+        if (packageName == null || packageName.isBlank()) {
+            return new ArrayList<>();
+        }
+        if (!CCI_PACKAGE.equals(packageName)) {
+            return new ArrayList<>();
+        }
+
+        List<PermissionDefinition> definitions = new ArrayList<>();
+        definitions.add(new PermissionDefinition(
+                "fine_location",
+                "ACCESS_FINE_LOCATION",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.ACCESS_FINE_LOCATION"
+        ));
+        definitions.add(new PermissionDefinition(
+                "coarse_location",
+                "ACCESS_COARSE_LOCATION",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.ACCESS_COARSE_LOCATION"
+        ));
+        definitions.add(new PermissionDefinition(
+                "background_location",
+                "ACCESS_BACKGROUND_LOCATION",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.ACCESS_BACKGROUND_LOCATION"
+        ));
+        definitions.add(new PermissionDefinition(
+                "read_phone_state",
+                "READ_PHONE_STATE",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.READ_PHONE_STATE"
+        ));
+        definitions.add(new PermissionDefinition(
+                "read_phone_numbers",
+                "READ_PHONE_NUMBERS",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.READ_PHONE_NUMBERS"
+        ));
+        definitions.add(new PermissionDefinition(
+                "post_notifications",
+                "POST_NOTIFICATIONS",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.POST_NOTIFICATIONS"
+        ));
+        definitions.add(new PermissionDefinition(
+                "deviceidle_whitelist",
+                "Keep active in device idle whitelist",
+                PermissionCommandType.DEVICE_IDLE_WHITELIST,
+                ""
+        ));
+        definitions.add(new PermissionDefinition(
+                "auto_revoke_ignore",
+                "Ignore auto revoke for unused app",
+                PermissionCommandType.IGNORE_AUTO_REVOKE,
+                ""
+        ));
+        return definitions;
+    }
+}
