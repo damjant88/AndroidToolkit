@@ -106,6 +106,12 @@ public class AdbDeviceService implements DeviceGateway {
         commandExecutor.runCommand("adb -s " + id + " shell cmd appops set " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED default");
     }
 
+    public boolean isPermissionRequestDeclared(String id, String appPackage, String permission) {
+        String packageDump = commandExecutor.runCommand("adb -s " + id + " shell dumpsys package " + appPackage);
+        return packageDump.contains("requested permissions:")
+                && packageDump.contains(permission);
+    }
+
     public boolean isPermissionGranted(String id, String appPackage, String permission) {
         String packageDump = commandExecutor.runCommand("adb -s " + id + " shell dumpsys package " + appPackage);
         return packageDump.contains(permission + ": granted=true")

@@ -26,13 +26,15 @@ public class PermissionsDialog extends JDialog {
     private final JButton disableButton = new JButton("Disable");
     private static final Color ENABLED_COLOR = new Color(0, 128, 0);
     private static final Color DISABLED_COLOR = new Color(180, 0, 0);
+    private static final Color UNAVAILABLE_COLOR = Color.GRAY;
 
     public PermissionsDialog(
             Frame owner,
             String deviceName,
             String packageName,
             List<PermissionDefinition> definitions,
-            Set<String> activePermissionIds
+            Set<String> activePermissionIds,
+            Set<String> unavailablePermissionIds
     ) {
         super(owner, "Permissions", true);
         this.definitions = new ArrayList<>(definitions);
@@ -59,11 +61,13 @@ public class PermissionsDialog extends JDialog {
         permissionsPanel.add(new JLabel("Status"), constraints);
 
         for (PermissionDefinition definition : this.definitions) {
+            boolean unavailable = unavailablePermissionIds.contains(definition.getId());
             JCheckBox box = new JCheckBox(definition.getLabel(), activePermissionIds.contains(definition.getId()));
+            box.setEnabled(!unavailable);
             box.addActionListener(event -> syncSelectAllState());
             permissionBoxes.add(box);
 
-            JLabel statusLabel = createStatusLabel(box.isSelected());
+            JLabel statusLabel = createStatusLabel(box.isSelected(), unavailable);
             statusLabels.add(statusLabel);
 
             constraints.gridy++;
@@ -93,14 +97,21 @@ public class PermissionsDialog extends JDialog {
         setLocationRelativeTo(owner);
     }
 
-    public void updateStatuses(Set<String> activePermissionIds) {
+    public void updateStatuses(Set<String> activePermissionIds, Set<String> unavailablePermissionIds) {
         for (int i = 0; i < definitions.size(); i++) {
+            boolean unavailable = unavailablePermissionIds.contains(definitions.get(i).getId());
             boolean enabled = activePermissionIds.contains(definitions.get(i).getId());
             JCheckBox checkBox = permissionBoxes.get(i);
-            checkBox.setSelected(enabled);
+            checkBox.setEnabled(!unavailable);
+            checkBox.setSelected(enabled && !unavailable);
             JLabel statusLabel = statusLabels.get(i);
-            statusLabel.setText(enabled ? "Enabled" : "Disabled");
-            statusLabel.setForeground(enabled ? ENABLED_COLOR : DISABLED_COLOR);
+            if (unavailable) {
+                statusLabel.setText("Unavailable");
+                statusLabel.setForeground(UNAVAILABLE_COLOR);
+            } else {
+                statusLabel.setText(enabled ? "Enabled" : "Disabled");
+                statusLabel.setForeground(enabled ? ENABLED_COLOR : DISABLED_COLOR);
+            }
         }
         syncSelectAllState();
     }
@@ -157,9 +168,9 @@ public class PermissionsDialog extends JDialog {
         selectAllBox.setSelected(allSelected);
     }
 
-    private JLabel createStatusLabel(boolean enabled) {
-        JLabel label = new JLabel(enabled ? "Enabled" : "Disabled");
-        label.setForeground(enabled ? ENABLED_COLOR : DISABLED_COLOR);
+    private JLabel createStatusLabel(boolean enabled, boolean unavailable) {
+        JLabel label = new JLabel(unavailable ? "Unavailable" : enabled ? "Enabled" : "Disabled");
+        label.setForeground(unavailable ? UNAVAILABLE_COLOR : enabled ? ENABLED_COLOR : DISABLED_COLOR);
         return label;
     }
 }

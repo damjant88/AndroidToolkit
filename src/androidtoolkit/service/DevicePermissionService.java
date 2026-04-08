@@ -65,13 +65,16 @@ public class DevicePermissionService {
         return new PermissionUpdateResult(appliedCount, selections.size(), enable ? "enabled" : "disabled", failures);
     }
 
-    public Set<String> loadActivePermissionIds(String serial, String packageName, List<PermissionDefinition> definitions) {
+    public PermissionStateSnapshot loadPermissionStates(String serial, String packageName, List<PermissionDefinition> definitions) {
         Set<String> activePermissionIds = new LinkedHashSet<>();
+        Set<String> unavailablePermissionIds = new LinkedHashSet<>();
         for (PermissionDefinition definition : definitions) {
+            boolean isAvailable = true;
             boolean isActive;
             switch (definition.getCommandType()) {
                 case GRANT_PERMISSION:
-                    isActive = deviceGateway.isPermissionGranted(serial, packageName, definition.getCommandValue());
+                    isAvailable = deviceGateway.isPermissionRequestDeclared(serial, packageName, definition.getCommandValue());
+                    isActive = isAvailable && deviceGateway.isPermissionGranted(serial, packageName, definition.getCommandValue());
                     break;
                 case DEVICE_IDLE_WHITELIST:
                     isActive = deviceGateway.isInDeviceIdleWhitelist(serial, packageName);
@@ -82,10 +85,14 @@ public class DevicePermissionService {
                 default:
                     throw new IllegalStateException("Unsupported permission action: " + definition.getCommandType());
             }
+            if (!isAvailable) {
+                unavailablePermissionIds.add(definition.getId());
+                continue;
+            }
             if (isActive) {
                 activePermissionIds.add(definition.getId());
             }
         }
-        return activePermissionIds;
+        return new PermissionStateSnapshot(activePermissionIds, unavailablePermissionIds);
     }
 }

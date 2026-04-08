@@ -30,6 +30,7 @@ import androidtoolkit.service.DeviceActionService;
 import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.DeviceInfoService;
 import androidtoolkit.service.DevicePermissionService;
+import androidtoolkit.service.PermissionStateSnapshot;
 import androidtoolkit.service.ScreenRecordingService;
 import androidtoolkit.service.StoragePaths;
 
@@ -244,8 +245,15 @@ public class Device extends JPanel {
             return;
         }
 
-        Set<String> activePermissionIds = devicePermissionService.loadActivePermissionIds(serial, deviceInfo.getSafePathPackage(), supportedPermissions);
-        PermissionsDialog dialog = new PermissionsDialog(parent, deviceName, deviceInfo.getSafePathPackage(), supportedPermissions, activePermissionIds);
+        PermissionStateSnapshot permissionStateSnapshot = devicePermissionService.loadPermissionStates(serial, deviceInfo.getSafePathPackage(), supportedPermissions);
+        PermissionsDialog dialog = new PermissionsDialog(
+                parent,
+                deviceName,
+                deviceInfo.getSafePathPackage(),
+                supportedPermissions,
+                permissionStateSnapshot.getActivePermissionIds(),
+                permissionStateSnapshot.getUnavailablePermissionIds()
+        );
         dialog.setEnableAction(event -> runPermissionUpdate(dialog, supportedPermissions, true));
         dialog.setDisableAction(event -> runPermissionUpdate(dialog, supportedPermissions, false));
         dialog.setVisible(true);
@@ -268,12 +276,15 @@ public class Device extends JPanel {
                 dialog.setActionsEnabled(true);
                 try {
                     PermissionUpdateResult result = get();
-                    Set<String> refreshedActivePermissionIds = devicePermissionService.loadActivePermissionIds(
+                    PermissionStateSnapshot refreshedPermissionStateSnapshot = devicePermissionService.loadPermissionStates(
                             serial,
                             deviceInfo.getSafePathPackage(),
                             supportedPermissions
                     );
-                    dialog.updateStatuses(refreshedActivePermissionIds);
+                    dialog.updateStatuses(
+                            refreshedPermissionStateSnapshot.getActivePermissionIds(),
+                            refreshedPermissionStateSnapshot.getUnavailablePermissionIds()
+                    );
                     parent.consoleView.appendText(result.toDisplayMessage(deviceName));
                     dialog.showResult(result, deviceName);
                 } catch (Exception ex) {

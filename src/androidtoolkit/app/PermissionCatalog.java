@@ -6,8 +6,6 @@ import java.util.List;
 public class PermissionCatalog {
 
     private static final String CCI_PACKAGE = "com.smithmicro.cci.test";
-    private static final String SAFEPATH_FAMILY_PACKAGE = "com.smithmicro.safepath.family";
-
     public List<PermissionDefinition> supportedPermissionsFor(String packageName) {
         if (packageName == null || packageName.isBlank()) {
             return new ArrayList<>();
@@ -15,10 +13,7 @@ public class PermissionCatalog {
         if (CCI_PACKAGE.equals(packageName)) {
             return cciPermissions();
         }
-        if (SAFEPATH_FAMILY_PACKAGE.equals(packageName)) {
-            return safePathFamilyPermissions();
-        }
-        return new ArrayList<>();
+        return safePathFamilyPermissions();
     }
 
     private List<PermissionDefinition> cciPermissions() {

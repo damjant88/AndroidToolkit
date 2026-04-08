@@ -38,6 +38,8 @@ public interface DeviceGateway {
 
     void resetAutoRevokePermissions(String id, String appPackage);
 
+    boolean isPermissionRequestDeclared(String id, String appPackage, String permission);
+
     boolean isPermissionGranted(String id, String appPackage, String permission);
 
     boolean isInDeviceIdleWhitelist(String id, String appPackage);
