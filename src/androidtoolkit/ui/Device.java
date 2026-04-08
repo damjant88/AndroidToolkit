@@ -3,35 +3,26 @@ package androidtoolkit.ui;
 import androidtoolkit.app.AppServices;
 import androidtoolkit.app.ConnectedDevice;
 import androidtoolkit.app.DeviceTarget;
+import androidtoolkit.app.DeviceActionManager;
 import androidtoolkit.app.DeviceMessageResult;
-import androidtoolkit.app.DeviceOperations;
-import androidtoolkit.app.FirebaseDebugRequest;
-import androidtoolkit.app.LogExportRequest;
-import androidtoolkit.app.LogExporter;
+import androidtoolkit.app.LogExportManager;
+import androidtoolkit.app.LogExportResponse;
 import androidtoolkit.app.PermissionDefinition;
 import androidtoolkit.app.PermissionDialogState;
 import androidtoolkit.app.PermissionManager;
 import androidtoolkit.app.PermissionUpdateResult;
 import androidtoolkit.app.PermissionUpdateResponse;
-import androidtoolkit.app.RebootDeviceRequest;
-import androidtoolkit.app.ScreenMirrorRequest;
-import androidtoolkit.app.ScreenshotRequest;
-import androidtoolkit.app.ScreenshotResult;
-import androidtoolkit.app.StartScreenRecordingRequest;
-import androidtoolkit.app.StartScreenRecordingResult;
-import androidtoolkit.app.StopScreenRecordingRequest;
-import androidtoolkit.app.StopScreenRecordingResult;
-import androidtoolkit.app.UninstallAppRequest;
+import androidtoolkit.app.RecordingActionResponse;
+import androidtoolkit.app.RecordingManager;
+import androidtoolkit.app.ScreenshotCaptureResponse;
+import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.UninstallAppResult;
-import androidtoolkit.app.WifiDebugRequest;
 import androidtoolkit.app.WifiDebugResult;
 import androidtoolkit.domain.DeviceInfo;
 import androidtoolkit.domain.RecordingSession;
 import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.DeviceActionService;
-import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.DeviceInfoService;
-import androidtoolkit.service.ScreenRecordingService;
 import androidtoolkit.service.StoragePaths;
 
 import javax.swing.*;
@@ -43,127 +34,124 @@ import androidtoolkit.ui.components.*;
 public class Device extends JPanel {
 
     private final StoragePaths storagePaths;
-    private final DeviceGateway deviceGateway;
     private final DeviceInfoService deviceInfoService;
     private final CommandExecutor commandExecutor;
-    DeviceActionService deviceActionService;
-    ScreenRecordingService screenRecordingService;
-    DeviceOperations deviceOperations;
-    LogExporter logExporter;
-    DevicePanelStateFactory devicePanelStateFactory;
-    File file = null;
-    SaveSpLogsButton saveLogsButton;
-    LogLocationButton logLocationButton;
-    WifiDebugButton wifiDebug;
-    EnableFirebaseButton enableFirebase;
-    RebootButton reboot;
-    TakeScreenshotButton takeScreenshotButton;
-    UninstallAppButton uninstallApp;
-    DeviceSelectionRadioButton radio;
-    boolean radioState = false;
-    LogoIconLabels labelIcon;
-    DeviceTextPanes deviceTextPane;
-    DeviceInfo deviceInfo;
-    Icons icon;
-    int totalDeviceCount;
-    String serial;
-    Boolean appIsInstalled;
-    String deviceName;
-    MyFrame parent;
-    Runnable refreshDevicesMethod;
-    String logLocation;
-    String recordingLocation;
-    EventTrackerButton eventTrackerButton;
-    ScreenMirrorButton screenMirrorButton;
-    ScreenRecordingButton screenRecordingButton;
-    PermissionsButton permissionsButton;
+    private final DeviceActionService deviceActionService;
+    private final DeviceActionManager deviceActionManager;
+    private final LogExportManager logExportManager;
+    private final DevicePanelStateFactory devicePanelStateFactory;
+    private final Icons icon;
+    private final int screenshotFrameCount;
+    private final String serial;
+    private final String deviceName;
+    private final MyFrame parent;
+    private final Runnable refreshDevicesMethod;
+    private final SaveSpLogsButton saveLogsButton;
+    private final LogLocationButton logLocationButton;
+    private final WifiDebugButton wifiDebug;
+    private final EnableFirebaseButton enableFirebase;
+    private final RebootButton reboot;
+    private final TakeScreenshotButton takeScreenshotButton;
+    private final UninstallAppButton uninstallApp;
+    private final DeviceSelectionRadioButton radio;
+    private final LogoIconLabels labelIcon;
+    private final DeviceTextPanes deviceTextPane;
+    private final EventTrackerButton eventTrackerButton;
+    private final ScreenMirrorButton screenMirrorButton;
+    private final ScreenRecordingButton screenRecordingButton;
+    private final PermissionsButton permissionsButton;
     private final RecordingSession recordingSession = new RecordingSession();
-    LiveEventTracker liveEventTracker;
-    PermissionManager permissionManager;
+    private final PermissionManager permissionManager;
+    private final RecordingManager recordingManager;
+    private final ScreenshotManager screenshotManager;
+    private DeviceInfo deviceInfo;
+    private boolean appIsInstalled;
+    private String logLocation;
 
     public Device(MyFrame parent, ConnectedDevice connectedDevice, int totalDeviceCount, Runnable refreshDevicesMethod, AppServices appServices) {
 
         this.setBounds((connectedDevice.getIndex()+1)*210, 0, 210, 345);
         this.setLayout(null);
-        this.totalDeviceCount = totalDeviceCount;
+        this.screenshotFrameCount = totalDeviceCount;
         this.storagePaths = appServices.storagePaths();
-        this.deviceGateway = appServices.deviceGateway();
         this.deviceInfoService = appServices.deviceInfoService();
         this.commandExecutor = appServices.commandExecutor();
         this.logLocation = storagePaths.logsDir().getPath();
-        this.recordingLocation = storagePaths.screenRecordingsDir().getPath();
-        icon = new Icons();
-        deviceActionService = appServices.deviceActionService();
-        screenRecordingService = appServices.screenRecordingService();
-        permissionManager = appServices.permissionManager();
-        deviceOperations = appServices.deviceOperations();
-        logExporter = appServices.logExporter();
-        devicePanelStateFactory = new DevicePanelStateFactory();
-        serial = connectedDevice.getSerial();
-        deviceName = connectedDevice.getDeviceName();
-        deviceInfo = connectedDevice.getDeviceInfo();
-        appIsInstalled = deviceInfo.isAppInstalled();
-        setIconAndButtons(totalDeviceCount);
-        this.setVisible(false);
+        this.icon = new Icons();
+        this.deviceActionService = appServices.deviceActionService();
+        this.deviceActionManager = appServices.deviceActionManager();
+        this.permissionManager = appServices.permissionManager();
+        this.recordingManager = appServices.recordingManager();
+        this.screenshotManager = appServices.screenshotManager();
+        this.logExportManager = appServices.logExportManager();
+        this.devicePanelStateFactory = new DevicePanelStateFactory();
+        this.serial = connectedDevice.getSerial();
+        this.deviceName = connectedDevice.getDeviceName();
+        this.deviceInfo = connectedDevice.getDeviceInfo();
+        this.appIsInstalled = deviceInfo.isAppInstalled();
         this.parent = parent;
         this.refreshDevicesMethod = refreshDevicesMethod;
+
+        this.radio = new DeviceSelectionRadioButton(deviceName);
+        this.labelIcon = new LogoIconLabels(icon.notInstalled);
+        this.deviceTextPane = new DeviceTextPanes();
+        this.eventTrackerButton = new EventTrackerButton();
+        this.saveLogsButton = new SaveSpLogsButton();
+        this.logLocationButton = new LogLocationButton();
+        this.screenMirrorButton = new ScreenMirrorButton();
+        this.screenRecordingButton = new ScreenRecordingButton();
+        this.permissionsButton = new PermissionsButton();
+        this.wifiDebug = new WifiDebugButton();
+        this.enableFirebase = new EnableFirebaseButton();
+        this.reboot = new RebootButton();
+        this.takeScreenshotButton = new TakeScreenshotButton();
+        this.uninstallApp = new UninstallAppButton();
+
+        setIconAndButtons(totalDeviceCount);
+        this.setVisible(false);
     }
 
     private void setIconAndButtons(int totalDeviceCount) {
-        radio = new DeviceSelectionRadioButton(deviceName);
         radio.setVisible(true);
         this.add(radio);
 
-        labelIcon = new LogoIconLabels(icon.notInstalled);
         labelIcon.setVisible(true);
         this.add(labelIcon);
 
-        deviceTextPane = new DeviceTextPanes();
         deviceTextPane.setText(deviceInfo.toDisplayText());
         deviceTextPane.setVisible(true);
         this.add(deviceTextPane);
 
-        eventTrackerButton = new EventTrackerButton();
         eventTrackerButton.addActionListener(new DeviceEventTrackerAction(this));
         this.add(eventTrackerButton);
 
-        saveLogsButton = new SaveSpLogsButton();
         saveLogsButton.addActionListener(new DeviceSaveLogsAction(this));
         this.add(saveLogsButton);
 
-        logLocationButton = new LogLocationButton();
         logLocationButton.addActionListener(new DeviceLogLocationAction(this));
         this.add(logLocationButton);
 
-        screenMirrorButton = new ScreenMirrorButton();
         screenMirrorButton.addActionListener(new DeviceScreenMirrorAction(this));
         this.add(screenMirrorButton);
 
-        screenRecordingButton = new ScreenRecordingButton();
         screenRecordingButton.addActionListener(new DeviceScreenRecordingAction(this));
         this.add(screenRecordingButton);
 
-        permissionsButton = new PermissionsButton();
         permissionsButton.addActionListener(new DevicePermissionsAction(this));
         this.add(permissionsButton);
 
-        wifiDebug = new WifiDebugButton();
         wifiDebug.addActionListener(new DeviceToggleWifiDebugAction(this));
         this.add(wifiDebug);
 
-        enableFirebase = new EnableFirebaseButton();
         enableFirebase.addActionListener(new DeviceEnableFirebaseAction(this));
         this.add(enableFirebase);
 
-        reboot = new RebootButton();
         reboot.addActionListener(new DeviceRebootAction(this));
         this.add(reboot);
 
-        takeScreenshotButton = new TakeScreenshotButton();
         takeScreenshotButton.addActionListener(new DeviceTakeScreenshotAction(this));
         this.add(takeScreenshotButton);
 
-        uninstallApp = new UninstallAppButton();
         uninstallApp.addActionListener(new DeviceUninstallAppAction(this));
         this.add(uninstallApp);
 
@@ -193,10 +181,6 @@ public class Device extends JPanel {
 
     public boolean isSelectedForInstall() {
         return radio.isSelected();
-    }
-
-    public void setRadioState(boolean radioState) {
-        this.radioState = radioState;
     }
 
     public String getSerial() {
@@ -294,25 +278,23 @@ public class Device extends JPanel {
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int response = fileChooser.showSaveDialog(parent);
         if (response == JFileChooser.APPROVE_OPTION) {
-            file = new File(fileChooser.getSelectedFile().getAbsolutePath());
-            logLocation = file.getAbsolutePath();
-            String exportedLogsFolder = logExporter.exportDeviceLogs(new LogExportRequest(serial, file.getAbsolutePath())).getExportedFolder();
+            File selectedFolder = new File(fileChooser.getSelectedFile().getAbsolutePath());
+            LogExportResponse exportResponse = logExportManager.exportDeviceLogs(serial, deviceName, selectedFolder.getAbsolutePath());
+            logLocation = exportResponse.getSelectedFolder();
             eventTrackerButton.setEnabled(true);
             logLocationButton.setEnabled(true);
-            openExplorerToFolder(exportedLogsFolder);
-            parent.consoleView.appendText("SP logs from " + deviceName + " are saved to " + logLocation);
+            openExplorerToFolder(exportResponse.getExportedLogsFolder());
+            parent.consoleView.appendText(exportResponse.getMessage());
         }
     }
 
     void toggleWifiDebugging() {
-        WifiDebugResult result = deviceOperations.toggleWifiDebugging(
-                new WifiDebugRequest(
-                        deviceInfo.getSerialNumber(),
-                        deviceName,
-                        deviceInfo.getIpAddress(),
-                        deviceInfo.isWifiDebugSession(),
-                        deviceInfo.hasWifiIp()
-                )
+        WifiDebugResult result = deviceActionManager.toggleWifiDebugging(
+                deviceInfo.getSerialNumber(),
+                deviceName,
+                deviceInfo.getIpAddress(),
+                deviceInfo.isWifiDebugSession(),
+                deviceInfo.hasWifiIp()
         );
 
         if (result.isWifiConnectionRequired()) {
@@ -347,9 +329,7 @@ public class Device extends JPanel {
         int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Reboot the device",
                 JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
-            DeviceMessageResult result = deviceOperations.rebootDevice(
-                    new RebootDeviceRequest(deviceInfo.getSerialNumber(), deviceName)
-            );
+            DeviceMessageResult result = deviceActionManager.rebootDevice(deviceInfo.getSerialNumber(), deviceName);
             if (parent.isConsoleVisible) {
                 parent.consoleView.appendText(result.getMessage());
             }
@@ -357,16 +337,16 @@ public class Device extends JPanel {
     }
 
     void takeScreenshot() {
-        ScreenshotResult result = deviceOperations.captureScreenshot(
-                new ScreenshotRequest(deviceInfo.getSerialNumber(), deviceName)
-        );
-        new ScreenshotFrame(deviceName, Device.this.totalDeviceCount);
+        ScreenshotCaptureResponse result = screenshotManager.captureScreenshot(deviceInfo.getSerialNumber(), deviceName);
+        new ScreenshotFrame(deviceName, screenshotFrameCount);
         parent.consoleView.appendText(result.getMessage());
     }
 
     void enableFirebaseDebugging() {
-        DeviceMessageResult result = deviceOperations.enableFirebaseDebugging(
-                new FirebaseDebugRequest(deviceInfo.getSerialNumber(), deviceName, deviceInfo.getSafePathPackage())
+        DeviceMessageResult result = deviceActionManager.enableFirebaseDebugging(
+                deviceInfo.getSerialNumber(),
+                deviceName,
+                deviceInfo.getSafePathPackage()
         );
         if (parent.isConsoleVisible) {
             parent.consoleView.appendText(result.getMessage());
@@ -381,8 +361,10 @@ public class Device extends JPanel {
         int response = JOptionPane.showConfirmDialog(parent, "Are you sure?", "Uninstall the app",
                 JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
-            UninstallAppResult result = deviceOperations.uninstallApp(
-                    new UninstallAppRequest(deviceInfo.getSerialNumber(), deviceName, deviceInfo.getSafePathPackage())
+            UninstallAppResult result = deviceActionManager.uninstallApp(
+                    deviceInfo.getSerialNumber(),
+                    deviceName,
+                    deviceInfo.getSafePathPackage()
             );
             saveLogsButton.setEnabled(false);
             enableFirebase.setEnabled(false);
@@ -404,16 +386,14 @@ public class Device extends JPanel {
     void openEventTracker() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                liveEventTracker = new LiveEventTracker(serial, deviceInfo.getPid(), commandExecutor);
+                new LiveEventTracker(serial, deviceInfo.getPid(), commandExecutor);
             }
         });
     }
 
     void startScreenMirror() {
         try {
-            DeviceMessageResult result = deviceOperations.startScreenMirror(
-                    new ScreenMirrorRequest(serial, deviceName)
-            );
+            DeviceMessageResult result = deviceActionManager.startScreenMirror(serial, deviceName);
             parent.consoleView.appendText(result.getMessage());
         } catch (RuntimeException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -423,9 +403,7 @@ public class Device extends JPanel {
     void handleScreenRecording() {
         if (screenRecordingButton.getText().equals("Start Record")) {
             try {
-                StartScreenRecordingResult result = deviceOperations.startScreenRecording(
-                        new StartScreenRecordingRequest(serial, deviceName, recordingSession)
-                );
+                RecordingActionResponse result = recordingManager.startRecording(serial, deviceName, recordingSession);
                 screenRecordingButton.setText(result.getButtonText());
                 parent.consoleView.appendText(result.getMessage());
             } catch (RuntimeException ex) {
@@ -433,14 +411,11 @@ public class Device extends JPanel {
             }
         } else if(recordingSession.getRecordingInProgress().get()) {
             try {
-                StopScreenRecordingResult result = deviceOperations.stopScreenRecording(
-                        new StopScreenRecordingRequest(serial, deviceName, deviceInfo.getPid(), recordingSession)
-                );
+                RecordingActionResponse result = recordingManager.stopRecording(serial, deviceName, deviceInfo.getPid(), recordingSession);
                 screenRecordingButton.setText(result.getButtonText());
-                if (result.isStopped()) {
-                    recordingLocation = result.getRecordingLocation();
+                if (result.isSuccess()) {
                     parent.consoleView.appendText(result.getMessage());
-                    openExplorerToFolder(recordingLocation);
+                    openExplorerToFolder(result.getRecordingLocation());
                 } else {
                     JOptionPane.showMessageDialog(Device.this, result.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -450,7 +425,7 @@ public class Device extends JPanel {
                 JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            StopScreenRecordingResult result = new StopScreenRecordingResult(false, false, false, "No active recording!", "", "Start Record");
+            RecordingActionResponse result = recordingManager.noActiveRecording();
             JOptionPane.showMessageDialog(Device.this, result.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             screenRecordingButton.setText(result.getButtonText());
         }

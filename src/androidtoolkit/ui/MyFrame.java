@@ -175,7 +175,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 			device = devicePanel;
 			listOfDevices.add(devicePanel);
 			this.add(devicePanel);
-			isInstalledList.add(devicePanel.appIsInstalled);
+			isInstalledList.add(devicePanel.isAppInstalled());
 		}
 		applyFrameState(createFrameState());
 	}

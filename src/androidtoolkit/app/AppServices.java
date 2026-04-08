@@ -31,9 +31,13 @@ public class AppServices {
     private final BuildInstaller buildInstaller;
     private final DeviceCatalog deviceCatalog;
     private final LogExporter logExporter;
+    private final LogExportManager logExportManager;
     private final DeviceOperations deviceOperations;
+    private final DeviceActionManager deviceActionManager;
     private final PermissionCatalog permissionCatalog;
     private final PermissionManager permissionManager;
+    private final RecordingManager recordingManager;
+    private final ScreenshotManager screenshotManager;
 
     public AppServices() {
         this.storagePaths = new StoragePaths();
@@ -50,9 +54,13 @@ public class AppServices {
         this.buildInstaller = new BuildInstaller(deviceGateway, commandExecutor);
         this.deviceCatalog = new DeviceCatalog(deviceGateway, deviceInfoService);
         this.logExporter = new LogExporter(deviceActionService);
+        this.logExportManager = new LogExportManager(logExporter);
         this.deviceOperations = new DeviceOperations(deviceActionService, screenRecordingService);
+        this.deviceActionManager = new DeviceActionManager(deviceOperations);
         this.permissionCatalog = new PermissionCatalog();
         this.permissionManager = new PermissionManager(permissionCatalog, devicePermissionService);
+        this.recordingManager = new RecordingManager(deviceOperations);
+        this.screenshotManager = new ScreenshotManager(deviceOperations);
     }
 
     public StoragePaths storagePaths() {
@@ -107,8 +115,16 @@ public class AppServices {
         return logExporter;
     }
 
+    public LogExportManager logExportManager() {
+        return logExportManager;
+    }
+
     public DeviceOperations deviceOperations() {
         return deviceOperations;
+    }
+
+    public DeviceActionManager deviceActionManager() {
+        return deviceActionManager;
     }
 
     public PermissionCatalog permissionCatalog() {
@@ -117,5 +133,13 @@ public class AppServices {
 
     public PermissionManager permissionManager() {
         return permissionManager;
+    }
+
+    public RecordingManager recordingManager() {
+        return recordingManager;
+    }
+
+    public ScreenshotManager screenshotManager() {
+        return screenshotManager;
     }
 }
