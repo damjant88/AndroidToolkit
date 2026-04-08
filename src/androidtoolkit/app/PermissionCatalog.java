@@ -61,7 +61,7 @@ public class PermissionCatalog {
         ));
         definitions.add(new PermissionDefinition(
                 "deviceidle_whitelist",
-                "Keep active in device idle whitelist",
+                "Disable Battery Optimization",
                 PermissionCommandType.DEVICE_IDLE_WHITELIST,
                 ""
         ));
@@ -99,6 +99,12 @@ public class PermissionCatalog {
                 "POST_NOTIFICATIONS",
                 PermissionCommandType.GRANT_PERMISSION,
                 "android.permission.POST_NOTIFICATIONS"
+        ));
+        definitions.add(new PermissionDefinition(
+                "deviceidle_whitelist",
+                "Disable Battery Optimization",
+                PermissionCommandType.DEVICE_IDLE_WHITELIST,
+                ""
         ));
         return definitions;
     }
