@@ -3,6 +3,8 @@
 *.iml
 out/
 dist/
+.gradle/
+build/
 !**/src/main/**/out/
 !**/src/test/**/out/
 
