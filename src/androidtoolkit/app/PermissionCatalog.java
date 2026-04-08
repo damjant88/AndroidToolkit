@@ -101,6 +101,12 @@ public class PermissionCatalog {
                 "android.permission.POST_NOTIFICATIONS"
         ));
         definitions.add(new PermissionDefinition(
+                "activity_recognition",
+                "Physical Activity",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.ACTIVITY_RECOGNITION"
+        ));
+        definitions.add(new PermissionDefinition(
                 "deviceidle_whitelist",
                 "Disable Battery Optimization",
                 PermissionCommandType.DEVICE_IDLE_WHITELIST,
