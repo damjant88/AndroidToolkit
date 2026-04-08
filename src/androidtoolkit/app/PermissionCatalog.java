@@ -67,7 +67,7 @@ public class PermissionCatalog {
         ));
         definitions.add(new PermissionDefinition(
                 "auto_revoke_ignore",
-                "Ignore auto revoke for unused app",
+                "Prevent Auto Reset Permissions",
                 PermissionCommandType.IGNORE_AUTO_REVOKE,
                 ""
         ));
@@ -93,6 +93,12 @@ public class PermissionCatalog {
                 "ACCESS_BACKGROUND_LOCATION",
                 PermissionCommandType.GRANT_PERMISSION,
                 "android.permission.ACCESS_BACKGROUND_LOCATION"
+        ));
+        definitions.add(new PermissionDefinition(
+                "post_notifications",
+                "POST_NOTIFICATIONS",
+                PermissionCommandType.GRANT_PERMISSION,
+                "android.permission.POST_NOTIFICATIONS"
         ));
         return definitions;
     }
