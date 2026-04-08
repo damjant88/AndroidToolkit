@@ -2,243 +2,125 @@ package androidtoolkit.ui;
 
 import androidtoolkit.app.AppServices;
 import androidtoolkit.app.BuildInstallRequest;
-import androidtoolkit.app.BuildInstaller;
 import androidtoolkit.app.BuildUninstallRequest;
 import androidtoolkit.app.ConnectedDevice;
 import androidtoolkit.app.DeviceCatalog;
 import androidtoolkit.app.DeviceDiscoveryRequest;
 import androidtoolkit.app.DeviceDiscoveryResult;
 import androidtoolkit.domain.BuildSelectionState;
-import androidtoolkit.service.BuildSelectionStore;
-import androidtoolkit.service.CommandExecutor;
-import androidtoolkit.service.StoragePaths;
 
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 import javax.swing.JFrame;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.JTextPane;
-import javax.swing.WindowConstants;
-import androidtoolkit.ui.components.*;
 
 public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi, DeviceMonitor.DeviceMonitorUi, BuildSelectionCoordinator.BuildSelectionUi {
 
-	private final AppServices appServices;
-	private final CommandExecutor commandExecutor;
-	private final StoragePaths storagePaths;
-	private final BuildSelectionStore buildSelectionStore;
-	File file1 = null;
-	RefreshDevicesButton RefreshDevicesButton;
-	JButton fileButton;
-	InstallButton installButton;
-	UninstallAllButton uninstallAllButton;
-	JTextPane staticPane;
-	ProgressBar progressBar;
-	ArrayList<String> serialNumberList = new ArrayList<>();
-	Device device;
-	public Icons icon;
-	ArrayList<Device> listOfDevices = new ArrayList<>();
-	ArrayList<Boolean> isInstalledList = new ArrayList<>();
-	int numberOfDevices;
-	FileTextFieldBox fileTextFieldBox;
-	BuildSelectionState buildSelectionState;
-	ConsoleView consoleView;
-	BuildInstaller buildInstaller;
-	BuildOperationCoordinator buildOperationCoordinator;
-	BuildSelectionCoordinator buildSelectionCoordinator;
-	DeviceCatalog deviceCatalog;
-	DeviceMonitor deviceMonitor;
-	DevicePanelFactory devicePanelFactory;
-	MyFrameStateFactory myFrameStateFactory;
-	int height = 500;
-	int width;
-	Boolean isConsoleVisible = false;
-	JMenuItem consoleViewMenu;
-	static LiveEventTracker liveEventTracker;
+	private static final int BASE_HEIGHT = 500;
+	private static final int CONSOLE_HEIGHT_DELTA = 200;
+	private final DevicePanelCollection devicePanelCollection;
+	private final BuildOperationCoordinator buildOperationCoordinator;
+	private final BuildSelectionCoordinator buildSelectionCoordinator;
+	private final DeviceCatalog deviceCatalog;
+	private final MyFrameStateFactory myFrameStateFactory;
+	private final MyFrameInitializer initializer;
+	private final MyFrameUiSupport uiSupport;
+	public final Icons icon;
+	private final MyFrameComponents components;
+	private int width;
 
 	public MyFrame() {
 		this(new AppServices());
 	}
 
 	public MyFrame(AppServices appServices) {
-		this.appServices = appServices;
-		this.commandExecutor = appServices.commandExecutor();
-		this.storagePaths = appServices.storagePaths();
-		this.buildSelectionStore = appServices.buildSelectionStore();
-		this.buildInstaller = appServices.buildInstaller();
-		this.buildOperationCoordinator = new BuildOperationCoordinator(buildInstaller);
-		this.buildSelectionCoordinator = new BuildSelectionCoordinator(buildSelectionStore);
+		this.buildOperationCoordinator = new BuildOperationCoordinator(appServices.buildInstaller());
+		this.buildSelectionCoordinator = new BuildSelectionCoordinator(appServices.buildSelectionStore());
 		this.deviceCatalog = appServices.deviceCatalog();
-		this.deviceMonitor = new DeviceMonitor(deviceCatalog, this::currentSerials, this, 3000);
-		this.devicePanelFactory = new DevicePanelFactory(appServices);
+		DevicePanelFactory devicePanelFactory = new DevicePanelFactory(appServices);
+		this.devicePanelCollection = new DevicePanelCollection(this.getContentPane(), devicePanelFactory, this::refreshDevices);
+		DeviceMonitor deviceMonitor = new DeviceMonitor(deviceCatalog, devicePanelCollection::currentSerials, this, 3000);
 		this.myFrameStateFactory = new MyFrameStateFactory();
+		this.initializer = new MyFrameInitializer();
+		this.uiSupport = new MyFrameUiSupport();
 
-		File logs = storagePaths.logsDir();
+		File logs = appServices.storagePaths().logsDir();
 		if (!logs.exists()) {
 			logs.mkdirs();
 		}
 		icon = new Icons();
 
-		setStaticElements();
-		refreshListOfDevices(deviceCatalog.discoverDevices(new DeviceDiscoveryRequest()));
+		BuildSelectionState initialBuildSelectionState = buildSelectionCoordinator.loadInitialState();
+		components = new MyFrameComponents(this, icon, initialBuildSelectionState, appServices.commandExecutor());
+		initializeFrameUi();
+		refreshDevices();
 		this.setVisible(true);
 		deviceMonitor.start();
 	}
 
-	private void setStaticElements() {
-		JMenuBar menuBar = new JMenuBar();
-		JMenu fileMenu = new JMenu("File");
-		JMenu editMenu = new JMenu("Edit");
-		JMenu helpMenu = new JMenu("Help");
-		JMenu toolsMenu = new JMenu("Tools");
-		menuBar.add(fileMenu);
-		menuBar.add(editMenu);
-		menuBar.add(helpMenu);
-		menuBar.add(toolsMenu);
-
-		JMenuItem defaultBuildLocation = new JMenuItem("Set Default 'Select Build' Location");
-		editMenu.add(defaultBuildLocation);
-		defaultBuildLocation.addActionListener(new DefaultBuildLocationAction(this));
-
-		consoleViewMenu = new JMenuItem("Show Console View");
-		toolsMenu.add(consoleViewMenu);
-		consoleViewMenu.addActionListener(new ConsoleViewToggleAction(this));
-
-		this.setJMenuBar(menuBar);
-
-		DeviceDiscoveryResult discoveryResult = deviceCatalog.discoverDevices(new DeviceDiscoveryRequest());
-		serialNumberList = discoveryResult.getSerials();
-		numberOfDevices = discoveryResult.getDeviceCount();
-		installButton = new InstallButton();
-		installButton.addActionListener(new InstallSelectedDevicesAction(this));
-		this.add(installButton);
-
-		uninstallAllButton = new UninstallAllButton();
-		uninstallAllButton.addActionListener(new UninstallAllDevicesAction(this));
-		this.add(uninstallAllButton);
-
-		staticPane = new StaticPane();
-		this.add(staticPane);
-
-		buildSelectionState = buildSelectionCoordinator.loadInitialState();
-
-		fileTextFieldBox = new FileTextFieldBox(buildSelectionState.getBuildNames());
-		fileTextFieldBox.addActionListener(new SelectBuildAction(this));
-		this.add(fileTextFieldBox);
-
-		RefreshDevicesButton = new RefreshDevicesButton(icon.display_icon);
-		RefreshDevicesButton.addActionListener(new RefreshDevicesAction(this));
-		this.add(RefreshDevicesButton);
-
-		fileButton = new FileButton("Select Build");
-		fileButton.addActionListener(new ChooseBuildAction(this));
-		this.add(fileButton);
-
-		progressBar = new ProgressBar();
-		this.add(progressBar);
-
-		consoleView = new ConsoleView(this, commandExecutor);
-		this.add(consoleView);
-		this.setTitle("Adb Toolkit");
-		this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		this.setLayout(null);
-		this.setResizable(false);
-
-		this.setMinimumSize(new Dimension(650, 500));
-		applyFrameState(createFrameState());
-		this.setIconImage(icon.frameIcon.getImage());
+	private void initializeFrameUi() {
+		initializer.initialize(this, components, uiSupport, icon, BASE_HEIGHT);
+		applyCurrentFrameState();
 	}
 
 	public void refreshListOfDevices() {
-		refreshListOfDevices(deviceCatalog.discoverDevices(new DeviceDiscoveryRequest()));
+		refreshDevicePanels(deviceCatalog.discoverDevices(new DeviceDiscoveryRequest()));
 	}
 
-	private void refreshListOfDevices(DeviceDiscoveryResult discoveryResult) {
-		clearDevicePanels();
-		java.util.List<ConnectedDevice> connectedDevices = discoveryResult.getDevices();
-		serialNumberList = new ArrayList<>(connectedDevices.stream()
-				.map(ConnectedDevice::getSerial)
-				.collect(Collectors.toList()));
-		numberOfDevices = discoveryResult.getDeviceCount();
-		for (Device devicePanel : devicePanelFactory.createPanels(this, connectedDevices, this::refreshDevices)) {
-			device = devicePanel;
-			listOfDevices.add(devicePanel);
-			this.add(devicePanel);
-			isInstalledList.add(devicePanel.isAppInstalled());
-		}
-		applyFrameState(createFrameState());
+	private void refreshDevicePanels(DeviceDiscoveryResult discoveryResult) {
+		devicePanelCollection.replace(this, discoveryResult);
+		applyCurrentFrameState();
 	}
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if ("progress".equals(evt.getPropertyName())) {
 			int progress = (Integer) evt.getNewValue();
-			progressBar.setIndeterminate(false);
-			progressBar.setValue(progress);
-		}
-	}
-
-	private void refreshDevicePanelsUi() {
-		applyFrameState(createFrameState());
-		revalidate();
-		repaint();
-	}
-
-	private void refreshBuildSelectionBox() {
-		fileTextFieldBox.removeAllItems();
-		for (String buildName : buildSelectionState.getBuildNames()) {
-			fileTextFieldBox.addItem(buildName);
+			components.progressBar().setIndeterminate(false);
+			components.progressBar().setValue(progress);
 		}
 	}
 
 	private MyFrameState createFrameState() {
 		return myFrameStateFactory.create(
-				numberOfDevices,
-				buildSelectionState != null && buildSelectionState.hasBuilds(),
-				isInstalledList.contains(false),
-				isInstalledList.contains(true)
+				devicePanelCollection.deviceCount(),
+				currentBuildSelectionState().hasBuilds(),
+				devicePanelCollection.hasInstallableDevice(),
+				devicePanelCollection.hasInstalledDevice()
 		);
 	}
 
 	private void applyFrameState(MyFrameState frameState) {
-		installButton.setEnabled(frameState.isInstallEnabled());
-		uninstallAllButton.setEnabled(frameState.isUninstallAllEnabled());
+		components.installButton().setEnabled(frameState.isInstallEnabled());
+		components.uninstallAllButton().setEnabled(frameState.isUninstallAllEnabled());
 		width = frameState.getWindowWidth();
 		applyWindowSize();
 	}
 
 	@Override
 	public void applyProgressState(BuildProgressState progressState) {
-		progressBar.setString(progressState.getMessage());
-		progressBar.setIndeterminate(progressState.isIndeterminate());
-		progressBar.setBackground(progressState.getBackgroundColor());
+		components.progressBar().setString(progressState.getMessage());
+		components.progressBar().setIndeterminate(progressState.isIndeterminate());
+		components.progressBar().setBackground(progressState.getBackgroundColor());
 	}
 
 	@Override
 	public void setInstallEnabled(boolean enabled) {
-		installButton.setEnabled(enabled);
+		components.installButton().setEnabled(enabled);
 	}
 
 	@Override
 	public void setUninstallAllEnabled(boolean enabled) {
-		uninstallAllButton.setEnabled(enabled);
+		components.uninstallAllButton().setEnabled(enabled);
 	}
 
 	@Override
 	public void refreshDevices() {
-		refreshListOfDevices();
-		refreshDevicePanelsUi();
+		refreshDisplayedDevices(deviceCatalog.discoverDevices(new DeviceDiscoveryRequest()));
 	}
 
 	@Override
@@ -257,72 +139,46 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 
 	@Override
 	public void onDeviceListChanged(DeviceDiscoveryResult discoveryResult) {
-		SwingUtilities.invokeLater(() -> {
-			refreshListOfDevices(discoveryResult);
-			refreshDevicePanelsUi();
-		});
-	}
-
-	private ArrayList<String> currentSerials() {
-		return new ArrayList<>(serialNumberList);
+		SwingUtilities.invokeLater(() -> refreshDisplayedDevices(discoveryResult));
 	}
 
 	private void applyWindowSize() {
-		if (consoleView != null && consoleView.isVisible()) {
-			setSize(width, height + 200);
+		if (isConsoleVisible()) {
+			setSize(width, BASE_HEIGHT + CONSOLE_HEIGHT_DELTA);
 		} else {
-			setSize(width, height);
+			setSize(width, BASE_HEIGHT);
 		}
 	}
 
 	@Override
 	public File chooseBuildFile(File defaultLocation) {
-		JFileChooser fileChooser = new JFileChooser(defaultLocation.getAbsolutePath());
-		int response = fileChooser.showOpenDialog(fileButton);
-		if (response == JFileChooser.APPROVE_OPTION) {
-			file1 = new File(fileChooser.getSelectedFile().getAbsolutePath());
-			return file1;
-		}
-		return null;
+		return uiSupport.chooseBuildFile(this, defaultLocation, components.fileButton());
 	}
 
 	@Override
 	public File chooseDefaultBuildLocation() {
-		JFileChooser fileChooser = new JFileChooser();
-		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		int response = fileChooser.showOpenDialog(null);
-		if (response == JFileChooser.APPROVE_OPTION) {
-			return new File(fileChooser.getSelectedFile().getAbsolutePath());
-		}
-		return null;
+		return uiSupport.chooseDirectory(this);
 	}
 
 	@Override
 	public void refreshBuildNames(java.util.List<String> buildNames) {
-		buildSelectionState = buildSelectionCoordinator.currentState();
-		fileTextFieldBox.removeAllItems();
-		for (String buildName : buildNames) {
-			fileTextFieldBox.addItem(buildName);
-		}
+		replaceBuildNames(buildNames);
 	}
 
 	@Override
 	public void selectBuildIndex(int index) {
-		fileTextFieldBox.setSelectedIndex(index);
+		components.fileTextFieldBox().setSelectedIndex(index);
 	}
 
 	@Override
 	public void onBuildSelectionChanged() {
-		buildSelectionState = buildSelectionCoordinator.currentState();
-		applyFrameState(createFrameState());
-		progressBar.setBackground(new Color(238, 238, 238));
-		progressBar.setString("Waiting for build...");
+		applyCurrentFrameState();
+		resetProgressToWaiting();
 	}
 
 	@Override
 	public void showDefaultBuildLocationSaved(File location) {
-		JOptionPane.showMessageDialog(null, "Default build location is set!" + "\n" + location.getAbsolutePath(), "Default Build Location",
-				JOptionPane.INFORMATION_MESSAGE);
+		uiSupport.showInfoMessage(this, "Default build location is set!" + "\n" + location.getAbsolutePath(), "Default Build Location");
 	}
 
 	void chooseDefaultBuildLocationSetting() {
@@ -330,63 +186,82 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	}
 
 	void toggleConsoleView() {
-		if (!consoleView.isVisible()) {
-			consoleView.setVisible(true);
-			isConsoleVisible = true;
-			consoleViewMenu.setText("Hide Console View");
-		} else {
-			consoleView.setVisible(false);
-			isConsoleVisible = false;
-			consoleViewMenu.setText("Show Console View");
-		}
+		boolean visible = !isConsoleVisible();
+		components.consoleView().setVisible(visible);
+		components.consoleViewMenu().setText(visible ? "Hide Console View" : "Show Console View");
 		applyWindowSize();
 	}
 
+	boolean isConsoleVisible() {
+		return components.consoleView().isVisible();
+	}
+
+	void appendConsoleText(String text) {
+		components.consoleView().appendText(text);
+	}
+
 	void showRefreshedDevices() {
-		refreshListOfDevices();
-		refreshDevicePanelsUi();
+		refreshDevices();
 	}
 
 	void startInstallSelectedDevices() {
+		BuildSelectionState buildSelectionState = currentBuildSelectionState();
 		buildOperationCoordinator.startInstall(
 				new BuildInstallRequest(
-						listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
+						devicePanelCollection.panels().stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
 						buildSelectionState.getPrimaryBuildPath(),
 						buildSelectionState.getPrimaryBuildName()
 				),
-				consoleView,
+				components.consoleView(),
 				this
 		);
 	}
 
 	void startUninstallInstalledDevices() {
+		BuildSelectionState buildSelectionState = currentBuildSelectionState();
 		buildOperationCoordinator.startUninstall(
 				new BuildUninstallRequest(
-						listOfDevices.stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
+						devicePanelCollection.panels().stream().map(Device::toDeviceTarget).collect(Collectors.toList()),
 						buildSelectionState.getPrimaryBuildName()
 				),
-				consoleView,
+				components.consoleView(),
 				this
 		);
 	}
 
 	void chooseBuild() {
 		buildSelectionCoordinator.chooseBuild(this);
-		buildSelectionState = buildSelectionCoordinator.currentState();
 	}
 
 	void selectBuildFromDropdown() {
-		int selectedIndex = fileTextFieldBox.getSelectedIndex();
+		int selectedIndex = components.fileTextFieldBox().getSelectedIndex();
 		buildSelectionCoordinator.selectBuildAt(selectedIndex, this);
-		buildSelectionState = buildSelectionCoordinator.currentState();
 	}
 
-	private void clearDevicePanels() {
-		for (Device element : listOfDevices) {
-			remove(element);
+	private BuildSelectionState currentBuildSelectionState() {
+		return buildSelectionCoordinator.currentState();
+	}
+
+	private void refreshDisplayedDevices(DeviceDiscoveryResult discoveryResult) {
+		refreshDevicePanels(discoveryResult);
+		refreshFrameDisplay();
+	}
+
+	private void refreshFrameDisplay() {
+		revalidate();
+		repaint();
+	}
+
+	private void replaceBuildNames(java.util.List<String> buildNames) {
+		components.fileTextFieldBox().removeAllItems();
+		for (String buildName : buildNames) {
+			components.fileTextFieldBox().addItem(buildName);
 		}
-		listOfDevices.clear();
-		isInstalledList.clear();
+	}
+
+	private void resetProgressToWaiting() {
+		components.progressBar().setBackground(new Color(238, 238, 238));
+		components.progressBar().setString("Waiting for build...");
 	}
 }
 

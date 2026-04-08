@@ -263,7 +263,7 @@ public class Device extends JPanel {
                             Set.copyOf(refreshedState.getActivePermissionIds()),
                             Set.copyOf(refreshedState.getUnavailablePermissionIds())
                     );
-                    parent.consoleView.appendText(result.toDisplayMessage(deviceName));
+                    parent.appendConsoleText(result.toDisplayMessage(deviceName));
                     dialog.showResult(result, deviceName);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Permissions", JOptionPane.ERROR_MESSAGE);
@@ -284,7 +284,7 @@ public class Device extends JPanel {
             eventTrackerButton.setEnabled(true);
             logLocationButton.setEnabled(true);
             openExplorerToFolder(exportResponse.getExportedLogsFolder());
-            parent.consoleView.appendText(exportResponse.getMessage());
+            parent.appendConsoleText(exportResponse.getMessage());
         }
     }
 
@@ -305,8 +305,8 @@ public class Device extends JPanel {
                     JOptionPane.INFORMATION_MESSAGE);
         } else {
             boolean disablingWifiDebug = deviceInfo.isWifiDebugSession() && !result.isWifiEnabled();
-            if (parent.isConsoleVisible) {
-                parent.consoleView.appendText(result.getMessage());
+            if (parent.isConsoleVisible()) {
+                parent.appendConsoleText(result.getMessage());
                 if (disablingWifiDebug) {
                     refreshDevicesMethod.run();
                 } else {
@@ -330,8 +330,8 @@ public class Device extends JPanel {
                 JOptionPane.YES_NO_OPTION);
         if (response == JOptionPane.YES_OPTION) {
             DeviceMessageResult result = deviceActionManager.rebootDevice(deviceInfo.getSerialNumber(), deviceName);
-            if (parent.isConsoleVisible) {
-                parent.consoleView.appendText(result.getMessage());
+            if (parent.isConsoleVisible()) {
+                parent.appendConsoleText(result.getMessage());
             }
         }
     }
@@ -339,7 +339,7 @@ public class Device extends JPanel {
     void takeScreenshot() {
         ScreenshotCaptureResponse result = screenshotManager.captureScreenshot(deviceInfo.getSerialNumber(), deviceName);
         new ScreenshotFrame(deviceName, screenshotFrameCount);
-        parent.consoleView.appendText(result.getMessage());
+        parent.appendConsoleText(result.getMessage());
     }
 
     void enableFirebaseDebugging() {
@@ -348,8 +348,8 @@ public class Device extends JPanel {
                 deviceName,
                 deviceInfo.getSafePathPackage()
         );
-        if (parent.isConsoleVisible) {
-            parent.consoleView.appendText(result.getMessage());
+        if (parent.isConsoleVisible()) {
+            parent.appendConsoleText(result.getMessage());
         } else {
             JOptionPane.showMessageDialog(parent,
                     result.getMessage(),
@@ -370,8 +370,8 @@ public class Device extends JPanel {
             enableFirebase.setEnabled(false);
             labelIcon.setVisible(true);
             refreshDevicesMethod.run();
-            if (parent.isConsoleVisible) {
-                parent.consoleView.appendText(result.getMessage());
+            if (parent.isConsoleVisible()) {
+                parent.appendConsoleText(result.getMessage());
             } else {
                 JOptionPane.showMessageDialog(parent, result.getMessage(), "Uninstall the app.",
                         JOptionPane.INFORMATION_MESSAGE);
@@ -394,7 +394,7 @@ public class Device extends JPanel {
     void startScreenMirror() {
         try {
             DeviceMessageResult result = deviceActionManager.startScreenMirror(serial, deviceName);
-            parent.consoleView.appendText(result.getMessage());
+            parent.appendConsoleText(result.getMessage());
         } catch (RuntimeException ex) {
             JOptionPane.showMessageDialog(parent, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -405,7 +405,7 @@ public class Device extends JPanel {
             try {
                 RecordingActionResponse result = recordingManager.startRecording(serial, deviceName, recordingSession);
                 screenRecordingButton.setText(result.getButtonText());
-                parent.consoleView.appendText(result.getMessage());
+                parent.appendConsoleText(result.getMessage());
             } catch (RuntimeException ex) {
                 JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -414,7 +414,7 @@ public class Device extends JPanel {
                 RecordingActionResponse result = recordingManager.stopRecording(serial, deviceName, deviceInfo.getPid(), recordingSession);
                 screenRecordingButton.setText(result.getButtonText());
                 if (result.isSuccess()) {
-                    parent.consoleView.appendText(result.getMessage());
+                    parent.appendConsoleText(result.getMessage());
                     openExplorerToFolder(result.getRecordingLocation());
                 } else {
                     JOptionPane.showMessageDialog(Device.this, result.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
