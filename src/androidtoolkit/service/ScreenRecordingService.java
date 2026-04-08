@@ -1,5 +1,6 @@
 package androidtoolkit.service;
 
+import androidtoolkit.app.StopScreenRecordingOutcome;
 import androidtoolkit.domain.RecordingSession;
 
 import javax.swing.*;
@@ -52,12 +53,12 @@ public class ScreenRecordingService {
         storageService.ensureDirectoryExists(toolkitDir);
 
         recordingSession.setRecordingFileName("screen_record_" + System.currentTimeMillis() + ".mp4");
+        recordingSession.getRecordingInProgress().set(true);
         startScreenMirrorAsync(serial);
 
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() throws Exception {
-                recordingSession.getRecordingInProgress().set(true);
                 try {
                     ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", "screenrecord",
                             "/sdcard/" + recordingSession.getRecordingFileName());
@@ -76,12 +77,15 @@ public class ScreenRecordingService {
         worker.execute();
     }
 
-    public String stopScreenRecording(String serial, String deviceName, RecordingSession recordingSession) throws InterruptedException {
-        if (recordingSession.getRecordingProcess() == null) {
-            return "";
+    public StopScreenRecordingOutcome stopScreenRecording(String serial, String deviceName, String pid, RecordingSession recordingSession) throws InterruptedException {
+        if (!recordingSession.getRecordingInProgress().get() && recordingSession.getRecordingProcess() == null) {
+            return new StopScreenRecordingOutcome("", false);
         }
 
-        recordingSession.getRecordingProcess().destroy();
+        Process recordingProcess = recordingSession.getRecordingProcess();
+        if (recordingProcess != null) {
+            recordingProcess.destroy();
+        }
         LocalDate currentDate = LocalDate.now();
         String dateString = currentDate.toString();
         File deviceDir = storageService.recordingDir(deviceName, dateString);
@@ -91,26 +95,32 @@ public class ScreenRecordingService {
         String recordingLocation = deviceDir.getPath();
         commandExecutor.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingSession.getRecordingFileName() + " " + recordingLocation);
         commandExecutor.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingSession.getRecordingFileName());
-
-        String appFlavour = deviceGateway.getSafePathPackage(serial);
-        deviceGateway.saveLogs(serial, appFlavour, recordingLocation);
-
-        File logsFolder = new File(recordingLocation + "/logs");
-        File[] logFiles = logsFolder.listFiles((dir, name) -> name.endsWith(".log"));
-        if (logFiles != null) {
-            for (File logFile : logFiles) {
-                if (logFile.isFile()) {
-                    File destination = new File(recordingLocation, recordingSession.getRecordingFileName() + ".log");
-                    logFile.renameTo(destination);
-                }
-            }
-        }
-        logsFolder.delete();
+        RecordingLogResult recordingLogResult = saveScreenRecordingLogs(serial, deviceName, pid, recordingSession.getRecordingFileName());
 
         recordingSession.setRecordingProcess(null);
         recordingSession.getRecordingInProgress().set(false);
         recordingSession.setRecordingLocation(recordingLocation);
-        return recordingLocation;
+        return new StopScreenRecordingOutcome(recordingLocation, recordingLogResult.isLogsCaptured());
     }
 
+    private RecordingLogResult saveScreenRecordingLogs(String serial, String deviceName, String fallbackPid, String recordingFileName) {
+        String resolvedPid = resolveCurrentPid(serial);
+        if (resolvedPid.isBlank()) {
+            resolvedPid = fallbackPid == null ? "" : fallbackPid.trim();
+        }
+        if (resolvedPid.isBlank()) {
+            return new RecordingLogResult(false, "");
+        }
+
+        deviceGateway.saveScreenRecordingLogs(serial, resolvedPid, deviceName, recordingFileName);
+        return new RecordingLogResult(true, resolvedPid);
+    }
+
+    private String resolveCurrentPid(String serial) {
+        String installedPackage = deviceGateway.getSafePathPackage(serial);
+        if (installedPackage == null || installedPackage.isBlank()) {
+            return "";
+        }
+        return commandExecutor.runCommand("adb -s " + serial + " shell pidof -s " + installedPackage).trim();
+    }
 }

@@ -88,8 +88,9 @@ public class DeviceOperations {
 
     public StopScreenRecordingResult stopScreenRecording(StopScreenRecordingRequest request) throws InterruptedException {
         if (!request.getRecordingSession().getRecordingInProgress().get()
-                || request.getRecordingSession().getRecordingProcess() == null) {
+                && request.getRecordingSession().getRecordingProcess() == null) {
             return new StopScreenRecordingResult(
+                    false,
                     false,
                     false,
                     "No active recording!",
@@ -98,26 +99,36 @@ public class DeviceOperations {
             );
         }
 
-        String recordingLocation = screenRecordingService.stopScreenRecording(
+        StopScreenRecordingOutcome outcome = screenRecordingService.stopScreenRecording(
                 request.getSerial(),
                 request.getDeviceName(),
+                request.getPid(),
                 request.getRecordingSession()
         );
+        String recordingLocation = outcome.getRecordingLocation();
 
         if (recordingLocation == null || recordingLocation.isBlank()) {
             return new StopScreenRecordingResult(
                     false,
                     false,
+                    false,
                     "No active recording!",
                     "",
                     "Start Record"
             );
         }
 
+        String message = "Screen recording is stopped on " + request.getDeviceName() + "." + "\n"
+                + "Screen recording saved to:\n" + recordingLocation;
+        if (!outcome.isLogsCaptured()) {
+            message = message + "\n" + "Recording logs could not be captured for this session.";
+        }
+
         return new StopScreenRecordingResult(
                 true,
                 true,
-                "Screen recording is stopped on " + request.getDeviceName() + "." + "\n" + "Screen recording saved to:\n" + recordingLocation,
+                outcome.isLogsCaptured(),
+                message,
                 recordingLocation,
                 "Start Record"
         );

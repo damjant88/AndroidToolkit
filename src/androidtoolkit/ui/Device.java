@@ -365,7 +365,7 @@ public class Device extends JPanel {
         } else if(recordingSession.getRecordingInProgress().get()) {
             try {
                 StopScreenRecordingResult result = deviceOperations.stopScreenRecording(
-                        new StopScreenRecordingRequest(serial, deviceName, recordingSession)
+                        new StopScreenRecordingRequest(serial, deviceName, deviceInfo.getPid(), recordingSession)
                 );
                 screenRecordingButton.setText(result.getButtonText());
                 if (result.isStopped()) {
@@ -381,7 +381,7 @@ public class Device extends JPanel {
                 JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } else {
-            StopScreenRecordingResult result = new StopScreenRecordingResult(false, false, "No active recording!", "", "Start Record");
+            StopScreenRecordingResult result = new StopScreenRecordingResult(false, false, false, "No active recording!", "", "Start Record");
             JOptionPane.showMessageDialog(Device.this, result.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             screenRecordingButton.setText(result.getButtonText());
         }
