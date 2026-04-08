@@ -246,39 +246,42 @@ public class Device extends JPanel {
 
         Set<String> activePermissionIds = devicePermissionService.loadActivePermissionIds(serial, deviceInfo.getSafePathPackage(), supportedPermissions);
         PermissionsDialog dialog = new PermissionsDialog(parent, deviceName, deviceInfo.getSafePathPackage(), supportedPermissions, activePermissionIds);
-        dialog.setApplyAction(event -> {
-            java.util.List<PermissionDefinition> selectedPermissions = dialog.selectedDefinitions();
-            dialog.setApplyEnabled(false);
-            SwingWorker<PermissionUpdateResult, Void> worker = new SwingWorker<PermissionUpdateResult, Void>() {
-                @Override
-                protected PermissionUpdateResult doInBackground() {
+        dialog.setEnableAction(event -> runPermissionUpdate(dialog, supportedPermissions, true));
+        dialog.setDisableAction(event -> runPermissionUpdate(dialog, supportedPermissions, false));
+        dialog.setVisible(true);
+    }
+
+    private void runPermissionUpdate(PermissionsDialog dialog, java.util.List<PermissionDefinition> supportedPermissions, boolean enable) {
+        java.util.List<PermissionDefinition> selectedPermissions = dialog.selectedDefinitions();
+        dialog.setActionsEnabled(false);
+        SwingWorker<PermissionUpdateResult, Void> worker = new SwingWorker<PermissionUpdateResult, Void>() {
+            @Override
+            protected PermissionUpdateResult doInBackground() {
+                if (enable) {
                     return devicePermissionService.applyPermissions(serial, deviceInfo.getSafePathPackage(), selectedPermissions);
                 }
+                return devicePermissionService.disablePermissions(serial, deviceInfo.getSafePathPackage(), selectedPermissions);
+            }
 
-                @Override
-                protected void done() {
-                    dialog.setApplyEnabled(true);
-                    try {
-                        PermissionUpdateResult result = get();
-                        Set<String> refreshedActivePermissionIds = devicePermissionService.loadActivePermissionIds(
-                                serial,
-                                deviceInfo.getSafePathPackage(),
-                                supportedPermissions
-                        );
-                        dialog.updateStatuses(refreshedActivePermissionIds);
-                        parent.consoleView.appendText(result.toDisplayMessage(deviceName));
-                        dialog.showResult(result, deviceName);
-                        if (result.isSuccessful()) {
-                            dialog.dispose();
-                        }
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Permissions", JOptionPane.ERROR_MESSAGE);
-                    }
+            @Override
+            protected void done() {
+                dialog.setActionsEnabled(true);
+                try {
+                    PermissionUpdateResult result = get();
+                    Set<String> refreshedActivePermissionIds = devicePermissionService.loadActivePermissionIds(
+                            serial,
+                            deviceInfo.getSafePathPackage(),
+                            supportedPermissions
+                    );
+                    dialog.updateStatuses(refreshedActivePermissionIds);
+                    parent.consoleView.appendText(result.toDisplayMessage(deviceName));
+                    dialog.showResult(result, deviceName);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(dialog, ex.getMessage(), "Permissions", JOptionPane.ERROR_MESSAGE);
                 }
-            };
-            worker.execute();
-        });
-        dialog.setVisible(true);
+            }
+        };
+        worker.execute();
     }
 
     void saveLogs() {

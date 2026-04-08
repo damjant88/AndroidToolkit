@@ -18,6 +18,14 @@ public class DevicePermissionService {
     }
 
     public PermissionUpdateResult applyPermissions(String serial, String packageName, List<PermissionDefinition> selections) {
+        return updatePermissions(serial, packageName, selections, true);
+    }
+
+    public PermissionUpdateResult disablePermissions(String serial, String packageName, List<PermissionDefinition> selections) {
+        return updatePermissions(serial, packageName, selections, false);
+    }
+
+    private PermissionUpdateResult updatePermissions(String serial, String packageName, List<PermissionDefinition> selections, boolean enable) {
         List<String> failures = new ArrayList<>();
         int appliedCount = 0;
 
@@ -25,13 +33,25 @@ public class DevicePermissionService {
             try {
                 switch (selection.getCommandType()) {
                     case GRANT_PERMISSION:
-                        deviceGateway.grantPermission(serial, packageName, selection.getCommandValue());
+                        if (enable) {
+                            deviceGateway.grantPermission(serial, packageName, selection.getCommandValue());
+                        } else {
+                            deviceGateway.revokePermission(serial, packageName, selection.getCommandValue());
+                        }
                         break;
                     case DEVICE_IDLE_WHITELIST:
-                        deviceGateway.addToDeviceIdleWhitelist(serial, packageName);
+                        if (enable) {
+                            deviceGateway.addToDeviceIdleWhitelist(serial, packageName);
+                        } else {
+                            deviceGateway.removeFromDeviceIdleWhitelist(serial, packageName);
+                        }
                         break;
                     case IGNORE_AUTO_REVOKE:
-                        deviceGateway.ignoreAutoRevokePermissions(serial, packageName);
+                        if (enable) {
+                            deviceGateway.ignoreAutoRevokePermissions(serial, packageName);
+                        } else {
+                            deviceGateway.resetAutoRevokePermissions(serial, packageName);
+                        }
                         break;
                     default:
                         throw new IllegalStateException("Unsupported permission action: " + selection.getCommandType());
@@ -42,7 +62,7 @@ public class DevicePermissionService {
             }
         }
 
-        return new PermissionUpdateResult(appliedCount, selections.size(), failures);
+        return new PermissionUpdateResult(appliedCount, selections.size(), enable ? "enabled" : "disabled", failures);
     }
 
     public Set<String> loadActivePermissionIds(String serial, String packageName, List<PermissionDefinition> definitions) {

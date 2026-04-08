@@ -28,9 +28,15 @@ public interface DeviceGateway {
 
     void grantPermission(String id, String appPackage, String permission);
 
+    void revokePermission(String id, String appPackage, String permission);
+
     void addToDeviceIdleWhitelist(String id, String appPackage);
 
+    void removeFromDeviceIdleWhitelist(String id, String appPackage);
+
     void ignoreAutoRevokePermissions(String id, String appPackage);
+
+    void resetAutoRevokePermissions(String id, String appPackage);
 
     boolean isPermissionGranted(String id, String appPackage, String permission);
 

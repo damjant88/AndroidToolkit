@@ -22,7 +22,8 @@ public class PermissionsDialog extends JDialog {
     private final List<JCheckBox> permissionBoxes = new ArrayList<>();
     private final List<JLabel> statusLabels = new ArrayList<>();
     private final JCheckBox selectAllBox = new JCheckBox("Select All", true);
-    private final JButton applyButton = new JButton("Apply");
+    private final JButton enableButton = new JButton("Enable");
+    private final JButton disableButton = new JButton("Disable");
     private static final Color ENABLED_COLOR = new Color(0, 128, 0);
     private static final Color DISABLED_COLOR = new Color(180, 0, 0);
 
@@ -82,7 +83,8 @@ public class PermissionsDialog extends JDialog {
         JPanel buttonPanel = new JPanel();
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener(event -> dispose());
-        buttonPanel.add(applyButton);
+        buttonPanel.add(enableButton);
+        buttonPanel.add(disableButton);
         buttonPanel.add(cancelButton);
         content.add(buttonPanel, BorderLayout.SOUTH);
 
@@ -103,15 +105,23 @@ public class PermissionsDialog extends JDialog {
         syncSelectAllState();
     }
 
-    public void setApplyEnabled(boolean enabled) {
-        applyButton.setEnabled(enabled);
+    public void setActionsEnabled(boolean enabled) {
+        enableButton.setEnabled(enabled);
+        disableButton.setEnabled(enabled);
     }
 
-    public void setApplyAction(ActionListener actionListener) {
-        for (ActionListener listener : applyButton.getActionListeners()) {
-            applyButton.removeActionListener(listener);
+    public void setEnableAction(ActionListener actionListener) {
+        for (ActionListener listener : enableButton.getActionListeners()) {
+            enableButton.removeActionListener(listener);
         }
-        applyButton.addActionListener(actionListener);
+        enableButton.addActionListener(actionListener);
+    }
+
+    public void setDisableAction(ActionListener actionListener) {
+        for (ActionListener listener : disableButton.getActionListeners()) {
+            disableButton.removeActionListener(listener);
+        }
+        disableButton.addActionListener(actionListener);
     }
 
     public List<PermissionDefinition> selectedDefinitions() {
@@ -126,7 +136,7 @@ public class PermissionsDialog extends JDialog {
 
     public void showResult(PermissionUpdateResult result, String deviceName) {
         JOptionPane.showMessageDialog(this, result.toDisplayMessage(deviceName),
-                result.isSuccessful() ? "Permissions Applied" : "Permissions Applied With Issues",
+                result.isSuccessful() ? "Permissions Updated" : "Permissions Updated With Issues",
                 result.isSuccessful() ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.WARNING_MESSAGE);
     }
 

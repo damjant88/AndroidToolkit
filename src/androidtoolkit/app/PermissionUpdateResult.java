@@ -7,11 +7,13 @@ public class PermissionUpdateResult {
 
     private final int appliedCount;
     private final int requestedCount;
+    private final String actionVerb;
     private final List<String> failures;
 
-    public PermissionUpdateResult(int appliedCount, int requestedCount, List<String> failures) {
+    public PermissionUpdateResult(int appliedCount, int requestedCount, String actionVerb, List<String> failures) {
         this.appliedCount = appliedCount;
         this.requestedCount = requestedCount;
+        this.actionVerb = actionVerb;
         this.failures = new ArrayList<>(failures);
     }
 
@@ -36,10 +38,10 @@ public class PermissionUpdateResult {
             return "No permissions were selected for " + deviceName + ".";
         }
         if (isSuccessful()) {
-            return "Applied " + appliedCount + " permission settings on " + deviceName + ".";
+            return capitalize(actionVerb) + " " + appliedCount + " permission settings on " + deviceName + ".";
         }
         StringBuilder builder = new StringBuilder();
-        builder.append("Applied ").append(appliedCount).append(" of ").append(requestedCount)
+        builder.append(capitalize(actionVerb)).append(" ").append(appliedCount).append(" of ").append(requestedCount)
                 .append(" permission settings on ").append(deviceName).append(".");
         if (!failures.isEmpty()) {
             builder.append("\n").append("Failed:").append("\n");
@@ -48,5 +50,12 @@ public class PermissionUpdateResult {
             }
         }
         return builder.toString().trim();
+    }
+
+    private String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return "Updated";
+        }
+        return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 }

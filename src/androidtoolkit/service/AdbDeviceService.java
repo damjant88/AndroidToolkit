@@ -86,12 +86,24 @@ public class AdbDeviceService implements DeviceGateway {
         commandExecutor.runCommand("adb -s " + id + " shell pm grant " + appPackage + " " + permission);
     }
 
+    public void revokePermission(String id, String appPackage, String permission) {
+        commandExecutor.runCommand("adb -s " + id + " shell pm revoke " + appPackage + " " + permission);
+    }
+
     public void addToDeviceIdleWhitelist(String id, String appPackage) {
         commandExecutor.runCommand("adb -s " + id + " shell cmd deviceidle whitelist +" + appPackage);
     }
 
+    public void removeFromDeviceIdleWhitelist(String id, String appPackage) {
+        commandExecutor.runCommand("adb -s " + id + " shell cmd deviceidle whitelist -" + appPackage);
+    }
+
     public void ignoreAutoRevokePermissions(String id, String appPackage) {
         commandExecutor.runCommand("adb -s " + id + " shell cmd appops set " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore");
+    }
+
+    public void resetAutoRevokePermissions(String id, String appPackage) {
+        commandExecutor.runCommand("adb -s " + id + " shell cmd appops set " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED default");
     }
 
     public boolean isPermissionGranted(String id, String appPackage, String permission) {
