@@ -36,6 +36,7 @@ import androidtoolkit.service.StoragePaths;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.util.Set;
 import androidtoolkit.ui.components.*;
 
 public class Device extends JPanel {
@@ -243,7 +244,8 @@ public class Device extends JPanel {
             return;
         }
 
-        PermissionsDialog dialog = new PermissionsDialog(parent, deviceName, deviceInfo.getSafePathPackage(), supportedPermissions);
+        Set<String> activePermissionIds = devicePermissionService.loadActivePermissionIds(serial, deviceInfo.getSafePathPackage(), supportedPermissions);
+        PermissionsDialog dialog = new PermissionsDialog(parent, deviceName, deviceInfo.getSafePathPackage(), supportedPermissions, activePermissionIds);
         dialog.setApplyAction(event -> {
             java.util.List<PermissionDefinition> selectedPermissions = dialog.selectedDefinitions();
             dialog.setApplyEnabled(false);
@@ -258,6 +260,12 @@ public class Device extends JPanel {
                     dialog.setApplyEnabled(true);
                     try {
                         PermissionUpdateResult result = get();
+                        Set<String> refreshedActivePermissionIds = devicePermissionService.loadActivePermissionIds(
+                                serial,
+                                deviceInfo.getSafePathPackage(),
+                                supportedPermissions
+                        );
+                        dialog.updateStatuses(refreshedActivePermissionIds);
                         parent.consoleView.appendText(result.toDisplayMessage(deviceName));
                         dialog.showResult(result, deviceName);
                         if (result.isSuccessful()) {

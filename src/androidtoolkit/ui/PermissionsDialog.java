@@ -5,24 +5,33 @@ import androidtoolkit.app.PermissionUpdateResult;
 
 import javax.swing.*;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class PermissionsDialog extends JDialog {
 
     private final List<PermissionDefinition> definitions;
     private final List<JCheckBox> permissionBoxes = new ArrayList<>();
+    private final List<JLabel> statusLabels = new ArrayList<>();
     private final JCheckBox selectAllBox = new JCheckBox("Select All", true);
     private final JButton applyButton = new JButton("Apply");
+    private static final Color ENABLED_COLOR = new Color(0, 128, 0);
+    private static final Color DISABLED_COLOR = new Color(180, 0, 0);
 
     public PermissionsDialog(
             Frame owner,
             String deviceName,
             String packageName,
-            List<PermissionDefinition> definitions
+            List<PermissionDefinition> definitions,
+            Set<String> activePermissionIds
     ) {
         super(owner, "Permissions", true);
         this.definitions = new ArrayList<>(definitions);
@@ -33,16 +42,39 @@ public class PermissionsDialog extends JDialog {
         infoPanel.add(new JLabel("Package: " + packageName));
         content.add(infoPanel, BorderLayout.NORTH);
 
-        JPanel permissionsPanel = new JPanel(new GridLayout(0, 1, 0, 4));
+        JPanel permissionsPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1.0;
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+        constraints.insets = new Insets(0, 0, 6, 8);
         selectAllBox.addActionListener(event -> setAllSelections(selectAllBox.isSelected()));
-        permissionsPanel.add(selectAllBox);
+        permissionsPanel.add(selectAllBox, constraints);
+
+        constraints.gridx = 1;
+        constraints.weightx = 0.0;
+        permissionsPanel.add(new JLabel("Status"), constraints);
 
         for (PermissionDefinition definition : this.definitions) {
-            JCheckBox box = new JCheckBox(definition.getLabel(), true);
+            JCheckBox box = new JCheckBox(definition.getLabel(), activePermissionIds.contains(definition.getId()));
             box.addActionListener(event -> syncSelectAllState());
             permissionBoxes.add(box);
-            permissionsPanel.add(box);
+
+            JLabel statusLabel = createStatusLabel(box.isSelected());
+            statusLabels.add(statusLabel);
+
+            constraints.gridy++;
+            constraints.gridx = 0;
+            constraints.weightx = 1.0;
+            permissionsPanel.add(box, constraints);
+
+            constraints.gridx = 1;
+            constraints.weightx = 0.0;
+            permissionsPanel.add(statusLabel, constraints);
         }
+        syncSelectAllState();
 
         JScrollPane scrollPane = new JScrollPane(permissionsPanel);
         content.add(scrollPane, BorderLayout.CENTER);
@@ -57,6 +89,18 @@ public class PermissionsDialog extends JDialog {
         setContentPane(content);
         setSize(420, 380);
         setLocationRelativeTo(owner);
+    }
+
+    public void updateStatuses(Set<String> activePermissionIds) {
+        for (int i = 0; i < definitions.size(); i++) {
+            boolean enabled = activePermissionIds.contains(definitions.get(i).getId());
+            JCheckBox checkBox = permissionBoxes.get(i);
+            checkBox.setSelected(enabled);
+            JLabel statusLabel = statusLabels.get(i);
+            statusLabel.setText(enabled ? "Enabled" : "Disabled");
+            statusLabel.setForeground(enabled ? ENABLED_COLOR : DISABLED_COLOR);
+        }
+        syncSelectAllState();
     }
 
     public void setApplyEnabled(boolean enabled) {
@@ -101,5 +145,11 @@ public class PermissionsDialog extends JDialog {
             }
         }
         selectAllBox.setSelected(allSelected);
+    }
+
+    private JLabel createStatusLabel(boolean enabled) {
+        JLabel label = new JLabel(enabled ? "Enabled" : "Disabled");
+        label.setForeground(enabled ? ENABLED_COLOR : DISABLED_COLOR);
+        return label;
     }
 }

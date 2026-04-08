@@ -94,6 +94,22 @@ public class AdbDeviceService implements DeviceGateway {
         commandExecutor.runCommand("adb -s " + id + " shell cmd appops set " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED ignore");
     }
 
+    public boolean isPermissionGranted(String id, String appPackage, String permission) {
+        String packageDump = commandExecutor.runCommand("adb -s " + id + " shell dumpsys package " + appPackage);
+        return packageDump.contains(permission + ": granted=true")
+                || packageDump.contains(permission + " granted=true");
+    }
+
+    public boolean isInDeviceIdleWhitelist(String id, String appPackage) {
+        String whitelistOutput = commandExecutor.runCommand("adb -s " + id + " shell dumpsys deviceidle whitelist");
+        return whitelistOutput.contains(appPackage);
+    }
+
+    public boolean isAutoRevokeIgnored(String id, String appPackage) {
+        String appOpsOutput = commandExecutor.runCommand("adb -s " + id + " shell cmd appops get " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED");
+        return appOpsOutput.toLowerCase().contains("ignore");
+    }
+
     public void startWifiDebugging(String id, String ip) {
         commandExecutor.runCommand("adb -s " + id + " shell settings put global adb_wifi_enabled 1");
         commandExecutor.runCommand("adb -s " + id + " tcpip 5555");

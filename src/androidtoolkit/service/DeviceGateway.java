@@ -32,6 +32,12 @@ public interface DeviceGateway {
 
     void ignoreAutoRevokePermissions(String id, String appPackage);
 
+    boolean isPermissionGranted(String id, String appPackage, String permission);
+
+    boolean isInDeviceIdleWhitelist(String id, String appPackage);
+
+    boolean isAutoRevokeIgnored(String id, String appPackage);
+
     void startWifiDebugging(String id, String ip);
 
     void stopWifiDebugging(String id, String ip);
