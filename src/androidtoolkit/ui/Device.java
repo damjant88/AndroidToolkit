@@ -8,9 +8,11 @@ import androidtoolkit.app.DeviceOperations;
 import androidtoolkit.app.FirebaseDebugRequest;
 import androidtoolkit.app.LogExportRequest;
 import androidtoolkit.app.LogExporter;
-import androidtoolkit.app.PermissionCatalog;
 import androidtoolkit.app.PermissionDefinition;
+import androidtoolkit.app.PermissionDialogState;
+import androidtoolkit.app.PermissionManager;
 import androidtoolkit.app.PermissionUpdateResult;
+import androidtoolkit.app.PermissionUpdateResponse;
 import androidtoolkit.app.RebootDeviceRequest;
 import androidtoolkit.app.ScreenMirrorRequest;
 import androidtoolkit.app.ScreenshotRequest;
@@ -29,8 +31,6 @@ import androidtoolkit.service.CommandExecutor;
 import androidtoolkit.service.DeviceActionService;
 import androidtoolkit.service.DeviceGateway;
 import androidtoolkit.service.DeviceInfoService;
-import androidtoolkit.service.DevicePermissionService;
-import androidtoolkit.service.PermissionStateSnapshot;
 import androidtoolkit.service.ScreenRecordingService;
 import androidtoolkit.service.StoragePaths;
 
@@ -79,8 +79,7 @@ public class Device extends JPanel {
     PermissionsButton permissionsButton;
     private final RecordingSession recordingSession = new RecordingSession();
     LiveEventTracker liveEventTracker;
-    DevicePermissionService devicePermissionService;
-    PermissionCatalog permissionCatalog;
+    PermissionManager permissionManager;
 
     public Device(MyFrame parent, ConnectedDevice connectedDevice, int totalDeviceCount, Runnable refreshDevicesMethod, AppServices appServices) {
 
@@ -96,10 +95,9 @@ public class Device extends JPanel {
         icon = new Icons();
         deviceActionService = appServices.deviceActionService();
         screenRecordingService = appServices.screenRecordingService();
-        devicePermissionService = appServices.devicePermissionService();
+        permissionManager = appServices.permissionManager();
         deviceOperations = appServices.deviceOperations();
         logExporter = appServices.logExporter();
-        permissionCatalog = appServices.permissionCatalog();
         devicePanelStateFactory = new DevicePanelStateFactory();
         serial = connectedDevice.getSerial();
         deviceName = connectedDevice.getDeviceName();
@@ -238,52 +236,48 @@ public class Device extends JPanel {
     }
 
     void openPermissionsDialog() {
-        java.util.List<PermissionDefinition> supportedPermissions = permissionCatalog.supportedPermissionsFor(deviceInfo.getSafePathPackage());
-        if (supportedPermissions.isEmpty()) {
+        PermissionDialogState dialogState = permissionManager.loadDialogState(serial, deviceInfo.getSafePathPackage());
+        if (!dialogState.hasDefinitions()) {
             JOptionPane.showMessageDialog(parent, "No predefined permissions are available for this package.", "Permissions",
                     JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
-        PermissionStateSnapshot permissionStateSnapshot = devicePermissionService.loadPermissionStates(serial, deviceInfo.getSafePathPackage(), supportedPermissions);
         PermissionsDialog dialog = new PermissionsDialog(
                 parent,
                 deviceName,
-                deviceInfo.getSafePathPackage(),
-                supportedPermissions,
-                permissionStateSnapshot.getActivePermissionIds(),
-                permissionStateSnapshot.getUnavailablePermissionIds()
+                dialogState.getPackageName(),
+                dialogState.getDefinitions(),
+                Set.copyOf(dialogState.getActivePermissionIds()),
+                Set.copyOf(dialogState.getUnavailablePermissionIds())
         );
-        dialog.setEnableAction(event -> runPermissionUpdate(dialog, supportedPermissions, true));
-        dialog.setDisableAction(event -> runPermissionUpdate(dialog, supportedPermissions, false));
+        dialog.setEnableAction(event -> runPermissionUpdate(dialog, dialogState, true));
+        dialog.setDisableAction(event -> runPermissionUpdate(dialog, dialogState, false));
         dialog.setVisible(true);
     }
 
-    private void runPermissionUpdate(PermissionsDialog dialog, java.util.List<PermissionDefinition> supportedPermissions, boolean enable) {
+    private void runPermissionUpdate(PermissionsDialog dialog, PermissionDialogState dialogState, boolean enable) {
         java.util.List<PermissionDefinition> selectedPermissions = dialog.selectedDefinitions();
         dialog.setActionsEnabled(false);
-        SwingWorker<PermissionUpdateResult, Void> worker = new SwingWorker<PermissionUpdateResult, Void>() {
+        SwingWorker<PermissionUpdateResponse, Void> worker = new SwingWorker<PermissionUpdateResponse, Void>() {
             @Override
-            protected PermissionUpdateResult doInBackground() {
+            protected PermissionUpdateResponse doInBackground() {
                 if (enable) {
-                    return devicePermissionService.applyPermissions(serial, deviceInfo.getSafePathPackage(), selectedPermissions);
+                    return permissionManager.enablePermissions(serial, dialogState.getPackageName(), selectedPermissions);
                 }
-                return devicePermissionService.disablePermissions(serial, deviceInfo.getSafePathPackage(), selectedPermissions);
+                return permissionManager.disablePermissions(serial, dialogState.getPackageName(), selectedPermissions);
             }
 
             @Override
             protected void done() {
                 dialog.setActionsEnabled(true);
                 try {
-                    PermissionUpdateResult result = get();
-                    PermissionStateSnapshot refreshedPermissionStateSnapshot = devicePermissionService.loadPermissionStates(
-                            serial,
-                            deviceInfo.getSafePathPackage(),
-                            supportedPermissions
-                    );
+                    PermissionUpdateResponse response = get();
+                    PermissionUpdateResult result = response.getUpdateResult();
+                    PermissionDialogState refreshedState = response.getDialogState();
                     dialog.updateStatuses(
-                            refreshedPermissionStateSnapshot.getActivePermissionIds(),
-                            refreshedPermissionStateSnapshot.getUnavailablePermissionIds()
+                            Set.copyOf(refreshedState.getActivePermissionIds()),
+                            Set.copyOf(refreshedState.getUnavailablePermissionIds())
                     );
                     parent.consoleView.appendText(result.toDisplayMessage(deviceName));
                     dialog.showResult(result, deviceName);

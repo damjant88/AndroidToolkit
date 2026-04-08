@@ -33,6 +33,7 @@ public class AppServices {
     private final LogExporter logExporter;
     private final DeviceOperations deviceOperations;
     private final PermissionCatalog permissionCatalog;
+    private final PermissionManager permissionManager;
 
     public AppServices() {
         this.storagePaths = new StoragePaths();
@@ -51,6 +52,7 @@ public class AppServices {
         this.logExporter = new LogExporter(deviceActionService);
         this.deviceOperations = new DeviceOperations(deviceActionService, screenRecordingService);
         this.permissionCatalog = new PermissionCatalog();
+        this.permissionManager = new PermissionManager(permissionCatalog, devicePermissionService);
     }
 
     public StoragePaths storagePaths() {
@@ -111,5 +113,9 @@ public class AppServices {
 
     public PermissionCatalog permissionCatalog() {
         return permissionCatalog;
+    }
+
+    public PermissionManager permissionManager() {
+        return permissionManager;
     }
 }
