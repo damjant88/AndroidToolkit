@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class MyFrame extends JFrame implements PropertyChangeListener, BuildOperationCoordinator.BuildOperationUi, DeviceMonitor.DeviceMonitorUi, BuildSelectionCoordinator.BuildSelectionUi {
 
@@ -26,6 +28,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 	private final BuildOperationCoordinator buildOperationCoordinator;
 	private final BuildSelectionCoordinator buildSelectionCoordinator;
 	private final DeviceCatalog deviceCatalog;
+	private final DeviceMonitor deviceMonitor;
 	private final MyFrameStateFactory myFrameStateFactory;
 	private final MyFrameInitializer initializer;
 	private final MyFrameUiSupport uiSupport;
@@ -43,7 +46,7 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		this.deviceCatalog = appServices.deviceCatalog();
 		DevicePanelFactory devicePanelFactory = new DevicePanelFactory(appServices);
 		this.devicePanelCollection = new DevicePanelCollection(this.getContentPane(), devicePanelFactory, this::refreshDevices);
-		DeviceMonitor deviceMonitor = new DeviceMonitor(deviceCatalog, devicePanelCollection::currentSerials, this, 3000);
+		this.deviceMonitor = new DeviceMonitor(deviceCatalog, devicePanelCollection::currentSerials, this, 3000);
 		this.myFrameStateFactory = new MyFrameStateFactory();
 		this.initializer = new MyFrameInitializer();
 		this.uiSupport = new MyFrameUiSupport();
@@ -57,6 +60,17 @@ public class MyFrame extends JFrame implements PropertyChangeListener, BuildOper
 		BuildSelectionState initialBuildSelectionState = buildSelectionCoordinator.loadInitialState();
 		components = new MyFrameComponents(this, icon, initialBuildSelectionState, appServices.commandExecutor());
 		initializeFrameUi();
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				deviceMonitor.stop();
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				deviceMonitor.stop();
+			}
+		});
 		refreshDevices();
 		this.setVisible(true);
 		deviceMonitor.start();

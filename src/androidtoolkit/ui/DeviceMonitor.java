@@ -14,6 +14,7 @@ public class DeviceMonitor {
     private final Supplier<ArrayList<String>> currentSerialsSupplier;
     private final DeviceMonitorUi deviceMonitorUi;
     private final long pollIntervalMs;
+    private Thread monitorThread;
 
     public DeviceMonitor(
             DeviceCatalog deviceCatalog,
@@ -28,7 +29,10 @@ public class DeviceMonitor {
     }
 
     public void start() {
-        Thread thread = new Thread(() -> {
+        if (monitorThread != null && monitorThread.isAlive()) {
+            return;
+        }
+        monitorThread = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
                     DeviceDiscoveryResult discoveryResult = deviceCatalog.discoverDevices(new DeviceDiscoveryRequest());
@@ -47,8 +51,16 @@ public class DeviceMonitor {
                     Thread.currentThread().interrupt();
                 }
             }
-        });
-        thread.start();
+        }, "device-monitor");
+        monitorThread.setDaemon(true);
+        monitorThread.start();
+    }
+
+    public void stop() {
+        if (monitorThread != null) {
+            monitorThread.interrupt();
+            monitorThread = null;
+        }
     }
 
     public interface DeviceMonitorUi {

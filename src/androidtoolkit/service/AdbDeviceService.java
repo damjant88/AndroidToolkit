@@ -106,16 +106,8 @@ public class AdbDeviceService implements DeviceGateway {
         commandExecutor.runCommand("adb -s " + id + " shell cmd appops set " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED default");
     }
 
-    public boolean isPermissionRequestDeclared(String id, String appPackage, String permission) {
-        String packageDump = commandExecutor.runCommand("adb -s " + id + " shell dumpsys package " + appPackage);
-        return packageDump.contains("requested permissions:")
-                && packageDump.contains(permission);
-    }
-
-    public boolean isPermissionGranted(String id, String appPackage, String permission) {
-        String packageDump = commandExecutor.runCommand("adb -s " + id + " shell dumpsys package " + appPackage);
-        return packageDump.contains(permission + ": granted=true")
-                || packageDump.contains(permission + " granted=true");
+    public String getPackageDump(String id, String appPackage) {
+        return commandExecutor.runCommand("adb -s " + id + " shell dumpsys package " + appPackage);
     }
 
     public boolean isInDeviceIdleWhitelist(String id, String appPackage) {
@@ -123,9 +115,8 @@ public class AdbDeviceService implements DeviceGateway {
         return whitelistOutput.contains(appPackage);
     }
 
-    public boolean isAutoRevokeIgnored(String id, String appPackage) {
-        String appOpsOutput = commandExecutor.runCommand("adb -s " + id + " shell cmd appops get " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED");
-        return appOpsOutput.toLowerCase().contains("ignore");
+    public String getAutoRevokePermissionsState(String id, String appPackage) {
+        return commandExecutor.runCommand("adb -s " + id + " shell cmd appops get " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED");
     }
 
     public void startWifiDebugging(String id, String ip) {
@@ -155,10 +146,6 @@ public class AdbDeviceService implements DeviceGateway {
     public String getSafePathPackage(String id) {
         List<String> installedPackages = getInstalledPackages(id);
         return packageClassifier.detectSafePathPackage(installedPackages);
-    }
-
-    public boolean checkIfInstalled(String id) {
-        return packageClassifier.isSupportedPackage(getSafePathPackage(id));
     }
 
     public boolean uninstallApp(String id, String appPackage) {

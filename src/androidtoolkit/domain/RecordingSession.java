@@ -36,4 +36,8 @@ public class RecordingSession {
     public AtomicBoolean getRecordingInProgress() {
         return recordingInProgress;
     }
+
+    public boolean isActive() {
+        return recordingInProgress.get() || recordingProcess != null;
+    }
 }

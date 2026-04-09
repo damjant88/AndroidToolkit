@@ -78,7 +78,7 @@ public class ScreenRecordingService {
     }
 
     public StopScreenRecordingOutcome stopScreenRecording(String serial, String deviceName, String pid, RecordingSession recordingSession) throws InterruptedException {
-        if (!recordingSession.getRecordingInProgress().get() && recordingSession.getRecordingProcess() == null) {
+        if (!recordingSession.isActive()) {
             return new StopScreenRecordingOutcome("", false);
         }
 

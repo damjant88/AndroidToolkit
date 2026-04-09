@@ -409,7 +409,7 @@ public class Device extends JPanel {
             } catch (RuntimeException ex) {
                 JOptionPane.showMessageDialog(Device.this, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
-        } else if(recordingSession.getRecordingInProgress().get()) {
+        } else if (recordingSession.isActive()) {
             try {
                 RecordingActionResponse result = recordingManager.stopRecording(serial, deviceName, deviceInfo.getPid(), recordingSession);
                 screenRecordingButton.setText(result.getButtonText());

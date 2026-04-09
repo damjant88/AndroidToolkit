@@ -87,8 +87,7 @@ public class DeviceOperations {
     }
 
     public StopScreenRecordingResult stopScreenRecording(StopScreenRecordingRequest request) throws InterruptedException {
-        if (!request.getRecordingSession().getRecordingInProgress().get()
-                && request.getRecordingSession().getRecordingProcess() == null) {
+        if (!request.getRecordingSession().isActive()) {
             return new StopScreenRecordingResult(
                     false,
                     false,

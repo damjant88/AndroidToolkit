@@ -17,7 +17,7 @@ public class DeviceInfoService {
         String model = deviceGateway.getDeviceModel(serial);
         String osVersion = deviceGateway.getDeviceOSVersion(serial);
         String safePathPackage = deviceGateway.getSafePathPackage(serial);
-        boolean appInstalled = deviceGateway.checkIfInstalled(serial);
+        boolean appInstalled = safePathPackage != null && !safePathPackage.isBlank();
         String wifiIp = deviceGateway.getWlanIp(serial);
         String mobileIp = deviceGateway.getMobileIp(serial);
         String ipAddress = wifiIp.isEmpty() ? mobileIp : wifiIp;

@@ -38,13 +38,11 @@ public interface DeviceGateway {
 
     void resetAutoRevokePermissions(String id, String appPackage);
 
-    boolean isPermissionRequestDeclared(String id, String appPackage, String permission);
-
-    boolean isPermissionGranted(String id, String appPackage, String permission);
+    String getPackageDump(String id, String appPackage);
 
     boolean isInDeviceIdleWhitelist(String id, String appPackage);
 
-    boolean isAutoRevokeIgnored(String id, String appPackage);
+    String getAutoRevokePermissionsState(String id, String appPackage);
 
     void startWifiDebugging(String id, String ip);
 
@@ -55,8 +53,6 @@ public interface DeviceGateway {
     ArrayList<String> getInstalledPackages(String id);
 
     String getSafePathPackage(String id);
-
-    boolean checkIfInstalled(String id);
 
     boolean uninstallApp(String id, String appPackage);
 

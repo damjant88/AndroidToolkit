@@ -138,7 +138,8 @@ public class PermissionsDialog extends JDialog {
     public List<PermissionDefinition> selectedDefinitions() {
         List<PermissionDefinition> selected = new ArrayList<>();
         for (int i = 0; i < definitions.size(); i++) {
-            if (permissionBoxes.get(i).isSelected()) {
+            JCheckBox checkBox = permissionBoxes.get(i);
+            if (checkBox.isEnabled() && checkBox.isSelected()) {
                 selected.add(definitions.get(i));
             }
         }
@@ -153,7 +154,9 @@ public class PermissionsDialog extends JDialog {
 
     private void setAllSelections(boolean selected) {
         for (JCheckBox permissionBox : permissionBoxes) {
-            permissionBox.setSelected(selected);
+            if (permissionBox.isEnabled()) {
+                permissionBox.setSelected(selected);
+            }
         }
     }
 

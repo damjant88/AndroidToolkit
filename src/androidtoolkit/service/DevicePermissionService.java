@@ -68,19 +68,29 @@ public class DevicePermissionService {
     public PermissionStateSnapshot loadPermissionStates(String serial, String packageName, List<PermissionDefinition> definitions) {
         Set<String> activePermissionIds = new LinkedHashSet<>();
         Set<String> unavailablePermissionIds = new LinkedHashSet<>();
+        String packageDump = deviceGateway.getPackageDump(serial, packageName);
+        String deviceIdleWhitelist = null;
+        String autoRevokeState = null;
+
         for (PermissionDefinition definition : definitions) {
             boolean isAvailable = true;
             boolean isActive;
             switch (definition.getCommandType()) {
                 case GRANT_PERMISSION:
-                    isAvailable = deviceGateway.isPermissionRequestDeclared(serial, packageName, definition.getCommandValue());
-                    isActive = isAvailable && deviceGateway.isPermissionGranted(serial, packageName, definition.getCommandValue());
+                    isAvailable = isPermissionRequestDeclared(packageDump, definition.getCommandValue());
+                    isActive = isAvailable && isPermissionGranted(packageDump, definition.getCommandValue());
                     break;
                 case DEVICE_IDLE_WHITELIST:
-                    isActive = deviceGateway.isInDeviceIdleWhitelist(serial, packageName);
+                    if (deviceIdleWhitelist == null) {
+                        deviceIdleWhitelist = deviceGateway.isInDeviceIdleWhitelist(serial, packageName) ? packageName : "";
+                    }
+                    isActive = deviceIdleWhitelist.contains(packageName);
                     break;
                 case IGNORE_AUTO_REVOKE:
-                    isActive = deviceGateway.isAutoRevokeIgnored(serial, packageName);
+                    if (autoRevokeState == null) {
+                        autoRevokeState = deviceGateway.getAutoRevokePermissionsState(serial, packageName);
+                    }
+                    isActive = autoRevokeState.toLowerCase().contains("ignore");
                     break;
                 default:
                     throw new IllegalStateException("Unsupported permission action: " + definition.getCommandType());
@@ -94,5 +104,15 @@ public class DevicePermissionService {
             }
         }
         return new PermissionStateSnapshot(activePermissionIds, unavailablePermissionIds);
+    }
+
+    private boolean isPermissionRequestDeclared(String packageDump, String permission) {
+        return packageDump.contains("requested permissions:")
+                && packageDump.contains(permission);
+    }
+
+    private boolean isPermissionGranted(String packageDump, String permission) {
+        return packageDump.contains(permission + ": granted=true")
+                || packageDump.contains(permission + " granted=true");
     }
 }
