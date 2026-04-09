@@ -106,6 +106,45 @@ public class AdbDeviceService implements DeviceGateway {
         commandExecutor.runCommand("adb -s " + id + " shell cmd appops set " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED default");
     }
 
+    public void enableAccessibilityService(String id, String appPackage, String serviceClassName) {
+        String component = toAccessibilityComponent(appPackage, serviceClassName);
+        String services = normalizeEnabledAccessibilityServices(
+                commandExecutor.runCommand("adb -s " + id + " shell settings get secure enabled_accessibility_services")
+        );
+        if (services.isBlank()) {
+            services = component;
+        } else if (!containsAccessibilityComponent(services, component)) {
+            services = services + ":" + component;
+        }
+        commandExecutor.runCommand("adb -s " + id + " shell settings put secure enabled_accessibility_services \"" + services + "\"");
+        commandExecutor.runCommand("adb -s " + id + " shell settings put secure accessibility_enabled 1");
+    }
+
+    public void disableAccessibilityService(String id, String appPackage, String serviceClassName) {
+        String component = toAccessibilityComponent(appPackage, serviceClassName);
+        String services = normalizeEnabledAccessibilityServices(
+                commandExecutor.runCommand("adb -s " + id + " shell settings get secure enabled_accessibility_services")
+        );
+        if (services.isBlank()) {
+            commandExecutor.runCommand("adb -s " + id + " shell settings put secure accessibility_enabled 0");
+            return;
+        }
+
+        List<String> keptComponents = Arrays.stream(services.split(":"))
+                .map(String::trim)
+                .filter(part -> !part.isEmpty())
+                .filter(part -> !part.equals(component))
+                .collect(Collectors.toList());
+        if (keptComponents.isEmpty()) {
+            commandExecutor.runCommand("adb -s " + id + " shell settings put secure enabled_accessibility_services \"\"");
+            commandExecutor.runCommand("adb -s " + id + " shell settings put secure accessibility_enabled 0");
+        } else {
+            String updatedServices = String.join(":", keptComponents);
+            commandExecutor.runCommand("adb -s " + id + " shell settings put secure enabled_accessibility_services \"" + updatedServices + "\"");
+            commandExecutor.runCommand("adb -s " + id + " shell settings put secure accessibility_enabled 1");
+        }
+    }
+
     public String getPackageDump(String id, String appPackage) {
         return commandExecutor.runCommand("adb -s " + id + " shell dumpsys package " + appPackage);
     }
@@ -117,6 +156,17 @@ public class AdbDeviceService implements DeviceGateway {
 
     public String getAutoRevokePermissionsState(String id, String appPackage) {
         return commandExecutor.runCommand("adb -s " + id + " shell cmd appops get " + appPackage + " AUTO_REVOKE_PERMISSIONS_IF_UNUSED");
+    }
+
+    public boolean isAccessibilityServiceEnabled(String id, String appPackage, String serviceClassName) {
+        String accessibilityEnabled = commandExecutor.runCommand("adb -s " + id + " shell settings get secure accessibility_enabled").trim();
+        if (!"1".equals(accessibilityEnabled)) {
+            return false;
+        }
+        String services = normalizeEnabledAccessibilityServices(
+                commandExecutor.runCommand("adb -s " + id + " shell settings get secure enabled_accessibility_services")
+        );
+        return containsAccessibilityComponent(services, toAccessibilityComponent(appPackage, serviceClassName));
     }
 
     public void startWifiDebugging(String id, String ip) {
@@ -171,5 +221,38 @@ public class AdbDeviceService implements DeviceGateway {
 
     public void deleteFile(String id, String target) {
         commandExecutor.runCommand("adb -s " + id + " shell rm " + target);
+    }
+
+    private String toAccessibilityComponent(String appPackage, String serviceClassName) {
+        if (serviceClassName == null || serviceClassName.isBlank()) {
+            return "";
+        }
+        if (serviceClassName.contains("/")) {
+            return serviceClassName;
+        }
+        if (serviceClassName.startsWith(".")) {
+            return appPackage + "/" + appPackage + serviceClassName;
+        }
+        return appPackage + "/" + serviceClassName;
+    }
+
+    private String normalizeEnabledAccessibilityServices(String services) {
+        if (services == null) {
+            return "";
+        }
+        String normalized = services.trim();
+        if (normalized.equalsIgnoreCase("null")) {
+            return "";
+        }
+        return normalized;
+    }
+
+    private boolean containsAccessibilityComponent(String services, String component) {
+        if (services == null || services.isBlank() || component == null || component.isBlank()) {
+            return false;
+        }
+        return Arrays.stream(services.split(":"))
+                .map(String::trim)
+                .anyMatch(component::equals);
     }
 }

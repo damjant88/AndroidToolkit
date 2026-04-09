@@ -66,6 +66,12 @@ public class PermissionCatalog {
                 PermissionCommandType.IGNORE_AUTO_REVOKE,
                 ""
         ));
+        definitions.add(new PermissionDefinition(
+                "accessibility_service",
+                "Accessibility Service",
+                PermissionCommandType.ACCESSIBILITY_SERVICE,
+                "com.locationlabs.contentfiltering.accessibility.ContentFilteringService"
+        ));
         return definitions;
     }
 
@@ -106,6 +112,18 @@ public class PermissionCatalog {
                 "Disable Battery Optimization",
                 PermissionCommandType.DEVICE_IDLE_WHITELIST,
                 ""
+        ));
+        definitions.add(new PermissionDefinition(
+                "auto_revoke_ignore",
+                "Prevent Auto Reset Permissions",
+                PermissionCommandType.IGNORE_AUTO_REVOKE,
+                ""
+        ));
+        definitions.add(new PermissionDefinition(
+                "accessibility_service",
+                "Accessibility Service",
+                PermissionCommandType.ACCESSIBILITY_SERVICE,
+                "com.locationlabs.contentfiltering.accessibility.ContentFilteringService"
         ));
         return definitions;
     }

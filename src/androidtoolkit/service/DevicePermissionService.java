@@ -53,6 +53,13 @@ public class DevicePermissionService {
                             deviceGateway.resetAutoRevokePermissions(serial, packageName);
                         }
                         break;
+                    case ACCESSIBILITY_SERVICE:
+                        if (enable) {
+                            deviceGateway.enableAccessibilityService(serial, packageName, selection.getCommandValue());
+                        } else {
+                            deviceGateway.disableAccessibilityService(serial, packageName, selection.getCommandValue());
+                        }
+                        break;
                     default:
                         throw new IllegalStateException("Unsupported permission action: " + selection.getCommandType());
                 }
@@ -92,6 +99,10 @@ public class DevicePermissionService {
                     }
                     isActive = autoRevokeState.toLowerCase().contains("ignore");
                     break;
+                case ACCESSIBILITY_SERVICE:
+                    isAvailable = isAccessibilityServiceDeclared(packageDump, packageName, definition.getCommandValue());
+                    isActive = isAvailable && deviceGateway.isAccessibilityServiceEnabled(serial, packageName, definition.getCommandValue());
+                    break;
                 default:
                     throw new IllegalStateException("Unsupported permission action: " + definition.getCommandType());
             }
@@ -114,5 +125,24 @@ public class DevicePermissionService {
     private boolean isPermissionGranted(String packageDump, String permission) {
         return packageDump.contains(permission + ": granted=true")
                 || packageDump.contains(permission + " granted=true");
+    }
+
+    private boolean isAccessibilityServiceDeclared(String packageDump, String packageName, String serviceClassName) {
+        String component = toAccessibilityComponent(packageName, serviceClassName);
+        return packageDump.contains("android.accessibilityservice.AccessibilityService")
+                && packageDump.contains(component);
+    }
+
+    private String toAccessibilityComponent(String packageName, String serviceClassName) {
+        if (serviceClassName == null || serviceClassName.isBlank()) {
+            return "";
+        }
+        if (serviceClassName.contains("/")) {
+            return serviceClassName;
+        }
+        if (serviceClassName.startsWith(".")) {
+            return packageName + "/" + packageName + serviceClassName;
+        }
+        return packageName + "/" + serviceClassName;
     }
 }

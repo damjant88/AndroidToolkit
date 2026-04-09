@@ -38,11 +38,17 @@ public interface DeviceGateway {
 
     void resetAutoRevokePermissions(String id, String appPackage);
 
+    void enableAccessibilityService(String id, String appPackage, String serviceClassName);
+
+    void disableAccessibilityService(String id, String appPackage, String serviceClassName);
+
     String getPackageDump(String id, String appPackage);
 
     boolean isInDeviceIdleWhitelist(String id, String appPackage);
 
     String getAutoRevokePermissionsState(String id, String appPackage);
+
+    boolean isAccessibilityServiceEnabled(String id, String appPackage, String serviceClassName);
 
     void startWifiDebugging(String id, String ip);
 
