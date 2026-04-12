@@ -17,6 +17,8 @@ public class LiveEventTracker extends JFrame {
     String serial;
     String pid;
     String event;
+    // Keep a reference to the running worker so we can stop the correct one
+    TrackEventWorker activeWorker;
 
     public LiveEventTracker(String serial, String pid, CommandExecutor commandExecutor) {
         this.serial = serial;
@@ -26,7 +28,8 @@ public class LiveEventTracker extends JFrame {
         setTitle("Live Event Tracker");
         setSize(500, 400);
         setVisible(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // DISPOSE_ON_CLOSE only closes this window. EXIT_ON_CLOSE would kill the entire app.
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
         // Initialize components
         eventTextField = new JTextField();
@@ -46,13 +49,18 @@ public class LiveEventTracker extends JFrame {
         trackButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                TrackEventWorker worker = new TrackEventWorker();
                 if (trackButton.getText().equals("Track")) {
-                    trackButton.setText("Stop Tracking");
                     event = eventTextField.getText();
-                    worker.execute();
+                    // Create and remember the worker so we can stop it later
+                    activeWorker = new TrackEventWorker();
+                    trackButton.setText("Stop Tracking");
+                    activeWorker.execute();
                 } else {
-                    worker.stopTracking();
+                    // Stop the actual running worker, not a new one
+                    if (activeWorker != null) {
+                        activeWorker.stopTracking();
+                        activeWorker = null;
+                    }
                     trackButton.setText("Track");
                 }
             }
