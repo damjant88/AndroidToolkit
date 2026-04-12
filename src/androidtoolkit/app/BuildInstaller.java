@@ -29,8 +29,11 @@ public class BuildInstaller {
                 tasksStarted++;
                 String command = "adb -s " + deviceTarget.getSerial() + " install " + "\"" + request.getBuildPath() + "\"";
                 runningTaskCount.incrementAndGet();
-                taskLauncher.launch(command);
-                consoleView.appendText(deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App installed: " + request.getBuildName());
+                String startMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "Installing: " + request.getBuildName();
+                String successMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App installed: " + request.getBuildName();
+                String failMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "Install failed: " + request.getBuildName();
+                consoleView.appendText(startMessage);
+                taskLauncher.launch(command, successMessage, failMessage, consoleView);
             }
         }
         return tasksStarted;
@@ -47,15 +50,19 @@ public class BuildInstaller {
                 tasksStarted++;
                 String command = "adb -s " + deviceTarget.getSerial() + " shell pm uninstall " + deviceGateway.getSafePathPackage(deviceTarget.getSerial());
                 runningTaskCount.incrementAndGet();
-                taskLauncher.launch(command);
-                consoleView.appendText(deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App removed: " + request.getBuildName());
+                String startMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App uninstall started: " + request.getBuildName();
+                String successMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App removed: " + request.getBuildName();
+                String failMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "Uninstall failed: " + request.getBuildName();
+                consoleView.appendText(startMessage);
+                taskLauncher.launch(command, successMessage, failMessage, consoleView);
             }
         }
         return tasksStarted;
     }
 
-    public void runCommand(String command) {
-        commandExecutor.runCommand(command);
+    // Returns the adb output so the caller can check for success/failure
+    public String runCommand(String command) {
+        return commandExecutor.runCommand(command);
     }
 
     public int finishTask() {
@@ -63,6 +70,8 @@ public class BuildInstaller {
     }
 
     public interface TaskLauncher {
-        void launch(String command);
+        // successMessage: logged if adb output contains "Success"
+        // failMessage: logged otherwise
+        void launch(String command, String successMessage, String failMessage, ConsoleView consoleView);
     }
 }

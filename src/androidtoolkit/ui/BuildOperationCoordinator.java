@@ -27,7 +27,7 @@ public class BuildOperationCoordinator {
         int tasksStarted = buildInstaller.installSelectedDevices(
                 request,
                 consoleView,
-                command -> startTask(command, ui)
+                (command, successMessage, failMessage, console) -> startTask(command, successMessage, failMessage, console, ui)
         );
 
         if (tasksStarted > 0) {
@@ -45,7 +45,7 @@ public class BuildOperationCoordinator {
         int tasksStarted = buildInstaller.uninstallInstalledDevices(
                 request,
                 consoleView,
-                command -> startTask(command, ui)
+                (command, successMessage, failMessage, console) -> startTask(command, successMessage, failMessage, console, ui)
         );
 
         if (tasksStarted == 0) {
@@ -54,8 +54,9 @@ public class BuildOperationCoordinator {
         }
     }
 
-    public void runCommand(String command) {
-        buildInstaller.runCommand(command);
+    // Returns the adb output so BuildCommandTask can check for success/failure
+    public String runCommand(String command) {
+        return buildInstaller.runCommand(command);
     }
 
     public void finishTask(BuildOperationUi ui) {
@@ -66,8 +67,8 @@ public class BuildOperationCoordinator {
         }
     }
 
-    private void startTask(String command, BuildOperationUi ui) {
-        BuildCommandTask task = new BuildCommandTask(command, this, ui);
+    private void startTask(String command, String successMessage, String failMessage, ConsoleView consoleView, BuildOperationUi ui) {
+        BuildCommandTask task = new BuildCommandTask(command, successMessage, failMessage, consoleView, this, ui);
         task.execute();
     }
 
