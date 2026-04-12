@@ -44,8 +44,9 @@ public class DeviceActionService {
         deviceGateway.enableAnalyticsDebug(serial, packageName);
     }
 
-    public void uninstallApp(String serial, String packageName) {
-        deviceGateway.uninstallApp(serial, packageName);
+    // Return the result so the caller knows if uninstall actually succeeded
+    public boolean uninstallApp(String serial, String packageName) {
+        return deviceGateway.uninstallApp(serial, packageName);
     }
 
     public void openFolder(String folderPath) {

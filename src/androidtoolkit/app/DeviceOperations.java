@@ -68,8 +68,12 @@ public class DeviceOperations {
     }
 
     public UninstallAppResult uninstallApp(UninstallAppRequest request) {
-        deviceActionService.uninstallApp(request.getSerial(), request.getPackageName());
-        return new UninstallAppResult(true, "App is uninstalled from " + request.getDeviceName() + "!");
+        // Use the actual result from adb to report success or failure
+        boolean success = deviceActionService.uninstallApp(request.getSerial(), request.getPackageName());
+        String message = success
+                ? "App is uninstalled from " + request.getDeviceName() + "!"
+                : "Failed to uninstall app from " + request.getDeviceName() + ".";
+        return new UninstallAppResult(success, message);
     }
 
     public DeviceMessageResult startScreenMirror(ScreenMirrorRequest request) {
