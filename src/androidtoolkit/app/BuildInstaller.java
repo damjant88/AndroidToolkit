@@ -29,7 +29,7 @@ public class BuildInstaller {
                 tasksStarted++;
                 String command = "adb -s " + deviceTarget.getSerial() + " install " + "\"" + request.getBuildPath() + "\"";
                 runningTaskCount.incrementAndGet();
-                String startMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "Installing: " + request.getBuildName();
+                String startMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App install started: " + request.getBuildName();
                 String successMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "App installed: " + request.getBuildName();
                 String failMessage = deviceTarget.getDeviceName() + " (" + deviceTarget.getSerial() + "):" + "\n" + "Install failed: " + request.getBuildName();
                 consoleView.appendText(startMessage);
