@@ -7,11 +7,10 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CommandExecutor {
-
-    private volatile boolean stopRequested = false;
 
     public String runCommand(String command) {
         return runCommand(tokenize(command));
@@ -35,17 +34,17 @@ public class CommandExecutor {
         }
     }
 
-    public String runLiveLogs(String command, String searchString) {
+    // Each caller passes their own stopFlag so multiple sessions can be stopped independently
+    public String runLiveLogs(String command, String searchString, AtomicBoolean stopFlag) {
         StringBuilder output = new StringBuilder();
 
         try {
             ProcessBuilder pb = new ProcessBuilder(tokenize(command)).redirectErrorStream(true);
             Process process = pb.start();
-            stopRequested = false;
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
-                while (!stopRequested && (line = reader.readLine()) != null) {
+                while (!stopFlag.get() && (line = reader.readLine()) != null) {
                     output.append(line).append(System.lineSeparator());
                     if (line.contains(searchString)) {
                         System.out.println(line);
@@ -64,10 +63,6 @@ public class CommandExecutor {
         }
 
         return output.toString().trim();
-    }
-
-    public void stopTracking() {
-        stopRequested = true;
     }
 
     public void runCommandAndSave(String command, String fileName) {

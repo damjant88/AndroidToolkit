@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +20,8 @@ public class LiveEventTracker extends JFrame {
     String event;
     // Keep a reference to the running worker so we can stop the correct one
     TrackEventWorker activeWorker;
+    // Each tracker owns its own stop flag so stopping one doesn't affect others
+    private final AtomicBoolean stopFlag = new AtomicBoolean(false);
 
     public LiveEventTracker(String serial, String pid, CommandExecutor commandExecutor) {
         this.serial = serial;
@@ -73,7 +76,8 @@ public class LiveEventTracker extends JFrame {
         @Override
         protected Void doInBackground() throws Exception {
             String command = "adb -s " + serial + " logcat --pid=" + pid;
-            output = commandExecutor.runLiveLogs(command, event);
+            stopFlag.set(false);
+            output = commandExecutor.runLiveLogs(command, event, stopFlag);
             return null;
         }
 
@@ -87,7 +91,7 @@ public class LiveEventTracker extends JFrame {
         }
 
         public void stopTracking() {
-            commandExecutor.stopTracking();
+            stopFlag.set(true);
         }
     }
 
