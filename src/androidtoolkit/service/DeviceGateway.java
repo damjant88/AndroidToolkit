@@ -64,7 +64,8 @@ public interface DeviceGateway {
 
     void reboot(String id);
 
-    String takeScreenshot(String id, String target, String fileName);
+    // Captures a screenshot on the device at the given path (target + fileName)
+    void takeScreenshot(String id, String target, String fileName);
 
     boolean pullFile(String id, String source, String target);
 

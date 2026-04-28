@@ -209,9 +209,9 @@ public class AdbDeviceService implements DeviceGateway {
         commandExecutor.runCommand("adb -s " + id + " reboot");
     }
 
-    public String takeScreenshot(String id, String target, String fileName) {
-        commandExecutor.runCommand("adb -s " + id + " shell screencap " + target + fileName);
-        return commandExecutor.runCommand("adb -s " + id + " shell ls -t /sdcard/screenshot.png | grep " + fileName + " -m 1");
+    public void takeScreenshot(String id, String target, String fileName) {
+        // Just capture the screenshot — the caller knows the path
+        commandExecutor.runCommand("adb -s " + id + " shell screencap /" + target + fileName);
     }
 
     public boolean pullFile(String id, String source, String target) {

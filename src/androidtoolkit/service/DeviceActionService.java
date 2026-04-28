@@ -33,10 +33,17 @@ public class DeviceActionService {
     }
 
     public File captureScreenshot(String serial, String deviceName) {
-        String output = deviceGateway.takeScreenshot(serial, "sdcard/", "screenshot.png");
+        // The device path is always known — no need to parse command output
+        String devicePath = "/sdcard/screenshot.png";
+        deviceGateway.takeScreenshot(serial, "sdcard/", "screenshot.png");
         File screenshotDir = storageService.screenshotDir(deviceName);
         storageService.ensureDirectoryExists(screenshotDir);
-        deviceGateway.pullFile(serial, output, screenshotDir.getPath());
+        boolean pulled = deviceGateway.pullFile(serial, devicePath, screenshotDir.getPath());
+        if (!pulled) {
+            throw new RuntimeException("Failed to pull screenshot from device");
+        }
+        // Clean up the temporary file on the device
+        deviceGateway.deleteFile(serial, devicePath);
         return screenshotDir;
     }
 
