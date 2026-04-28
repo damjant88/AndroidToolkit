@@ -45,7 +45,8 @@ public class BuildSelectionStore {
     public File loadDefaultBuildLocation() {
         File locationFile = storageService.locationFile();
         if (!locationFile.exists()) {
-            return locationFile;
+            // No saved location — use user's home directory as a sensible default
+            return new File(System.getProperty("user.home"));
         }
 
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(locationFile))) {
