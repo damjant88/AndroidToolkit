@@ -17,14 +17,15 @@ import androidtoolkit.ui.components.ScreenshotLocationButton;
 
 public class ScreenshotFrame extends JFrame {
 
-	private static final StoragePaths STORAGE_PATHS = new StoragePaths();
+	private final StoragePaths storagePaths;
 	String deviceName;
 	int numberOfDevices;
 	Icons icon;
 	ScreenshotLocationButton screenshotLocationButton;
 	CopyScreenshotButton copyScreenshotButton;
 
-	public ScreenshotFrame(String deviceName, int numberOfDevices) {
+	public ScreenshotFrame(String deviceName, int numberOfDevices, StoragePaths storagePaths) {
+		this.storagePaths = storagePaths;
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		JLabel imageLabel = new JLabel();
 		imageLabel.setBounds(0, 30, 240, 520);
@@ -48,7 +49,7 @@ public class ScreenshotFrame extends JFrame {
 		this.numberOfDevices = numberOfDevices;
 		int x = numberOfDevices * 210 + 220;
 		try {
-				BufferedImage image = ImageIO.read(STORAGE_PATHS.screenshotFile(deviceName));
+				BufferedImage image = ImageIO.read(storagePaths.screenshotFile(deviceName));
 				ImageIcon icon = new ImageIcon(image);
 				Image scaledImage = icon.getImage().getScaledInstance(330, 740, Image.SCALE_SMOOTH);
 				ImageIcon scaledIcon = new ImageIcon(scaledImage); // Create a new ImageIcon from the scaled Image
@@ -79,7 +80,7 @@ public class ScreenshotFrame extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			openExplorerToFolder(STORAGE_PATHS.screenshotDir(deviceName).getPath());
+			openExplorerToFolder(storagePaths.screenshotDir(deviceName).getPath());
 		}
 	}
 
@@ -87,7 +88,7 @@ public class ScreenshotFrame extends JFrame {
 
 		@Override
 		public void actionPerformed(ActionEvent event) {
-			File imageFile = STORAGE_PATHS.screenshotFile(deviceName);
+			File imageFile = storagePaths.screenshotFile(deviceName);
 			if (!imageFile.exists()) {
 				System.err.println("Image file does not exist.");
 				return;

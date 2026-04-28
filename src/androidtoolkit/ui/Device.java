@@ -338,7 +338,7 @@ public class Device extends JPanel {
 
     void takeScreenshot() {
         ScreenshotCaptureResponse result = screenshotManager.captureScreenshot(deviceInfo.getSerialNumber(), deviceName);
-        new ScreenshotFrame(deviceName, screenshotFrameCount);
+        new ScreenshotFrame(deviceName, screenshotFrameCount, storagePaths);
         parent.appendConsoleText(result.getMessage());
     }
 
