@@ -1,16 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { uploadBuild, installBuild } from '../api/deviceApi';
+import { installBuild, uploadBuild, uninstallApp } from '../api/deviceApi';
 
 const MAX_HISTORY = 5;
 
-function InstallPanel({ devices, onRefresh }) {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploadedPath, setUploadedPath] = useState('');
-  const [uploadedName, setUploadedName] = useState('');
+function InstallPanel({ devices, selectedDevices, onRefresh }) {
+  const [selectedPath, setSelectedPath] = useState('');
+  const [selectedName, setSelectedName] = useState('');
   const [message, setMessage] = useState('');
   const [installing, setInstalling] = useState({});
+  const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [buildHistory, setBuildHistory] = useState(() => {
-    // Load history from localStorage so it persists across page reloads
     const saved = localStorage.getItem('buildHistory');
     return saved ? JSON.parse(saved) : [];
   });
@@ -28,48 +28,68 @@ function InstallPanel({ devices, onRefresh }) {
     saveHistory(updated);
   }
 
-  function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      setUploadedPath('');
-      setUploadedName('');
-    }
-  }
-
-  function handleHistorySelect(entry) {
-    setSelectedFile(null);
-    setUploadedPath(entry.path);
-    setUploadedName(entry.fileName);
-    setMessage(`Selected from history: ${entry.fileName}`);
-  }
-
-  async function handleUpload() {
-    if (!selectedFile) {
-      setMessage('Select an APK file first');
+  async function handleFileSelected(file) {
+    if (!file || !file.name.endsWith('.apk')) {
+      setMessage('❌ Only .apk files are accepted');
       return;
     }
-    setMessage('Uploading...');
+    setSelectedName(file.name);
+    setMessage(`Uploading ${file.name}...`);
+    setUploading(true);
     try {
-      const result = await uploadBuild(selectedFile);
-      setUploadedPath(result.path);
-      setUploadedName(result.fileName);
+      const result = await uploadBuild(file);
+      setSelectedPath(result.path);
+      setSelectedName(result.fileName);
       addToHistory(result.fileName, result.path);
-      setMessage('✅ ' + result.message);
+      setMessage(`✅ Ready to install: ${result.fileName}`);
     } catch (err) {
       setMessage('❌ Upload failed: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setUploading(false);
     }
+  }
+
+  function handleFileInput(e) {
+    const file = e.target.files[0];
+    if (file) handleFileSelected(file);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFileSelected(file);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    setDragging(true);
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault();
+    setDragging(false);
+  }
+
+
+  function handleHistorySelect(entry) {
+    setSelectedPath(entry.path);
+    setSelectedName(entry.fileName);
+    setMessage(`Selected: ${entry.fileName}`);
   }
 
   async function handleInstall(serial) {
-    if (!uploadedPath) {
-      setMessage('Upload an APK first');
+    if (!selectedPath) {
+      setMessage('Select or enter an APK path first');
       return;
     }
     setInstalling((prev) => ({ ...prev, [serial]: true }));
-    setMessage(`Installing ${uploadedName} on ${serial}...`);
+    setMessage(`Installing ${selectedName} on ${serial}...`);
     try {
-      const result = await installBuild(serial, uploadedPath);
+      const result = await installBuild(serial, selectedPath);
+      if (result.success) {
+        addToHistory(selectedName, selectedPath);
+      }
       setMessage(result.success ? '✅ ' + result.message : '❌ ' + result.message);
       if (result.success && onRefresh) onRefresh();
     } catch (err) {
@@ -80,51 +100,73 @@ function InstallPanel({ devices, onRefresh }) {
   }
 
   async function handleInstallAll() {
-    if (!uploadedPath) {
-      setMessage('Upload an APK first');
+    if (!selectedPath) {
+      setMessage('Select an APK first');
       return;
     }
-    setMessage(`Installing ${uploadedName} on all devices...`);
-    for (const device of devices) {
+    if (selectedDevices.length === 0) {
+      setMessage('No devices selected');
+      return;
+    }
+    setMessage(`Installing ${selectedName} on ${selectedDevices.length} device(s)...`);
+    for (const device of selectedDevices) {
       await handleInstall(device.serial);
     }
+  }
+
+  async function handleUninstallAll() {
+    const installedDevices = devices.filter(d => d.deviceInfo.appInstalled);
+    if (installedDevices.length === 0) {
+      setMessage('No devices have the app installed');
+      return;
+    }
+    if (!window.confirm(`Uninstall from ${installedDevices.length} device(s)?`)) return;
+    setMessage('Uninstalling from all devices...');
+    for (const device of installedDevices) {
+      const serial = device.deviceInfo.serialNumber;
+      const pkg = device.deviceInfo.safePathPackage;
+      try {
+        const result = await uninstallApp(serial, pkg);
+        setMessage(prev => prev + '\n' + (result.message || `Done: ${serial}`));
+      } catch (err) {
+        setMessage(prev => prev + '\n❌ ' + serial + ': ' + err.message);
+      }
+    }
+    if (onRefresh) onRefresh();
   }
 
   return (
     <div className="install-panel">
       <h3>📦 Install Build</h3>
 
-      <div className="install-controls">
-        {/* Hidden native file input */}
+      {/* Drag and drop zone */}
+      <div
+        className={`drop-zone ${dragging ? 'drop-zone-active' : ''}`}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => fileInputRef.current.click()}
+      >
         <input
           ref={fileInputRef}
           type="file"
           accept=".apk"
-          onChange={handleFileSelect}
+          onChange={handleFileInput}
           style={{ display: 'none' }}
         />
-
-        {/* Custom styled button */}
-        <button className="select-build-btn" onClick={() => fileInputRef.current.click()}>
-          Select Build
-        </button>
-
-        <button onClick={handleUpload} disabled={!selectedFile}>
-          Upload APK
-        </button>
+        {uploading ? (
+          <p>⏳ Uploading...</p>
+        ) : (
+          <p>📂 Drag & drop APK here, or <strong>click to select</strong></p>
+        )}
       </div>
 
-      {/* Show selected file name */}
-      {selectedFile && (
-        <p className="selected-file-name">📄 {selectedFile.name}</p>
-      )}
-
-      {/* Build history dropdown — like the Swing app's FileTextFieldBox */}
+      {/* Build history dropdown */}
       {buildHistory.length > 0 && (
         <div className="build-history">
-          <label><strong>Recent builds:</strong></label>
+          <label><strong>Recent:</strong></label>
           <select
-            value={uploadedPath}
+            value={selectedPath}
             onChange={(e) => {
               const entry = buildHistory.find(h => h.path === e.target.value);
               if (entry) handleHistorySelect(entry);
@@ -140,24 +182,24 @@ function InstallPanel({ devices, onRefresh }) {
         </div>
       )}
 
-      {/* Ready to install section */}
-      {uploadedPath && (
+      {/* Install buttons */}
+      {selectedPath && (
         <div className="install-targets">
-          <p><strong>Ready to install:</strong> {uploadedName}</p>
+          <p><strong>Ready to install:</strong> {selectedName}</p>
           <div className="install-buttons">
             <button onClick={handleInstallAll} className="install-all-btn">
-              Install on All Devices
+              Install on Selected ({selectedDevices.length})
             </button>
-            {devices.map((device) => (
-              <button
-                key={device.serial}
-                disabled={installing[device.serial]}
-                onClick={() => handleInstall(device.serial)}
-              >
-                {installing[device.serial] ? 'Installing...' : `Install → ${device.deviceName}`}
-              </button>
-            ))}
           </div>
+        </div>
+      )}
+
+      {/* Uninstall All - always visible when devices have app installed */}
+      {devices.some(d => d.deviceInfo.appInstalled) && (
+        <div className="uninstall-all-row">
+          <button onClick={handleUninstallAll} className="uninstall-all-btn">
+            Uninstall All
+          </button>
         </div>
       )}
 

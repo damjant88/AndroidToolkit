@@ -11,16 +11,15 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
 /**
  * REST API for build (APK) operations.
  *
- * Test with Postman:
- *   POST http://localhost:8080/api/builds/upload     (form-data: file=<apk>)
- *   POST http://localhost:8080/api/builds/install/{serial}?path=<uploaded path>
+ * Two ways to install:
+ * 1. Upload via drag-drop/file picker → server saves to uploads dir → install from there
+ * 2. Paste a local path → install directly (server and browser are on the same machine)
  */
 @RestController
 @RequestMapping("/api/builds")
@@ -31,13 +30,12 @@ public class BuildController {
 
     public BuildController(AppServices appServices) {
         this.commandExecutor = appServices.commandExecutor();
-        // Store uploaded APKs in C:/AdbToolkit/uploads
         this.uploadsDir = Path.of(appServices.storagePaths().rootPath(), "uploads");
         uploadsDir.toFile().mkdirs();
     }
 
     /**
-     * Upload an APK file to the server.
+     * Upload an APK via drag-drop or file picker.
      * Returns the server-side path so the client can use it for install.
      */
     @PostMapping("/upload")
@@ -58,7 +56,7 @@ public class BuildController {
     }
 
     /**
-     * Install a previously uploaded APK on a specific device.
+     * Install an APK on a device from a local path.
      */
     @PostMapping("/install/{serial}")
     public Map<String, Object> installOnDevice(

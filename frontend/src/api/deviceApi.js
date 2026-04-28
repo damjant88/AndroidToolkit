@@ -65,16 +65,16 @@ export async function disablePermissions(serial, packageName, permissionIds) {
   return response.data;
 }
 
+export async function installBuild(serial, apkPath) {
+  const response = await api.post(`/builds/install/${serial}?path=${encodeURIComponent(apkPath)}`);
+  return response.data;
+}
+
 export async function uploadBuild(file) {
   const formData = new FormData();
   formData.append('file', file);
   const response = await api.post('/builds/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
-}
-
-export async function installBuild(serial, apkPath) {
-  const response = await api.post(`/builds/install/${serial}?path=${encodeURIComponent(apkPath)}`);
   return response.data;
 }

@@ -5,7 +5,7 @@ import {
 } from '../api/deviceApi';
 import { getIconForPackage } from '../api/packageIcons';
 
-function DeviceCard({ device, onRefresh, onOpenPermissions }) {
+function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermissions }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [screenshotUrl, setScreenshotUrl] = useState(null);
@@ -95,9 +95,18 @@ function DeviceCard({ device, onRefresh, onOpenPermissions }) {
   }
 
   return (
-    <div className="device-card">
-      <div className="device-card-header">
-        <h3>{device.deviceName}</h3>
+    <div
+      className={`device-card ${selected ? 'device-card-selected' : ''}`}
+    >
+      <div className="device-card-header" onClick={onToggleSelect}>
+        <label className="device-select-checkbox" onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={onToggleSelect}
+          />
+          <h3>{device.deviceName}</h3>
+        </label>
         <img
           className="device-icon"
           src={`/icons/${getIconForPackage(info.safePathPackage)}`}
