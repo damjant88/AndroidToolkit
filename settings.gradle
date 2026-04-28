@@ -2,3 +2,4 @@ rootProject.name = 'AndroidToolkit'
 
 include 'core'
 include 'desktop'
+include 'backend'
