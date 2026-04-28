@@ -1,59 +1,22 @@
-plugins {
-    id 'application'
+allprojects {
+    group = 'androidtoolkit'
+    version = '1.0.0-SNAPSHOT'
 }
 
-group = 'androidtoolkit'
-version = '1.0.0-SNAPSHOT'
+subprojects {
+    apply plugin: 'java'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs = ['src']
-        }
-        resources {
-            srcDirs = ['Assets']
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(11)
         }
     }
-    test {
-        java {
-            srcDirs = ['test']
-        }
-        resources {
-            srcDirs = ['test-resources']
-        }
+
+    repositories {
+        mavenCentral()
     }
-}
 
-application {
-    mainClass = 'androidtoolkit.app.AdbToolkit'
-}
-
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
-    testImplementation 'org.mockito:mockito-core:5.11.0'
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
-}
-
-jar {
-    manifest {
-        attributes('Main-Class': application.mainClass.get())
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
     }
 }

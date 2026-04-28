@@ -1,25 +1,14 @@
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$srcRoot = Join-Path $projectRoot "src"
-$outRoot = Join-Path $projectRoot "out"
 
-if (Test-Path $outRoot) {
-    Remove-Item $outRoot -Recurse -Force
+Push-Location $projectRoot
+try {
+    cmd /c gradlew.bat :desktop:build -x test
+    if ($LASTEXITCODE -ne 0) {
+        throw "Build failed."
+    }
+    Write-Host "Build completed: desktop\build\libs\desktop-1.0.0-SNAPSHOT.jar"
+} finally {
+    Pop-Location
 }
-
-New-Item -ItemType Directory -Path $outRoot | Out-Null
-
-$javaFiles = Get-ChildItem -Path $srcRoot -Recurse -Filter *.java | ForEach-Object { $_.FullName }
-
-if (-not $javaFiles) {
-    throw "No Java source files were found under $srcRoot."
-}
-
-javac -d $outRoot $javaFiles
-
-if ($LASTEXITCODE -ne 0) {
-    throw "Compilation failed."
-}
-
-Write-Host "Build completed in $outRoot"

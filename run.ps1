@@ -1,14 +1,21 @@
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$outRoot = Join-Path $projectRoot "out"
-$storageRoot = "C:\AdbToolkit"
+$toolkitDir = "C:\AdbToolkit"
 
-# Always rebuild before launch so we don't run stale compiled classes.
-& (Join-Path $projectRoot "build.ps1")
-
-if (-not (Test-Path $storageRoot)) {
-    New-Item -ItemType Directory -Path $storageRoot | Out-Null
+if (-not (Test-Path $toolkitDir)) {
+    New-Item -ItemType Directory -Path $toolkitDir | Out-Null
 }
 
-java -cp "$outRoot;Assets" androidtoolkit.app.AdbToolkit
+Push-Location $projectRoot
+try {
+    cmd /c gradlew.bat :desktop:build -x test
+    if ($LASTEXITCODE -ne 0) {
+        throw "Build failed."
+    }
+
+    $jar = Join-Path $projectRoot "desktop\build\libs\desktop-1.0.0-SNAPSHOT.jar"
+    java -jar $jar
+} finally {
+    Pop-Location
+}

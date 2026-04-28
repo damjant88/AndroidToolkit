@@ -1,0 +1,34 @@
+plugins {
+    id 'application'
+}
+
+dependencies {
+    implementation project(':core')
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['Assets']
+        }
+    }
+}
+
+application {
+    mainClass = 'androidtoolkit.app.AdbToolkit'
+}
+
+jar {
+    manifest {
+        attributes('Main-Class': application.mainClass.get())
+    }
+    // Include core classes in the jar so it's self-contained
+    dependsOn ':core:jar'
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
