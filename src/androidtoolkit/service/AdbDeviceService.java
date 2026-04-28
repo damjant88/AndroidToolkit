@@ -22,7 +22,7 @@ public class AdbDeviceService implements DeviceGateway {
         ArrayList<String> devices = new ArrayList<>();
         String output = commandExecutor.runCommand("adb devices");
         devices.addAll(Arrays.stream(output.split("\n")).map(String::trim).filter(line -> line.endsWith("device"))
-                .map(line -> line.replace("device", "").trim()).collect(Collectors.toList()));
+                .map(line -> line.split("\\s+")[0].trim()).collect(Collectors.toList()));
         return devices;
     }
 
@@ -107,7 +107,7 @@ public class AdbDeviceService implements DeviceGateway {
     }
 
     public void enableAccessibilityService(String id, String appPackage, String serviceClassName) {
-        String component = toAccessibilityComponent(appPackage, serviceClassName);
+        String component = AccessibilityComponentResolver.toComponent(appPackage, serviceClassName);
         String services = normalizeEnabledAccessibilityServices(
                 commandExecutor.runCommand("adb -s " + id + " shell settings get secure enabled_accessibility_services")
         );
@@ -121,7 +121,7 @@ public class AdbDeviceService implements DeviceGateway {
     }
 
     public void disableAccessibilityService(String id, String appPackage, String serviceClassName) {
-        String component = toAccessibilityComponent(appPackage, serviceClassName);
+        String component = AccessibilityComponentResolver.toComponent(appPackage, serviceClassName);
         String services = normalizeEnabledAccessibilityServices(
                 commandExecutor.runCommand("adb -s " + id + " shell settings get secure enabled_accessibility_services")
         );
@@ -166,7 +166,7 @@ public class AdbDeviceService implements DeviceGateway {
         String services = normalizeEnabledAccessibilityServices(
                 commandExecutor.runCommand("adb -s " + id + " shell settings get secure enabled_accessibility_services")
         );
-        return containsAccessibilityComponent(services, toAccessibilityComponent(appPackage, serviceClassName));
+        return containsAccessibilityComponent(services, AccessibilityComponentResolver.toComponent(appPackage, serviceClassName));
     }
 
     public void startWifiDebugging(String id, String ip) {
@@ -221,19 +221,6 @@ public class AdbDeviceService implements DeviceGateway {
 
     public void deleteFile(String id, String target) {
         commandExecutor.runCommand("adb -s " + id + " shell rm " + target);
-    }
-
-    private String toAccessibilityComponent(String appPackage, String serviceClassName) {
-        if (serviceClassName == null || serviceClassName.isBlank()) {
-            return "";
-        }
-        if (serviceClassName.contains("/")) {
-            return serviceClassName;
-        }
-        if (serviceClassName.startsWith(".")) {
-            return appPackage + "/" + appPackage + serviceClassName;
-        }
-        return appPackage + "/" + serviceClassName;
     }
 
     private String normalizeEnabledAccessibilityServices(String services) {

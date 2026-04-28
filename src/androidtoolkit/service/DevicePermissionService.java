@@ -128,21 +128,9 @@ public class DevicePermissionService {
     }
 
     private boolean isAccessibilityServiceDeclared(String packageDump, String packageName, String serviceClassName) {
-        String component = toAccessibilityComponent(packageName, serviceClassName);
+        String component = AccessibilityComponentResolver.toComponent(packageName, serviceClassName);
         return packageDump.contains("android.accessibilityservice.AccessibilityService")
                 && packageDump.contains(component);
     }
 
-    private String toAccessibilityComponent(String packageName, String serviceClassName) {
-        if (serviceClassName == null || serviceClassName.isBlank()) {
-            return "";
-        }
-        if (serviceClassName.contains("/")) {
-            return serviceClassName;
-        }
-        if (serviceClassName.startsWith(".")) {
-            return packageName + "/" + packageName + serviceClassName;
-        }
-        return packageName + "/" + serviceClassName;
-    }
 }

@@ -163,6 +163,10 @@ public class PermissionsDialog extends JDialog {
     private void syncSelectAllState() {
         boolean allSelected = !permissionBoxes.isEmpty();
         for (JCheckBox permissionBox : permissionBoxes) {
+            // Skip disabled (unavailable) checkboxes — they shouldn't affect "Select All"
+            if (!permissionBox.isEnabled()) {
+                continue;
+            }
             if (!permissionBox.isSelected()) {
                 allSelected = false;
                 break;

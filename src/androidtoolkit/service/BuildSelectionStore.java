@@ -26,7 +26,6 @@ public class BuildSelectionStore {
 
         try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(buildsFile))) {
             ArrayList<String> builds = (ArrayList<String>) objectInputStream.readObject();
-            saveBuildSelection(new BuildSelectionState(builds));
             return new BuildSelectionState(builds);
         } catch (IOException | ClassNotFoundException ex) {
             throw new RuntimeException(ex);
