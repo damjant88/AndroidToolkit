@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getDevices } from '../api/deviceApi';
 import DeviceCard from './DeviceCard';
+import InstallPanel from './InstallPanel';
 
 function DeviceList() {
   const [devices, setDevices] = useState([]);
@@ -41,6 +42,7 @@ function DeviceList() {
 
   return (
     <div>
+      <InstallPanel devices={devices} onRefresh={fetchDevices} />
       <div className="toolbar">
         <button onClick={fetchDevices}>🔄 Refresh Devices</button>
         <span>{devices.length} device(s) connected</span>
