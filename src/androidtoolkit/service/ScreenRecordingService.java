@@ -68,9 +68,9 @@ public class ScreenRecordingService {
                     process.waitFor();
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
-                } finally {
-                    recordingSession.getRecordingInProgress().set(false);
                 }
+                // No finally block here — stopScreenRecording owns the state cleanup.
+                // This avoids a race condition where both threads set recordingInProgress to false.
                 return null;
             }
         };
@@ -82,23 +82,27 @@ public class ScreenRecordingService {
             return new StopScreenRecordingOutcome("", false);
         }
 
+        // Destroy the process and wait for it to actually terminate (no guessing with Thread.sleep)
         Process recordingProcess = recordingSession.getRecordingProcess();
         if (recordingProcess != null) {
             recordingProcess.destroy();
+            recordingProcess.waitFor();
         }
+
+        // Now that the process is confirmed dead, clean up the session state
+        recordingSession.setRecordingProcess(null);
+        recordingSession.getRecordingInProgress().set(false);
+
         LocalDate currentDate = LocalDate.now();
         String dateString = currentDate.toString();
         File deviceDir = storageService.recordingDir(deviceName, dateString);
         storageService.ensureDirectoryExists(deviceDir);
 
-        Thread.sleep(300);
         String recordingLocation = deviceDir.getPath();
         commandExecutor.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingSession.getRecordingFileName() + " " + recordingLocation);
         commandExecutor.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingSession.getRecordingFileName());
         RecordingLogResult recordingLogResult = saveScreenRecordingLogs(serial, deviceName, pid, recordingSession.getRecordingFileName());
 
-        recordingSession.setRecordingProcess(null);
-        recordingSession.getRecordingInProgress().set(false);
         recordingSession.setRecordingLocation(recordingLocation);
         return new StopScreenRecordingOutcome(recordingLocation, recordingLogResult.isLogsCaptured());
     }
