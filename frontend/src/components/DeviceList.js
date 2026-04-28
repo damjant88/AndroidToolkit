@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { getDevices } from '../api/deviceApi';
 import DeviceCard from './DeviceCard';
 import InstallPanel from './InstallPanel';
+import PermissionsDialog from './PermissionsDialog';
 
 function DeviceList() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [permissionsTarget, setPermissionsTarget] = useState(null);
 
   async function fetchDevices() {
     setLoading(true);
@@ -23,10 +25,17 @@ function DeviceList() {
 
   useEffect(() => {
     fetchDevices();
-    // Poll for device changes every 5 seconds (like DeviceMonitor in Swing)
     const interval = setInterval(fetchDevices, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  function openPermissions(serial, packageName, deviceName) {
+    setPermissionsTarget({ serial, packageName, deviceName });
+  }
+
+  function closePermissions() {
+    setPermissionsTarget(null);
+  }
 
   if (loading && devices.length === 0) {
     return <p className="status">Loading devices...</p>;
@@ -49,9 +58,23 @@ function DeviceList() {
       </div>
       <div className="device-grid">
         {devices.map((device) => (
-          <DeviceCard key={device.serial} device={device} onRefresh={fetchDevices} />
+          <DeviceCard
+            key={device.serial}
+            device={device}
+            onRefresh={fetchDevices}
+            onOpenPermissions={(serial, packageName) => openPermissions(serial, packageName, device.deviceName)}
+          />
         ))}
       </div>
+
+      {permissionsTarget && (
+        <PermissionsDialog
+          serial={permissionsTarget.serial}
+          packageName={permissionsTarget.packageName}
+          deviceName={permissionsTarget.deviceName}
+          onClose={closePermissions}
+        />
+      )}
     </div>
   );
 }

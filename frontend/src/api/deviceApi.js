@@ -33,6 +33,38 @@ export async function toggleWifiDebug(serial, ipAddress, wifiDebugSession, hasWi
   return response.data;
 }
 
+export async function pullLogs(serial) {
+  const response = await api.post(`/devices/${serial}/pull-logs`);
+  return response.data;
+}
+
+export async function downloadLogs(deviceName) {
+  const response = await api.get(`/files/logs/${deviceName}/download`, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
+export async function takeScreenshot(serial, deviceName) {
+  const response = await api.post(`/devices/${serial}/screenshot`, { deviceName });
+  return response.data;
+}
+
+export async function getPermissions(serial, packageName) {
+  const response = await api.get(`/devices/${serial}/permissions?packageName=${encodeURIComponent(packageName)}`);
+  return response.data;
+}
+
+export async function enablePermissions(serial, packageName, permissionIds) {
+  const response = await api.post(`/devices/${serial}/permissions/enable`, { packageName, permissionIds });
+  return response.data;
+}
+
+export async function disablePermissions(serial, packageName, permissionIds) {
+  const response = await api.post(`/devices/${serial}/permissions/disable`, { packageName, permissionIds });
+  return response.data;
+}
+
 export async function uploadBuild(file) {
   const formData = new FormData();
   formData.append('file', file);
