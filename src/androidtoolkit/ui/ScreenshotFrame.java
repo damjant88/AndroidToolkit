@@ -60,8 +60,12 @@ public class ScreenshotFrame extends JFrame {
 
 		getContentPane().add(imageLabel, BorderLayout.CENTER);
 
-		// Set the size of the JFrame to match the size of the image
-		setSize(imageLabel.getIcon().getIconWidth() + 16, imageLabel.getIcon().getIconHeight() + 30);
+		// Set the size of the JFrame to match the image, or use a fallback if the image failed to load
+		if (imageLabel.getIcon() != null) {
+			setSize(imageLabel.getIcon().getIconWidth() + 16, imageLabel.getIcon().getIconHeight() + 30);
+		} else {
+			setSize(350, 400);
+		}
 
 		if(numberOfDevices <= 2) {
 			setLocation(640, 0);
