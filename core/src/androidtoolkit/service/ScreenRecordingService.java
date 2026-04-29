@@ -6,6 +6,7 @@ import androidtoolkit.domain.RecordingSession;
 import javax.swing.*;
 import java.io.File;
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
 
 public class ScreenRecordingService {
 
@@ -86,7 +87,10 @@ public class ScreenRecordingService {
         Process recordingProcess = recordingSession.getRecordingProcess();
         if (recordingProcess != null) {
             recordingProcess.destroy();
-            recordingProcess.waitFor();
+            // Timeout after 5 seconds in case the process hangs (e.g. WiFi device)
+            if (!recordingProcess.waitFor(5, TimeUnit.SECONDS)) {
+                recordingProcess.destroyForcibly();
+            }
         }
 
         // Now that the process is confirmed dead, clean up the session state
@@ -112,11 +116,21 @@ public class ScreenRecordingService {
         if (resolvedPid.isBlank()) {
             resolvedPid = fallbackPid == null ? "" : fallbackPid.trim();
         }
+
+        LocalDate currentDate = LocalDate.now();
+        String dateString = currentDate.toString();
+        String logFileName = storageService.recordingDir(deviceName, dateString).getPath() + "/" + recordingFileName + ".log";
+
         if (resolvedPid.isBlank()) {
-            return new RecordingLogResult(false, "");
+            // No PID available — save full logcat dump instead of nothing
+            String command = "adb -s " + serial + " logcat -d";
+            commandExecutor.runCommandAndSave(command, logFileName);
+            return new RecordingLogResult(true, "");
         }
 
-        deviceGateway.saveScreenRecordingLogs(serial, resolvedPid, deviceName, recordingFileName);
+        // Save filtered logcat for the app's PID
+        String command = "adb -s " + serial + " logcat -d --pid=" + resolvedPid;
+        commandExecutor.runCommandAndSave(command, logFileName);
         return new RecordingLogResult(true, resolvedPid);
     }
 

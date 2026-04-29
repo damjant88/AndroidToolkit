@@ -11,11 +11,15 @@ import androidtoolkit.app.PermissionDialogState;
 import androidtoolkit.app.PermissionManager;
 import androidtoolkit.app.PermissionDefinition;
 import androidtoolkit.app.PermissionUpdateResponse;
+import androidtoolkit.app.RecordingActionResponse;
+import androidtoolkit.app.RecordingManager;
 import androidtoolkit.app.ScreenshotCaptureResponse;
 import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.UninstallAppResult;
 import androidtoolkit.app.WifiDebugResult;
 import androidtoolkit.app.AppServices;
+import androidtoolkit.domain.RecordingSession;
+import androidtoolkit.service.ScreenRecordingService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/devices")
@@ -36,7 +41,10 @@ public class DeviceController {
     private final LogExportManager logExportManager;
     private final ScreenshotManager screenshotManager;
     private final PermissionManager permissionManager;
+    private final RecordingManager recordingManager;
+    private final ScreenRecordingService screenRecordingService;
     private final AppServices appServices;
+    private final Map<String, RecordingSession> recordingSessions = new ConcurrentHashMap<>();
 
     public DeviceController(
             DeviceCatalog deviceCatalog,
@@ -44,6 +52,7 @@ public class DeviceController {
             LogExportManager logExportManager,
             ScreenshotManager screenshotManager,
             PermissionManager permissionManager,
+            RecordingManager recordingManager,
             AppServices appServices
     ) {
         this.deviceCatalog = deviceCatalog;
@@ -51,6 +60,8 @@ public class DeviceController {
         this.logExportManager = logExportManager;
         this.screenshotManager = screenshotManager;
         this.permissionManager = permissionManager;
+        this.recordingManager = recordingManager;
+        this.screenRecordingService = appServices.screenRecordingService();
         this.appServices = appServices;
     }
 
@@ -91,9 +102,56 @@ public class DeviceController {
     }
 
     @PostMapping("/{serial}/screenshot")
-    public ScreenshotCaptureResponse takeScreenshot(@PathVariable String serial, @RequestBody(required = false) java.util.Map<String, String> body) {
+    public ScreenshotCaptureResponse takeScreenshot(@PathVariable String serial, @RequestBody(required = false) Map<String, String> body) {
         String deviceName = (body != null) ? body.getOrDefault("deviceName", serial) : serial;
         return screenshotManager.captureScreenshot(serial, deviceName);
+    }
+
+    @PostMapping("/{serial}/screen-mirror")
+    public Map<String, Object> startScreenMirror(@PathVariable String serial) {
+        try {
+            screenRecordingService.startScreenMirrorAsync(serial);
+            return Map.of("success", true, "message", "Screen mirror started for " + serial);
+        } catch (RuntimeException e) {
+            return Map.of("success", false, "message", e.getMessage());
+        }
+    }
+
+    @PostMapping("/{serial}/start-recording")
+    public Map<String, Object> startRecording(@PathVariable String serial) {
+        RecordingSession session = recordingSessions.computeIfAbsent(serial, k -> new RecordingSession());
+        if (session.isActive()) {
+            return Map.of("success", false, "message", "Recording already in progress on " + serial);
+        }
+        try {
+            RecordingActionResponse result = recordingManager.startRecording(serial, serial, session);
+            return Map.of("success", result.isSuccess(), "message", result.getMessage());
+        } catch (RuntimeException e) {
+            return Map.of("success", false, "message", e.getMessage());
+        }
+    }
+
+    @PostMapping("/{serial}/stop-recording")
+    public Map<String, Object> stopRecording(@PathVariable String serial, @RequestBody(required = false) Map<String, String> body) {
+        RecordingSession session = recordingSessions.get(serial);
+        if (session == null || !session.isActive()) {
+            return Map.of("success", false, "message", "No active recording on " + serial);
+        }
+        String pid = (body != null) ? body.getOrDefault("pid", "") : "";
+        String recordingFileName = session.getRecordingFileName();
+        try {
+            RecordingActionResponse result = recordingManager.stopRecording(serial, serial, pid, session);
+            return Map.of(
+                    "success", result.isSuccess(),
+                    "message", result.getMessage(),
+                    "recordingLocation", result.getRecordingLocation() != null ? result.getRecordingLocation() : "",
+                    "recordingFileName", recordingFileName != null ? recordingFileName : ""
+            );
+        } catch (Exception e) {
+            session.setRecordingProcess(null);
+            session.getRecordingInProgress().set(false);
+            return Map.of("success", false, "message", "Stop recording failed: " + e.getMessage());
+        }
     }
 
     @GetMapping("/{serial}/permissions")

@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
-  pullLogs, takeScreenshot, downloadLogs
+  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, downloadRecording
 } from '../api/deviceApi';
 import { getIconForPackage } from '../api/packageIcons';
 
 function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermissions }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [screenshotUrl, setScreenshotUrl] = useState(null);
+  const [recording, setRecording] = useState(false);
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
@@ -33,8 +33,14 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
     setMessage('Capturing screenshot...');
     try {
       await takeScreenshot(serial, device.deviceName);
-      // Add timestamp to force browser to reload the image
-      setScreenshotUrl(`/api/files/screenshot/${device.deviceName}?t=${Date.now()}`);
+      const url = `/api/files/screenshot/${device.deviceName}?t=${Date.now()}`;
+      // Open screenshot viewer in a popup window centered on screen
+      const viewerUrl = `/?view=screenshot&url=${encodeURIComponent(url)}&device=${encodeURIComponent(device.deviceName)}`;
+      const w = 420;
+      const h = 800;
+      const left = window.screenX + Math.round((window.outerWidth - w) / 2);
+      const top = window.screenY + Math.round((window.outerHeight - h) / 2);
+      window.open(viewerUrl, `screenshot_${device.deviceName}`, `width=${w},height=${h},left=${left},top=${top},resizable=yes`);
       setMessage('Screenshot captured');
     } catch (err) {
       setMessage('Error: ' + (err.response?.data?.message || err.message));
@@ -64,33 +70,55 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
     }
   }
 
-  async function handleCopyScreenshot() {
-    if (!screenshotUrl) return;
+  async function handleScreenMirror() {
+    setLoading(true);
+    setMessage('');
     try {
-      const response = await fetch(screenshotUrl);
-      const blob = await response.blob();
-      await navigator.clipboard.write([
-        new ClipboardItem({ 'image/png': blob })
-      ]);
-      setMessage('Screenshot copied to clipboard');
+      const result = await startScreenMirror(serial);
+      setMessage(result.message);
     } catch (err) {
-      setMessage('Copy failed: ' + err.message);
+      setMessage('Error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   }
 
-  async function handleDownloadScreenshot() {
-    if (!screenshotUrl) return;
+  async function handleRecording() {
+    setLoading(true);
+    setMessage('');
     try {
-      const response = await fetch(screenshotUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `screenshot_${device.deviceName}.png`;
-      link.click();
-      window.URL.revokeObjectURL(url);
+      if (!recording) {
+        const result = await startRecording(serial);
+        setMessage(result.message);
+        if (result.success) setRecording(true);
+      } else {
+        setMessage('⏹ Stopping recording...');
+        const result = await stopRecording(serial, info.pid || '');
+        setRecording(false);
+        if (result.success && result.recordingLocation) {
+          setMessage('✅ Recording saved. Downloading...');
+          try {
+            const blob = await downloadRecording(result.recordingLocation, result.recordingFileName);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `recording_${device.deviceName}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+            setMessage(`✅ Recording downloaded\n📁 ${result.recordingLocation}`);
+          } catch (dlErr) {
+            setMessage(`✅ Recording saved to:\n📁 ${result.recordingLocation}\n⚠️ Download failed: ${dlErr.message}`);
+          }
+        } else {
+          setMessage(result.message || 'No active recording');
+        }
+      }
     } catch (err) {
-      setMessage('Download failed: ' + err.message);
+      setMessage('Error: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -159,6 +187,18 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           Screenshot
         </button>
 
+        <button disabled={loading} onClick={handleScreenMirror}>
+          Screen Mirror
+        </button>
+
+        <button
+          disabled={loading}
+          onClick={handleRecording}
+          className={recording ? 'recording-active' : ''}
+        >
+          {recording ? '⏹ Stop Record' : '⏺ Start Record'}
+        </button>
+
         <button
           disabled={loading}
           onClick={() => handleAction(
@@ -177,16 +217,6 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
       </div>
 
       {message && <p className="device-message" style={{whiteSpace: 'pre-line'}}>{message}</p>}
-
-      {screenshotUrl && (
-        <div className="screenshot-preview">
-          <img src={screenshotUrl} alt="device screenshot" />
-          <div className="screenshot-actions">
-            <button onClick={handleCopyScreenshot}>📋 Copy to Clipboard</button>
-            <button onClick={handleDownloadScreenshot}>💾 Download</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

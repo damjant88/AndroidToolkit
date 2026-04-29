@@ -45,6 +45,30 @@ export async function downloadLogs(deviceName) {
   return response.data;
 }
 
+export async function startScreenMirror(serial) {
+  const response = await api.post(`/devices/${serial}/screen-mirror`);
+  return response.data;
+}
+
+export async function startRecording(serial) {
+  const response = await api.post(`/devices/${serial}/start-recording`);
+  return response.data;
+}
+
+export async function stopRecording(serial, pid) {
+  const response = await api.post(`/devices/${serial}/stop-recording`, { pid });
+  return response.data;
+}
+
+export async function downloadRecording(recordingPath, recordingFileName) {
+  const params = new URLSearchParams({ path: recordingPath });
+  if (recordingFileName) params.append('fileName', recordingFileName);
+  const response = await api.get(`/files/recording/download?${params.toString()}`, {
+    responseType: 'blob',
+  });
+  return response.data;
+}
+
 export async function takeScreenshot(serial, deviceName) {
   const response = await api.post(`/devices/${serial}/screenshot`, { deviceName });
   return response.data;

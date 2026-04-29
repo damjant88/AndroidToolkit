@@ -36,7 +36,7 @@ public class StoragePaths {
     }
 
     public File screenshotDir(String deviceName) {
-        return new File(screenshotsDir(), deviceName);
+        return new File(screenshotsDir(), sanitize(deviceName));
     }
 
     public File screenshotFile(String deviceName) {
@@ -52,6 +52,11 @@ public class StoragePaths {
     }
 
     public File recordingDir(String deviceName, String dateString) {
-        return new File(screenRecordingsDir(), deviceName + "/" + dateString);
+        return new File(screenRecordingsDir(), sanitize(deviceName) + "/" + dateString);
+    }
+
+    // Replace characters that are invalid in Windows file/folder names
+    private String sanitize(String name) {
+        return name.replace(":", "_").replace("?", "_").replace("*", "_");
     }
 }

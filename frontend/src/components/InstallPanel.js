@@ -182,17 +182,18 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
         </div>
       )}
 
-      {/* Install buttons */}
-      {selectedPath && (
-        <div className="install-targets">
-          <p><strong>Ready to install:</strong> {selectedName}</p>
-          <div className="install-buttons">
-            <button onClick={handleInstallAll} className="install-all-btn">
-              Install on Selected ({selectedDevices.length})
-            </button>
-          </div>
+      {/* Install button - always visible, grayed when no APK or no devices selected */}
+      <div className="install-targets">
+        <div className="install-buttons">
+          <button
+            onClick={handleInstallAll}
+            className="install-all-btn"
+            disabled={!selectedPath || selectedDevices.length === 0}
+          >
+            Install on Selected ({selectedDevices.length})
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Uninstall All - always visible when devices have app installed */}
       {devices.some(d => d.deviceInfo.appInstalled) && (

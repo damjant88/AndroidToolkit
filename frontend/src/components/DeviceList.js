@@ -106,7 +106,7 @@ function DeviceList() {
       <div className="device-grid">
         {devices.map((device) => (
           <DeviceCard
-            key={device.serial}
+            key={device.deviceInfo.serialNumber || device.serial || device.index}
             device={device}
             selected={selectedSerials.has(device.serial)}
             onToggleSelect={() => toggleDeviceSelection(device.serial)}
