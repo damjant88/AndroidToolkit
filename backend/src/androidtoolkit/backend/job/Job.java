@@ -37,7 +37,7 @@ public class Job {
     public Instant getStartedAt() { return startedAt; }
     public Status getStatus() { return status; }
     public Instant getCompletedAt() { return completedAt; }
-    public Map<String, DeviceResult> getDeviceResults() { return new ConcurrentHashMap<>(deviceResults); }
+    public Map<String, DeviceResult> getDeviceResults() { return new java.util.HashMap<>(deviceResults); }
 
     public void setStatus(Status status) { this.status = status; }
 
