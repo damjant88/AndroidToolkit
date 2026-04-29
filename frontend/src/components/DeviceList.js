@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getDevices } from '../api/deviceApi';
+import { useDeviceWebSocket } from '../api/useDeviceWebSocket';
 import DeviceCard from './DeviceCard';
 import InstallPanel from './InstallPanel';
 import PermissionsDialog from './PermissionsDialog';
@@ -9,45 +10,55 @@ function DeviceList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [permissionsTarget, setPermissionsTarget] = useState(null);
-  // Track which devices are selected for install (by serial)
   const [selectedSerials, setSelectedSerials] = useState(new Set());
   const initialLoadDone = useRef(false);
 
+  // WebSocket: receive real-time device updates from the server
+  const deviceUpdate = useDeviceWebSocket();
+
+  // When WebSocket pushes an update, apply it
+  useEffect(() => {
+    if (deviceUpdate && deviceUpdate.devices) {
+      applyDeviceUpdate(deviceUpdate.devices);
+    }
+  }, [deviceUpdate]);
+
+  function applyDeviceUpdate(fetched) {
+    setDevices(fetched);
+    const currentSerials = new Set(fetched.map(d => d.serial));
+
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
+      setSelectedSerials(currentSerials);
+    } else {
+      setSelectedSerials(prev => {
+        const updated = new Set(prev);
+        for (const s of updated) {
+          if (!currentSerials.has(s)) updated.delete(s);
+        }
+        return updated;
+      });
+    }
+    setLoading(false);
+  }
+
+  // Initial HTTP fetch (in case WebSocket hasn't connected yet)
   async function fetchDevices() {
-    setLoading(true);
     setError('');
     try {
       const result = await getDevices();
       const fetched = result.devices || [];
-      setDevices(fetched);
-
-      const currentSerials = new Set(fetched.map(d => d.serial));
-
-      if (!initialLoadDone.current) {
-        // First load — select all devices
-        initialLoadDone.current = true;
-        setSelectedSerials(currentSerials);
-      } else {
-        // Subsequent refreshes — only remove disconnected devices
-        setSelectedSerials(prev => {
-          const updated = new Set(prev);
-          for (const s of updated) {
-            if (!currentSerials.has(s)) updated.delete(s);
-          }
-          return updated;
-        });
-      }
+      applyDeviceUpdate(fetched);
     } catch (err) {
       setError('Failed to connect to backend: ' + err.message);
-    } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
     fetchDevices();
-    // Poll every 10 seconds for device changes
-    const interval = setInterval(fetchDevices, 10000);
+    // Fallback polling every 30s in case WebSocket disconnects
+    const interval = setInterval(fetchDevices, 30000);
     return () => clearInterval(interval);
   }, []);
 
