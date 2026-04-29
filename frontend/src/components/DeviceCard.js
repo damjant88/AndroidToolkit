@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
-  pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder,
-  getPermissions, enablePermissions, disablePermissions
+  pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder
 } from '../api/deviceApi';
 import { getIconForPackage, getLabelForPackage } from '../api/packageIcons';
 
-function DeviceCard({ device, selected, onToggleSelect, onRefresh }) {
+function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermissions }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
-  const [permissionsOpen, setPermissionsOpen] = useState(false);
-  const [permissions, setPermissions] = useState(null);
-  const [selectedPermIds, setSelectedPermIds] = useState([]);
-  const [permLoading, setPermLoading] = useState(false);
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
@@ -111,61 +106,6 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh }) {
     }
   }
 
-  // --- Permissions inline panel ---
-  async function handleOpenPermissions() {
-    if (permissionsOpen) {
-      setPermissionsOpen(false);
-      return;
-    }
-    setPermLoading(true);
-    try {
-      const state = await getPermissions(serial, info.safePathPackage);
-      setPermissions(state);
-      setSelectedPermIds(state.activePermissionIds || []);
-      setPermissionsOpen(true);
-    } catch (err) {
-      setMessage('Error loading permissions: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setPermLoading(false);
-    }
-  }
-
-  function togglePermSelection(id) {
-    setSelectedPermIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  }
-
-  async function handleEnablePerms() {
-    setPermLoading(true);
-    try {
-      const result = await enablePermissions(serial, info.safePathPackage, selectedPermIds);
-      const r = result.updateResult;
-      setMessage(r.successful ? `✅ Enabled ${r.appliedCount} permissions` : `⚠️ ${r.appliedCount}/${r.requestedCount} enabled`);
-      setPermissions(result.dialogState);
-      setSelectedPermIds(result.dialogState.activePermissionIds || []);
-    } catch (err) {
-      setMessage('Error: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setPermLoading(false);
-    }
-  }
-
-  async function handleDisablePerms() {
-    setPermLoading(true);
-    try {
-      const result = await disablePermissions(serial, info.safePathPackage, selectedPermIds);
-      const r = result.updateResult;
-      setMessage(r.successful ? `✅ Disabled ${r.appliedCount} permissions` : `⚠️ ${r.appliedCount}/${r.requestedCount} disabled`);
-      setPermissions(result.dialogState);
-      setSelectedPermIds(result.dialogState.activePermissionIds || []);
-    } catch (err) {
-      setMessage('Error: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setPermLoading(false);
-    }
-  }
-
   return (
     <div className={`device-card ${selected ? 'device-card-selected' : ''}`}>
       <div className="device-card-header" onClick={onToggleSelect}>
@@ -193,7 +133,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh }) {
             <button disabled={loading} onClick={handlePullLogs}>Pull SP Logs</button>
             <button disabled={loading} onClick={() => handleAction(() => enableFirebaseDebug(serial, info.safePathPackage))}>Firebase Debug</button>
             <button disabled={loading} onClick={() => handleAction(() => uninstallApp(serial, info.safePathPackage), 'Are you sure you want to uninstall?')}>Uninstall</button>
-            <button disabled={loading || permLoading} onClick={handleOpenPermissions}>{permissionsOpen ? '▼ Permissions' : '▶ Permissions'}</button>
+            <button disabled={loading} onClick={() => onOpenPermissions && onOpenPermissions(serial, info.safePathPackage)}>Permissions</button>
           </>
         )}
         <button disabled={loading} onClick={handleScreenshot}>Screenshot</button>
@@ -202,34 +142,6 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh }) {
         <button disabled={loading} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
         <button disabled={loading} onClick={() => handleAction(() => rebootDevice(serial), 'Are you sure you want to reboot?')}>Reboot</button>
       </div>
-
-      {/* Inline permissions panel */}
-      {permissionsOpen && permissions && (
-        <div className="permissions-inline">
-          <div className="permissions-list">
-            {(permissions.definitions || []).map(def => {
-              const isUnavailable = (permissions.unavailablePermissionIds || []).includes(def.id);
-              const isActive = (permissions.activePermissionIds || []).includes(def.id);
-              const isSelected = selectedPermIds.includes(def.id);
-              return (
-                <div key={def.id} className={`permission-row ${isUnavailable ? 'unavailable' : ''}`}>
-                  <label>
-                    <input type="checkbox" checked={isSelected} disabled={isUnavailable || permLoading} onChange={() => togglePermSelection(def.id)} />
-                    {def.label}
-                  </label>
-                  <span className={`permission-status ${isUnavailable ? 'status-unavailable' : isActive ? 'status-enabled' : 'status-disabled'}`}>
-                    {isUnavailable ? 'N/A' : isActive ? 'On' : 'Off'}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="permissions-inline-actions">
-            <button onClick={handleEnablePerms} disabled={permLoading || selectedPermIds.length === 0}>Enable</button>
-            <button onClick={handleDisablePerms} disabled={permLoading || selectedPermIds.length === 0}>Disable</button>
-          </div>
-        </div>
-      )}
 
       {message && <p className="device-message" style={{whiteSpace: 'pre-line'}}>{message}</p>}
     </div>
