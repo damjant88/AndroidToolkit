@@ -3,13 +3,13 @@ import { getDevices } from '../api/deviceApi';
 import { useDeviceWebSocket } from '../api/useDeviceWebSocket';
 import DeviceCard from './DeviceCard';
 import InstallPanel from './InstallPanel';
-import PermissionsDialog from './PermissionsDialog';
+
 
 function DeviceList() {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [permissionsTarget, setPermissionsTarget] = useState(null);
+
   const [selectedSerials, setSelectedSerials] = useState(new Set());
   const initialLoadDone = useRef(false);
 
@@ -82,13 +82,13 @@ function DeviceList() {
     setSelectedSerials(new Set());
   }
 
-  function openPermissions(serial, packageName, deviceName) {
-    setPermissionsTarget({ serial, packageName, deviceName });
-  }
 
-  function closePermissions() {
-    setPermissionsTarget(null);
-  }
+
+
+
+
+
+
 
   if (loading && devices.length === 0) {
     return <p className="status">Loading devices...</p>;
@@ -123,20 +123,20 @@ function DeviceList() {
             selected={selectedSerials.has(device.serial)}
             onToggleSelect={() => toggleDeviceSelection(device.serial)}
             onRefresh={fetchDevices}
-            onOpenPermissions={(serial, packageName) => openPermissions(serial, packageName, device.deviceName)}
+
           />
         ))}
       </div>
 
-      {permissionsTarget && (
-        <PermissionsDialog
-          serial={permissionsTarget.serial}
-          packageName={permissionsTarget.packageName}
-          deviceName={permissionsTarget.deviceName}
-          onClose={closePermissions}
-        />
-      )}
-    </div>
+
+
+
+
+
+
+
+
+
   );
 }
 
