@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
+import static androidtoolkit.backend.validation.InputValidator.*;
+
 /**
  * REST API for build (APK) operations.
  *
@@ -40,10 +42,7 @@ public class BuildController {
      */
     @PostMapping("/upload")
     public Map<String, String> uploadBuild(@RequestParam("file") MultipartFile file) throws IOException {
-        String fileName = file.getOriginalFilename();
-        if (fileName == null || !fileName.endsWith(".apk")) {
-            throw new IllegalArgumentException("Only .apk files are accepted");
-        }
+        String fileName = sanitizeFileName(file.getOriginalFilename());
 
         File destination = uploadsDir.resolve(fileName).toFile();
         file.transferTo(destination);
@@ -63,6 +62,9 @@ public class BuildController {
             @PathVariable String serial,
             @RequestParam("path") String apkPath
     ) {
+        validateSerial(serial);
+        validateFilePath(apkPath);
+
         File apkFile = new File(apkPath);
         if (!apkFile.exists()) {
             return Map.of("success", false, "message", "APK not found: " + apkPath);

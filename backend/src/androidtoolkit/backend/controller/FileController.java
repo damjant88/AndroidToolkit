@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static androidtoolkit.backend.validation.InputValidator.*;
+
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
@@ -77,6 +79,9 @@ public class FileController {
             @RequestParam("fileName") String fileName,
             HttpServletResponse response
     ) throws IOException {
+        validatePathWithinAllowedRoot(recordingPath);
+        validateFilePath(recordingPath + "/" + fileName);
+
         File file = new File(recordingPath, fileName);
         if (!file.exists() || !file.isFile()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -100,6 +105,7 @@ public class FileController {
 
     @PostMapping("/open-folder")
     public Map<String, Object> openFolder(@RequestParam("path") String folderPath) {
+        validatePathWithinAllowedRoot(folderPath);
         File folder = new File(folderPath).getAbsoluteFile();
         if (!folder.exists()) {
             folder = folder.getParentFile();

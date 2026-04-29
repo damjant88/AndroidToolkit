@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static androidtoolkit.backend.validation.InputValidator.*;
+
 @RestController
 @RequestMapping("/api/devices")
 public class DeviceController {
@@ -72,17 +74,21 @@ public class DeviceController {
 
     @PostMapping("/{serial}/reboot")
     public DeviceMessageResult reboot(@PathVariable String serial) {
+        validateSerial(serial);
         return deviceActionManager.rebootDevice(serial, serial);
     }
 
     @PostMapping("/{serial}/uninstall")
     public UninstallAppResult uninstall(@PathVariable String serial, @RequestBody Map<String, String> body) {
+        validateSerial(serial);
         String packageName = body.getOrDefault("packageName", "");
+        validatePackageName(packageName);
         return deviceActionManager.uninstallApp(serial, serial, packageName);
     }
 
     @PostMapping("/{serial}/wifi-debug")
     public WifiDebugResult toggleWifiDebug(@PathVariable String serial, @RequestBody Map<String, Object> body) {
+        validateSerial(serial);
         String ipAddress = (String) body.getOrDefault("ipAddress", "");
         boolean wifiDebugSession = (boolean) body.getOrDefault("wifiDebugSession", false);
         boolean hasWifiIp = (boolean) body.getOrDefault("hasWifiIp", false);
@@ -91,24 +97,29 @@ public class DeviceController {
 
     @PostMapping("/{serial}/firebase-debug")
     public DeviceMessageResult enableFirebaseDebug(@PathVariable String serial, @RequestBody Map<String, String> body) {
+        validateSerial(serial);
         String packageName = body.getOrDefault("packageName", "");
+        validatePackageName(packageName);
         return deviceActionManager.enableFirebaseDebugging(serial, serial, packageName);
     }
 
     @PostMapping("/{serial}/pull-logs")
     public LogExportResponse pullLogs(@PathVariable String serial) {
+        validateSerial(serial);
         String targetFolder = appServices.storagePaths().logsDir().getPath();
         return logExportManager.exportDeviceLogs(serial, serial, targetFolder);
     }
 
     @PostMapping("/{serial}/screenshot")
     public ScreenshotCaptureResponse takeScreenshot(@PathVariable String serial, @RequestBody(required = false) Map<String, String> body) {
+        validateSerial(serial);
         String deviceName = (body != null) ? body.getOrDefault("deviceName", serial) : serial;
         return screenshotManager.captureScreenshot(serial, deviceName);
     }
 
     @PostMapping("/{serial}/screen-mirror")
     public Map<String, Object> startScreenMirror(@PathVariable String serial) {
+        validateSerial(serial);
         try {
             screenRecordingService.startScreenMirrorAsync(serial);
             return Map.of("success", true, "message", "Screen mirror started for " + serial);
@@ -119,6 +130,7 @@ public class DeviceController {
 
     @PostMapping("/{serial}/start-recording")
     public Map<String, Object> startRecording(@PathVariable String serial) {
+        validateSerial(serial);
         RecordingSession session = recordingSessions.computeIfAbsent(serial, k -> new RecordingSession());
         if (session.isActive()) {
             return Map.of("success", false, "message", "Recording already in progress on " + serial);
@@ -133,6 +145,7 @@ public class DeviceController {
 
     @PostMapping("/{serial}/stop-recording")
     public Map<String, Object> stopRecording(@PathVariable String serial, @RequestBody(required = false) Map<String, String> body) {
+        validateSerial(serial);
         RecordingSession session = recordingSessions.get(serial);
         if (session == null || !session.isActive()) {
             return Map.of("success", false, "message", "No active recording on " + serial);
@@ -156,12 +169,16 @@ public class DeviceController {
 
     @GetMapping("/{serial}/permissions")
     public PermissionDialogState getPermissions(@PathVariable String serial, @RequestParam String packageName) {
+        validateSerial(serial);
+        validatePackageName(packageName);
         return permissionManager.loadDialogState(serial, packageName);
     }
 
     @PostMapping("/{serial}/permissions/enable")
     public PermissionUpdateResponse enablePermissions(@PathVariable String serial, @RequestBody Map<String, Object> body) {
+        validateSerial(serial);
         String packageName = (String) body.getOrDefault("packageName", "");
+        validatePackageName(packageName);
         List<String> permissionIds = (List<String>) body.getOrDefault("permissionIds", List.of());
         List<PermissionDefinition> definitions = permissionManager.loadDialogState(serial, packageName)
                 .getDefinitions().stream()
@@ -172,7 +189,9 @@ public class DeviceController {
 
     @PostMapping("/{serial}/permissions/disable")
     public PermissionUpdateResponse disablePermissions(@PathVariable String serial, @RequestBody Map<String, Object> body) {
+        validateSerial(serial);
         String packageName = (String) body.getOrDefault("packageName", "");
+        validatePackageName(packageName);
         List<String> permissionIds = (List<String>) body.getOrDefault("permissionIds", List.of());
         List<PermissionDefinition> definitions = permissionManager.loadDialogState(serial, packageName)
                 .getDefinitions().stream()
