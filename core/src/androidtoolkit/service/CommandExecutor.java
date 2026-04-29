@@ -22,7 +22,7 @@ public class CommandExecutor {
             Process process = pb.start();
             String output = new BufferedReader(new InputStreamReader(process.getInputStream())).lines()
                     .collect(Collectors.joining("\r\n"));
-            if (!process.waitFor(3, TimeUnit.SECONDS)) {
+            if (!process.waitFor(120, TimeUnit.SECONDS)) {
                 process.destroyForcibly();
             }
             return output.trim();

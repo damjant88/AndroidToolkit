@@ -37,6 +37,17 @@ sourceSets {
     }
 }
 
+// Copy React build output into the Spring Boot static resources
+tasks.register('copyFrontend', Copy) {
+    from '../frontend/build'
+    into 'build/resources/main/static'
+}
+
+tasks.named('processResources') {
+    dependsOn 'copyFrontend'
+    onlyIf { file('../frontend/build').exists() }
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }
