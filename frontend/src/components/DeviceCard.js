@@ -56,8 +56,9 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
       const result = await pullLogs(serial);
       setMessage('✅ Logs saved');
       // Open the logs folder in Windows Explorer
-      if (result.exportedLogsFolder) {
-        try { await openFolder(result.exportedLogsFolder); } catch (e) {}
+      const folder = result.exportedLogsFolder || result.selectedFolder;
+      if (folder) {
+        try { await openFolder(folder.replace(/\/+$/, '')); } catch (e) {}
       }
     } catch (err) {
       setMessage('Error: ' + (err.response?.data?.message || err.message));

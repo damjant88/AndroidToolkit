@@ -100,13 +100,17 @@ public class FileController {
 
     @PostMapping("/open-folder")
     public Map<String, Object> openFolder(@RequestParam("path") String folderPath) {
-        File folder = new File(folderPath);
-        if (!folder.exists() || !folder.isDirectory()) {
+        File folder = new File(folderPath).getAbsoluteFile();
+        if (!folder.exists()) {
+            // Try parent if the exact path doesn't exist (e.g. trailing subfolder not created yet)
+            folder = folder.getParentFile();
+        }
+        if (folder == null || !folder.exists() || !folder.isDirectory()) {
             return Map.of("success", false, "message", "Folder not found: " + folderPath);
         }
         try {
             Runtime.getRuntime().exec(new String[]{"explorer.exe", folder.getAbsolutePath()});
-            return Map.of("success", true, "message", "Opened: " + folderPath);
+            return Map.of("success", true, "message", "Opened: " + folder.getAbsolutePath());
         } catch (IOException e) {
             return Map.of("success", false, "message", "Failed to open folder: " + e.getMessage());
         }
