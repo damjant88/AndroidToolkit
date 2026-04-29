@@ -55,6 +55,8 @@ public class ScreenRecordingService {
 
         recordingSession.setRecordingFileName("screen_record_" + System.currentTimeMillis() + ".mp4");
         recordingSession.getRecordingInProgress().set(true);
+        // Capture PID now while the app is running — we'll use it for log filtering at stop time
+        recordingSession.setPid(resolveCurrentPid(serial));
         startScreenMirrorAsync(serial);
 
         SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
@@ -107,16 +109,20 @@ public class ScreenRecordingService {
         String recordingLocation = deviceDir.getPath();
         commandExecutor.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingSession.getRecordingFileName() + " " + recordingLocation);
         commandExecutor.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingSession.getRecordingFileName());
-        RecordingLogResult recordingLogResult = saveScreenRecordingLogs(serial, deviceName, pid, recordingSession.getRecordingFileName());
+        // Use the PID captured at start time if the caller didn't provide one
+        String effectivePid = (pid != null && !pid.isBlank()) ? pid : recordingSession.getPid();
+        RecordingLogResult recordingLogResult = saveScreenRecordingLogs(serial, deviceName, effectivePid, recordingSession.getRecordingFileName());
 
         recordingSession.setRecordingLocation(recordingLocation);
         return new StopScreenRecordingOutcome(recordingLocation, recordingLogResult.isLogsCaptured());
     }
 
     private RecordingLogResult saveScreenRecordingLogs(String serial, String deviceName, String fallbackPid, String recordingFileName) {
-        String resolvedPid = resolveCurrentPid(serial);
+        // First try the PID captured at start time (stored in session via fallbackPid)
+        // Then try resolving it fresh, then fall back to the parameter
+        String resolvedPid = (fallbackPid != null && !fallbackPid.isBlank()) ? fallbackPid.trim() : "";
         if (resolvedPid.isBlank()) {
-            resolvedPid = fallbackPid == null ? "" : fallbackPid.trim();
+            resolvedPid = resolveCurrentPid(serial);
         }
 
         LocalDate currentDate = LocalDate.now();

@@ -6,6 +6,7 @@ public class RecordingSession {
 
     private String recordingFileName;
     private String recordingLocation;
+    private String pid;
     private Process recordingProcess;
     private final AtomicBoolean recordingInProgress = new AtomicBoolean(false);
 
@@ -23,6 +24,14 @@ public class RecordingSession {
 
     public void setRecordingLocation(String recordingLocation) {
         this.recordingLocation = recordingLocation;
+    }
+
+    public String getPid() {
+        return pid;
+    }
+
+    public void setPid(String pid) {
+        this.pid = pid;
     }
 
     public Process getRecordingProcess() {
