@@ -38,9 +38,10 @@ public class PermissionController {
     @PostMapping("/{serial}/permissions/enable")
     public PermissionUpdateResponse enablePermissions(@PathVariable String serial, @RequestBody Map<String, Object> body) {
         validateSerial(serial);
-        String packageName = (String) body.getOrDefault("packageName", "");
+        String packageName = String.valueOf(body.getOrDefault("packageName", ""));
         validatePackageName(packageName);
-        List<String> permissionIds = (List<String>) body.getOrDefault("permissionIds", List.of());
+        List<?> rawIds = (List<?>) body.getOrDefault("permissionIds", List.of());
+        List<String> permissionIds = rawIds.stream().map(String::valueOf).toList();
         List<PermissionDefinition> definitions = permissionManager.loadDialogState(serial, packageName)
                 .getDefinitions().stream()
                 .filter(d -> permissionIds.contains(d.getId()))
@@ -51,9 +52,10 @@ public class PermissionController {
     @PostMapping("/{serial}/permissions/disable")
     public PermissionUpdateResponse disablePermissions(@PathVariable String serial, @RequestBody Map<String, Object> body) {
         validateSerial(serial);
-        String packageName = (String) body.getOrDefault("packageName", "");
+        String packageName = String.valueOf(body.getOrDefault("packageName", ""));
         validatePackageName(packageName);
-        List<String> permissionIds = (List<String>) body.getOrDefault("permissionIds", List.of());
+        List<?> rawIds = (List<?>) body.getOrDefault("permissionIds", List.of());
+        List<String> permissionIds = rawIds.stream().map(String::valueOf).toList();
         List<PermissionDefinition> definitions = permissionManager.loadDialogState(serial, packageName)
                 .getDefinitions().stream()
                 .filter(d -> permissionIds.contains(d.getId()))

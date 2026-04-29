@@ -38,12 +38,6 @@ export async function pullLogs(serial) {
   return response.data;
 }
 
-export async function downloadLogs(deviceName) {
-  const response = await api.get(`/files/logs/${deviceName}/download`, {
-    responseType: 'blob',
-  });
-  return response.data;
-}
 
 export async function startScreenMirror(serial) {
   const response = await api.post(`/devices/${serial}/screen-mirror`);
@@ -60,13 +54,6 @@ export async function stopRecording(serial, pid) {
   return response.data;
 }
 
-export async function downloadRecordingFile(recordingPath, fileName) {
-  const params = new URLSearchParams({ path: recordingPath, fileName });
-  const response = await api.get(`/files/recording/download?${params.toString()}`, {
-    responseType: 'blob',
-  });
-  return response.data;
-}
 
 export async function openFolder(folderPath) {
   const response = await api.post('/files/open-folder', null, {

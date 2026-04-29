@@ -3,7 +3,6 @@ package androidtoolkit.service;
 import androidtoolkit.app.StopScreenRecordingOutcome;
 import androidtoolkit.domain.RecordingSession;
 
-import javax.swing.*;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
@@ -37,16 +36,17 @@ public class ScreenRecordingService {
             throw new IllegalStateException("scrcpy executable not found in System variables Path!");
         }
 
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
+        Thread thread = new Thread(() -> {
+            try {
                 ProcessBuilder pb = new ProcessBuilder(scrcpyExecutable.getAbsolutePath(), "-s", serial);
                 pb.redirectErrorStream(true);
                 pb.start().waitFor();
-                return null;
+            } catch (Exception e) {
+                System.err.println("Screen mirror failed: " + e.getMessage());
             }
-        };
-        worker.execute();
+        }, "scrcpy-" + serial);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public void startScreenRecording(String serial, RecordingSession recordingSession) {
@@ -59,26 +59,24 @@ public class ScreenRecordingService {
         recordingSession.setPid(resolveCurrentPid(serial));
         startScreenMirrorAsync(serial);
 
-        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                try {
-                    ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", "screenrecord",
-                            "--bit-rate", "4000000",
-                            "/sdcard/" + recordingSession.getRecordingFileName());
-                    pb.redirectErrorStream(true);
-                    Process process = pb.start();
-                    recordingSession.setRecordingProcess(process);
-                    process.waitFor();
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-                // No finally block here — stopScreenRecording owns the state cleanup.
-                // This avoids a race condition where both threads set recordingInProgress to false.
-                return null;
+        Thread thread = new Thread(() -> {
+            try {
+                ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", "screenrecord",
+                        "--bit-rate", "4000000",
+                        "/sdcard/" + recordingSession.getRecordingFileName());
+                pb.redirectErrorStream(true);
+                Process process = pb.start();
+                recordingSession.setRecordingProcess(process);
+                process.waitFor();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            } catch (Exception e) {
+                System.err.println("Screen recording failed: " + e.getMessage());
             }
-        };
-        worker.execute();
+            // No state cleanup here — stopScreenRecording owns it.
+        }, "screenrecord-" + serial);
+        thread.setDaemon(true);
+        thread.start();
     }
 
     public StopScreenRecordingOutcome stopScreenRecording(String serial, String deviceName, String pid, RecordingSession recordingSession) throws InterruptedException {
@@ -87,17 +85,15 @@ public class ScreenRecordingService {
         }
 
         // Stop the recording gracefully by sending SIGINT to screenrecord on the device.
-        // This lets it finalize the MP4 file header properly (destroying the local process corrupts the file).
         Process recordingProcess = recordingSession.getRecordingProcess();
         if (recordingProcess != null) {
             commandExecutor.runCommand("adb -s " + serial + " shell pkill -INT screenrecord");
-            // Wait for the process to finish writing
             if (!recordingProcess.waitFor(10, TimeUnit.SECONDS)) {
                 recordingProcess.destroyForcibly();
             }
         }
 
-        // Now that the process is confirmed dead, clean up the session state
+        // Clean up session state
         recordingSession.setRecordingProcess(null);
         recordingSession.getRecordingInProgress().set(false);
 
@@ -109,7 +105,6 @@ public class ScreenRecordingService {
         String recordingLocation = deviceDir.getPath();
         commandExecutor.runCommand("adb -s " + serial + " pull " + "/sdcard/" + recordingSession.getRecordingFileName() + " " + recordingLocation);
         commandExecutor.runCommand("adb -s " + serial + " shell rm " + "/sdcard/" + recordingSession.getRecordingFileName());
-        // Use the PID captured at start time if the caller didn't provide one
         String effectivePid = (pid != null && !pid.isBlank()) ? pid : recordingSession.getPid();
         RecordingLogResult recordingLogResult = saveScreenRecordingLogs(serial, deviceName, effectivePid, recordingSession.getRecordingFileName());
 
@@ -118,8 +113,6 @@ public class ScreenRecordingService {
     }
 
     private RecordingLogResult saveScreenRecordingLogs(String serial, String deviceName, String fallbackPid, String recordingFileName) {
-        // First try the PID captured at start time (stored in session via fallbackPid)
-        // Then try resolving it fresh, then fall back to the parameter
         String resolvedPid = (fallbackPid != null && !fallbackPid.isBlank()) ? fallbackPid.trim() : "";
         if (resolvedPid.isBlank()) {
             resolvedPid = resolveCurrentPid(serial);
@@ -130,13 +123,11 @@ public class ScreenRecordingService {
         String logFileName = storageService.recordingDir(deviceName, dateString).getPath() + "/" + recordingFileName + ".log";
 
         if (resolvedPid.isBlank()) {
-            // No PID available — save full logcat dump instead of nothing
             String command = "adb -s " + serial + " logcat -d";
             commandExecutor.runCommandAndSave(command, logFileName);
             return new RecordingLogResult(true, "");
         }
 
-        // Save filtered logcat for the app's PID
         String command = "adb -s " + serial + " logcat -d --pid=" + resolvedPid;
         commandExecutor.runCommandAndSave(command, logFileName);
         return new RecordingLogResult(true, resolvedPid);
