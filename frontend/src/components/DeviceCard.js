@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
-  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, downloadRecordingFile, openFolder
+  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, openFolder
 } from '../api/deviceApi';
 import { getIconForPackage } from '../api/packageIcons';
 
@@ -12,17 +12,6 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
-
-  function triggerDownload(blob, fileName) {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-  }
 
   async function handleAction(actionFn, confirmMessage) {
     if (confirmMessage && !window.confirm(confirmMessage)) return;
@@ -107,25 +96,8 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         const result = await stopRecording(serial, info.pid || '');
         setRecording(false);
         if (result.success && result.recordingLocation) {
-          setMessage('✅ Recording saved. Downloading...');
-          try {
-            // Download video file
-            const videoBlob = await downloadRecordingFile(result.recordingLocation, result.recordingFileName);
-            triggerDownload(videoBlob, result.recordingFileName);
-            // Download log file
-            const logFileName = result.recordingFileName + '.log';
-            try {
-              const logBlob = await downloadRecordingFile(result.recordingLocation, logFileName);
-              triggerDownload(logBlob, logFileName);
-            } catch (logErr) {
-              // Log file might not exist — that's ok
-            }
-            setMessage(`✅ Recording downloaded`);
-            // Open the recording folder in Windows Explorer
-            try { await openFolder(result.recordingLocation); } catch (e) {}
-          } catch (dlErr) {
-            setMessage(`✅ Recording saved to:\n📁 ${result.recordingLocation}\n⚠️ Download failed: ${dlErr.message}`);
-          }
+          setMessage(`✅ Recording saved`);
+          try { await openFolder(result.recordingLocation); } catch (e) {}
         } else {
           setMessage(result.message || 'No active recording');
         }
