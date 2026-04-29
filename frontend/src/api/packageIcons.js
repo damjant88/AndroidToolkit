@@ -20,7 +20,31 @@ const PACKAGE_ICON_MAP = {
   'com.orange.es.TuYo': 'toyo.png',
 };
 
+const PACKAGE_LABEL_MAP = {
+  'com.smithmicro.tmobile.familymode.test': 'FamilyMode',
+  'com.tmobile.familycontrols': 'FamilyMode',
+  'com.smithmicro.safepath.dish.test': 'Dish',
+  'com.smithmicro.safepath.dish.kid.test': 'Dish',
+  'com.smithmicro.safepath.family': 'SPFamily',
+  'com.smithmicro.safepath.family.child': 'SPFamily',
+  'com.smithmicro.safepath.family.light': 'SPFamily',
+  'com.smithmicro.safepath.family.speakeasy': 'SPFamily',
+  'com.smithmicro.cci.test': 'SPFamily',
+  'com.smithmicro.att.securefamily': 'SF IAP',
+  'com.wavemarket.waplauncher': 'SF EAP',
+  'com.att.securefamilycompanion': 'SF Companion',
+  'com.smithmicro.sprint.safeandfound.test': 'Safe&Found',
+  'com.sprint.safefound': 'Safe&Found',
+  'com.smithmicro.orangespain.test': 'TuYo',
+  'com.orange.es.TuYo': 'TuYo',
+};
+
 export function getIconForPackage(packageName) {
   if (!packageName) return 'Android.png';
   return PACKAGE_ICON_MAP[packageName] || 'Android.png';
+}
+
+export function getLabelForPackage(packageName) {
+  if (!packageName) return 'Not Installed';
+  return PACKAGE_LABEL_MAP[packageName] || 'Installed';
 }

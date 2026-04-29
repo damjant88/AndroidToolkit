@@ -700,3 +700,19 @@ body {
   border-color: #cc0000 !important;
   transform: scale(1.1);
 }
+
+.device-icon-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #555;
+}
+
+.device-icon + .device-icon-label {
+  margin-left: 4px;
+}
+
+.device-icon-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

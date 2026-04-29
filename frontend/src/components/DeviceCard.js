@@ -3,7 +3,7 @@ import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
   pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder
 } from '../api/deviceApi';
-import { getIconForPackage } from '../api/packageIcons';
+import { getIconForPackage, getLabelForPackage } from '../api/packageIcons';
 
 function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermissions }) {
   const [message, setMessage] = useState('');
@@ -122,11 +122,14 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           />
           <h3>{device.deviceName}</h3>
         </label>
-        <img
-          className="device-icon"
-          src={`/icons/${getIconForPackage(info.safePathPackage)}`}
-          alt="app icon"
-        />
+        <div className="device-icon-group">
+          <img
+            className="device-icon"
+            src={`/icons/${getIconForPackage(info.safePathPackage)}`}
+            alt="app icon"
+          />
+          <span className="device-icon-label">{getLabelForPackage(info.safePathPackage)}</span>
+        </div>
       </div>
       <div className="device-info">
         <p><strong>Serial:</strong> {serial}</p>
