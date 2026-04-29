@@ -26,4 +26,4 @@ Write-Host "Starting AndroidToolkit Web App..."
 Write-Host "Open: http://localhost:8080"
 Write-Host ""
 
-java -Djava.awt.headless=false -jar $jar
+java "-Djava.awt.headless=false" -jar $jar

@@ -137,6 +137,7 @@ function DeviceList() {
 
 
 
+    </div>
   );
 }
 
