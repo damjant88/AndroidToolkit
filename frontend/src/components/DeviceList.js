@@ -13,7 +13,7 @@ function DeviceList() {
   const [permissionsTarget, setPermissionsTarget] = useState(null);
   const initialLoadDone = useRef(false);
 
-  const deviceUpdate = useDeviceWebSocket();
+  const { deviceUpdate, connected } = useDeviceWebSocket();
 
   useEffect(() => {
     if (deviceUpdate && deviceUpdate.devices) {
@@ -54,7 +54,7 @@ function DeviceList() {
     fetchDevices();
     const interval = setInterval(fetchDevices, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggleDeviceSelection(serial) {
     setSelectedSerials(prev => {
@@ -85,6 +85,9 @@ function DeviceList() {
     <div>
       <InstallPanel devices={devices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
       <div className="toolbar">
+        <span className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
+          {connected ? '🟢' : '🔴'}
+        </span>
         <span>{devices.length} device(s) connected</span>
         <span className="selection-info">{selectedSerials.size} selected</span>
         <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>

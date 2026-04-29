@@ -12,7 +12,7 @@ function PermissionsDialog({ serial, packageName, deviceName, onClose }) {
 
   useEffect(() => {
     loadPermissions();
-  }, [serial, packageName]);
+  }, [serial, packageName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadPermissions() {
     setLoading(true);

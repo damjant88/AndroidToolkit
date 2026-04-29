@@ -4,10 +4,11 @@ import SockJS from 'sockjs-client';
 
 /**
  * Hook that connects to the backend WebSocket and receives real-time device updates.
- * Returns the latest device discovery result pushed by the server.
+ * Returns { deviceUpdate, connected }
  */
 export function useDeviceWebSocket() {
   const [deviceUpdate, setDeviceUpdate] = useState(null);
+  const [connected, setConnected] = useState(false);
   const clientRef = useRef(null);
 
   useEffect(() => {
@@ -15,13 +16,21 @@ export function useDeviceWebSocket() {
       webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
       reconnectDelay: 5000,
       onConnect: () => {
+        setConnected(true);
         client.subscribe('/topic/devices', (message) => {
           const data = JSON.parse(message.body);
           setDeviceUpdate(data);
         });
       },
+      onDisconnect: () => {
+        setConnected(false);
+      },
       onStompError: (frame) => {
+        setConnected(false);
         console.error('WebSocket error:', frame.headers['message']);
+      },
+      onWebSocketClose: () => {
+        setConnected(false);
       },
     });
 
@@ -35,5 +44,5 @@ export function useDeviceWebSocket() {
     };
   }, []);
 
-  return deviceUpdate;
+  return { deviceUpdate, connected };
 }

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { uploadBuild, uninstallApp, startInstallJob, startUninstallJob, getJob } from '../api/deviceApi';
+import { uploadBuild, startInstallJob, startUninstallJob, getJob } from '../api/deviceApi';
 
 const MAX_HISTORY = 5;
 
