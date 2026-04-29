@@ -133,11 +133,10 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
       </div>
       <div className="device-info">
         <p><strong>Serial:</strong> {serial}</p>
-        <p><strong>Model:</strong> {info.manufacturer} {info.model}</p>
+        <p><strong>Manufacturer:</strong> {info.manufacturer}</p>
+        <p><strong>Model:</strong> {info.model}</p>
         <p><strong>OS Version:</strong> Android {info.osVersion}</p>
         <p><strong>IP:</strong> {info.ipAddress || 'N/A'}</p>
-        <p><strong>Package:</strong> {info.safePathPackage || 'Not installed'}</p>
-        <p><strong>Status:</strong> {info.appInstalled ? '✅ Installed' : '❌ Not installed'}</p>
       </div>
 
       <div className="device-actions">
