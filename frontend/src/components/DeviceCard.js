@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
-  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, downloadRecording
+  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, downloadRecordingFile
 } from '../api/deviceApi';
 import { getIconForPackage } from '../api/packageIcons';
 
@@ -12,6 +12,17 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
+
+  function triggerDownload(blob, fileName) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
 
   async function handleAction(actionFn, confirmMessage) {
     if (confirmMessage && !window.confirm(confirmMessage)) return;
@@ -98,16 +109,18 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         if (result.success && result.recordingLocation) {
           setMessage('✅ Recording saved. Downloading...');
           try {
-            const blob = await downloadRecording(result.recordingLocation, result.recordingFileName);
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `recording_${device.deviceName}.zip`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            setMessage(`✅ Recording downloaded\n📁 ${result.recordingLocation}`);
+            // Download video file
+            const videoBlob = await downloadRecordingFile(result.recordingLocation, result.recordingFileName);
+            triggerDownload(videoBlob, result.recordingFileName);
+            // Download log file
+            const logFileName = result.recordingFileName + '.log';
+            try {
+              const logBlob = await downloadRecordingFile(result.recordingLocation, logFileName);
+              triggerDownload(logBlob, logFileName);
+            } catch (logErr) {
+              // Log file might not exist — that's ok
+            }
+            setMessage(`✅ Recording downloaded`);
           } catch (dlErr) {
             setMessage(`✅ Recording saved to:\n📁 ${result.recordingLocation}\n⚠️ Download failed: ${dlErr.message}`);
           }

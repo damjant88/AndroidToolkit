@@ -60,9 +60,8 @@ export async function stopRecording(serial, pid) {
   return response.data;
 }
 
-export async function downloadRecording(recordingPath, recordingFileName) {
-  const params = new URLSearchParams({ path: recordingPath });
-  if (recordingFileName) params.append('fileName', recordingFileName);
+export async function downloadRecordingFile(recordingPath, fileName) {
+  const params = new URLSearchParams({ path: recordingPath, fileName });
   const response = await api.get(`/files/recording/download?${params.toString()}`, {
     responseType: 'blob',
   });

@@ -67,46 +67,31 @@ public class FileController {
     }
 
     /**
-     * Downloads recording files (video + log) matching the given filename prefix.
-     * Only includes the specific recording's files, not old ones from the same folder.
+     * Downloads a specific file from a recording folder by name.
      */
     @GetMapping("/recording/download")
-    public void downloadRecording(
+    public void downloadRecordingFile(
             @RequestParam("path") String recordingPath,
-            @RequestParam(value = "fileName", required = false) String fileName,
+            @RequestParam("fileName") String fileName,
             HttpServletResponse response
     ) throws IOException {
-        File recordingDir = new File(recordingPath);
-        if (!recordingDir.exists() || !recordingDir.isDirectory()) {
+        File file = new File(recordingPath, fileName);
+        if (!file.exists() || !file.isFile()) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write("Recording folder not found: " + recordingPath);
+            response.getWriter().write("File not found: " + fileName);
             return;
         }
 
-        // Only include files that match this recording session
-        String prefix = (fileName != null && !fileName.isBlank())
-                ? fileName.replace(".mp4", "")
-                : null;
+        String contentType = fileName.endsWith(".mp4") ? "video/mp4" : "application/octet-stream";
+        response.setContentType(contentType);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"");
+        response.setContentLengthLong(file.length());
 
-        File[] files = recordingDir.listFiles(file -> {
-            if (!file.isFile()) return false;
-            if (prefix == null) return true;
-            return file.getName().startsWith(prefix);
-        });
-
-        if (files == null || files.length == 0) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            response.getWriter().write("No recording files found");
-            return;
-        }
-
-        response.setContentType("application/zip");
-        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"recording_" + recordingDir.getName() + ".zip\"");
-
-        try (ZipOutputStream zipOut = new ZipOutputStream(response.getOutputStream())) {
-            for (File file : files) {
-                addFileToZip(zipOut, file, file.getName());
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                response.getOutputStream().write(buffer, 0, bytesRead);
             }
         }
     }
