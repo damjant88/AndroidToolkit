@@ -1,21 +1,29 @@
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$toolkitDir = "C:\AdbToolkit"
 
-if (-not (Test-Path $toolkitDir)) {
-    New-Item -ItemType Directory -Path $toolkitDir | Out-Null
-}
-
-Push-Location $projectRoot
+Write-Host "Building React frontend..."
+Push-Location (Join-Path $projectRoot "frontend")
 try {
-    cmd /c gradlew.bat :desktop:build -x test
-    if ($LASTEXITCODE -ne 0) {
-        throw "Build failed."
-    }
-
-    $jar = Join-Path $projectRoot "desktop\build\libs\desktop-1.0.0-SNAPSHOT.jar"
-    java -jar $jar
+    npm run build
+    if ($LASTEXITCODE -ne 0) { throw "Frontend build failed." }
 } finally {
     Pop-Location
 }
+
+Write-Host "Building Spring Boot backend (with frontend bundled)..."
+Push-Location $projectRoot
+try {
+    cmd /c gradlew.bat :backend:bootJar
+    if ($LASTEXITCODE -ne 0) { throw "Backend build failed." }
+} finally {
+    Pop-Location
+}
+
+$jar = Join-Path $projectRoot "backend\build\libs\backend-1.0.0-SNAPSHOT.jar"
+Write-Host ""
+Write-Host "Starting AndroidToolkit Web App..."
+Write-Host "Open: http://localhost:8080"
+Write-Host ""
+
+java -Djava.awt.headless=false -jar $jar
