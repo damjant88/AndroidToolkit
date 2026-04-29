@@ -62,6 +62,7 @@ public class ScreenRecordingService {
             protected Void doInBackground() throws Exception {
                 try {
                     ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", "screenrecord",
+                            "--bit-rate", "4000000",
                             "/sdcard/" + recordingSession.getRecordingFileName());
                     pb.redirectErrorStream(true);
                     Process process = pb.start();
