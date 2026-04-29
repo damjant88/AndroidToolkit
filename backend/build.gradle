@@ -38,3 +38,7 @@ sourceSets {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+bootRun {
+    jvmArgs = ['-Djava.awt.headless=false']
+}

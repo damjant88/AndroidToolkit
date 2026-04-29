@@ -69,7 +69,9 @@ export async function downloadRecordingFile(recordingPath, fileName) {
 }
 
 export async function openFolder(folderPath) {
-  const response = await api.post(`/files/open-folder?path=${encodeURIComponent(folderPath)}`);
+  const response = await api.post('/files/open-folder', null, {
+    params: { path: folderPath.replace(/\\/g, '/') }
+  });
   return response.data;
 }
 

@@ -55,10 +55,11 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
     try {
       const result = await pullLogs(serial);
       setMessage('✅ Logs saved');
-      // Open the logs folder in Windows Explorer
+      // Open the actual logs folder in Windows Explorer
       const folder = result.exportedLogsFolder || result.selectedFolder;
       if (folder) {
-        try { await openFolder(folder.replace(/\/+$/, '')); } catch (e) {}
+        const openResult = await openFolder(folder);
+        if (!openResult.success) setMessage('✅ Logs saved\n⚠️ ' + openResult.message);
       }
     } catch (err) {
       setMessage('Error: ' + (err.response?.data?.message || err.message));
@@ -92,9 +93,11 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         setMessage('⏹ Stopping recording...');
         const result = await stopRecording(serial, info.pid || '');
         setRecording(false);
+
         if (result.success && result.recordingLocation) {
-          setMessage(`✅ Recording saved`);
-          try { await openFolder(result.recordingLocation); } catch (e) {}
+          setMessage('Recording saved');
+          const openResult = await openFolder(result.recordingLocation);
+          if (!openResult.success) setMessage('Recording saved but: ' + openResult.message);
         } else {
           setMessage(result.message || 'No active recording');
         }

@@ -102,16 +102,20 @@ public class FileController {
     public Map<String, Object> openFolder(@RequestParam("path") String folderPath) {
         File folder = new File(folderPath).getAbsoluteFile();
         if (!folder.exists()) {
-            // Try parent if the exact path doesn't exist (e.g. trailing subfolder not created yet)
             folder = folder.getParentFile();
         }
         if (folder == null || !folder.exists() || !folder.isDirectory()) {
             return Map.of("success", false, "message", "Folder not found: " + folderPath);
         }
         try {
-            Runtime.getRuntime().exec(new String[]{"explorer.exe", folder.getAbsolutePath()});
+            // Desktop.open() requires headless=false. Use ProcessBuilder as fallback.
+            if (!java.awt.GraphicsEnvironment.isHeadless()) {
+                java.awt.Desktop.getDesktop().open(folder);
+            } else {
+                new ProcessBuilder("explorer.exe", folder.getAbsolutePath()).start();
+            }
             return Map.of("success", true, "message", "Opened: " + folder.getAbsolutePath());
-        } catch (IOException e) {
+        } catch (Exception e) {
             return Map.of("success", false, "message", "Failed to open folder: " + e.getMessage());
         }
     }
