@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
-  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, openFolder
+  pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder
 } from '../api/deviceApi';
 import { getIconForPackage } from '../api/packageIcons';
 
@@ -53,16 +53,12 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
     setLoading(true);
     setMessage('Pulling logs...');
     try {
-      await pullLogs(serial);
-      setMessage('Logs pulled. Downloading zip...');
-      const blob = await downloadLogs(device.deviceName);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `logs_${device.deviceName}.zip`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      setMessage('✅ Logs downloaded');
+      const result = await pullLogs(serial);
+      setMessage('✅ Logs saved');
+      // Open the logs folder in Windows Explorer
+      if (result.exportedLogsFolder) {
+        try { await openFolder(result.exportedLogsFolder); } catch (e) {}
+      }
     } catch (err) {
       setMessage('Error: ' + (err.response?.data?.message || err.message));
     } finally {
