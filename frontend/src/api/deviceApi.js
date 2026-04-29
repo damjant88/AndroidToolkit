@@ -68,6 +68,11 @@ export async function downloadRecordingFile(recordingPath, fileName) {
   return response.data;
 }
 
+export async function openFolder(folderPath) {
+  const response = await api.post(`/files/open-folder?path=${encodeURIComponent(folderPath)}`);
+  return response.data;
+}
+
 export async function takeScreenshot(serial, deviceName) {
   const response = await api.post(`/devices/${serial}/screenshot`, { deviceName });
   return response.data;

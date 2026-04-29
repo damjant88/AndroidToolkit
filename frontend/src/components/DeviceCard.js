@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
-  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, downloadRecordingFile
+  pullLogs, takeScreenshot, downloadLogs, startScreenMirror, startRecording, stopRecording, downloadRecordingFile, openFolder
 } from '../api/deviceApi';
 import { getIconForPackage } from '../api/packageIcons';
 
@@ -121,6 +121,8 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
               // Log file might not exist — that's ok
             }
             setMessage(`✅ Recording downloaded`);
+            // Open the recording folder in Windows Explorer
+            try { await openFolder(result.recordingLocation); } catch (e) {}
           } catch (dlErr) {
             setMessage(`✅ Recording saved to:\n📁 ${result.recordingLocation}\n⚠️ Download failed: ${dlErr.message}`);
           }

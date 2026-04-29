@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -67,7 +69,7 @@ public class FileController {
     }
 
     /**
-     * Downloads a specific file from a recording folder by name.
+     * Opens a folder in Windows Explorer on the local machine.
      */
     @GetMapping("/recording/download")
     public void downloadRecordingFile(
@@ -93,6 +95,20 @@ public class FileController {
             while ((bytesRead = fis.read(buffer)) != -1) {
                 response.getOutputStream().write(buffer, 0, bytesRead);
             }
+        }
+    }
+
+    @PostMapping("/open-folder")
+    public Map<String, Object> openFolder(@RequestParam("path") String folderPath) {
+        File folder = new File(folderPath);
+        if (!folder.exists() || !folder.isDirectory()) {
+            return Map.of("success", false, "message", "Folder not found: " + folderPath);
+        }
+        try {
+            Runtime.getRuntime().exec(new String[]{"explorer.exe", folder.getAbsolutePath()});
+            return Map.of("success", true, "message", "Opened: " + folderPath);
+        } catch (IOException e) {
+            return Map.of("success", false, "message", "Failed to open folder: " + e.getMessage());
         }
     }
 
