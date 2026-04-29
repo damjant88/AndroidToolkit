@@ -95,3 +95,23 @@ export async function uploadBuild(file) {
   });
   return response.data;
 }
+
+export async function startInstallJob(apkPath, serials) {
+  const response = await api.post('/jobs/install', { apkPath, serials });
+  return response.data;
+}
+
+export async function startUninstallJob(serials) {
+  const response = await api.post('/jobs/uninstall', { serials });
+  return response.data;
+}
+
+export async function getJob(jobId) {
+  const response = await api.get(`/jobs/${jobId}`);
+  return response.data;
+}
+
+export async function getRecentJobs() {
+  const response = await api.get('/jobs');
+  return response.data;
+}

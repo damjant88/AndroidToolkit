@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { installBuild, uploadBuild, uninstallApp } from '../api/deviceApi';
+import { uploadBuild, uninstallApp, startInstallJob, startUninstallJob, getJob } from '../api/deviceApi';
 
 const MAX_HISTORY = 5;
 
@@ -7,9 +7,9 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
   const [selectedPath, setSelectedPath] = useState('');
   const [selectedName, setSelectedName] = useState('');
   const [message, setMessage] = useState('');
-  const [installing, setInstalling] = useState({});
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [jobRunning, setJobRunning] = useState(false);
   const [buildHistory, setBuildHistory] = useState(() => {
     const saved = localStorage.getItem('buildHistory');
     return saved ? JSON.parse(saved) : [];
@@ -77,24 +77,25 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     setMessage(`Selected: ${entry.fileName}`);
   }
 
-  async function handleInstall(serial) {
-    if (!selectedPath) {
-      setMessage('Select an APK first');
-      return;
-    }
-    setInstalling((prev) => ({ ...prev, [serial]: true }));
-    setMessage(`Installing ${selectedName} on ${serial}...`);
-    try {
-      const result = await installBuild(serial, selectedPath);
-      if (result.success) {
-        addToHistory(selectedName, selectedPath);
+  async function pollJobUntilDone(jobId) {
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const job = await getJob(jobId);
+      const completed = job.completedCount || 0;
+      const total = job.totalCount || 0;
+      const percent = job.progressPercent || 0;
+
+      // Build per-device status
+      const results = job.deviceResults || {};
+      const lines = Object.values(results).map(r =>
+        (r.success ? '✅' : '❌') + ' ' + r.serial + ': ' + r.message
+      );
+      const progress = `[${percent}%] ${completed}/${total} devices done`;
+      setMessage(progress + (lines.length > 0 ? '\n' + lines.join('\n') : ''));
+
+      if (job.status === 'COMPLETED' || job.status === 'FAILED') {
+        return job;
       }
-      setMessage(result.success ? '✅ ' + result.message : '❌ ' + result.message);
-      if (result.success && onRefresh) onRefresh();
-    } catch (err) {
-      setMessage('❌ Install failed: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setInstalling((prev) => ({ ...prev, [serial]: false }));
     }
   }
 
@@ -107,8 +108,19 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       setMessage('No devices selected');
       return;
     }
-    setMessage(`Installing ${selectedName} on ${selectedDevices.length} device(s)...`);
-    await Promise.all(selectedDevices.map(device => handleInstall(device.serial)));
+    setJobRunning(true);
+    setMessage(`Starting install on ${selectedDevices.length} device(s)...`);
+    try {
+      const serials = selectedDevices.map(d => d.deviceInfo.serialNumber);
+      const result = await startInstallJob(selectedPath, serials);
+      addToHistory(selectedName, selectedPath);
+      await pollJobUntilDone(result.jobId);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      setMessage('❌ ' + (err.response?.data?.message || err.message));
+    } finally {
+      setJobRunning(false);
+    }
   }
 
   async function handleUninstallAll() {
@@ -118,21 +130,18 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       return;
     }
     if (!window.confirm('Uninstall from ' + installedDevices.length + ' device(s)?')) return;
-    setMessage('Uninstalling from all devices...');
-    const results = await Promise.allSettled(
-      installedDevices.map(async (device) => {
-        const serial = device.deviceInfo.serialNumber;
-        const pkg = device.deviceInfo.safePathPackage;
-        return uninstallApp(serial, pkg);
-      })
-    );
-    const messages = results.map((r, i) => {
-      const serial = installedDevices[i].deviceInfo.serialNumber;
-      if (r.status === 'fulfilled') return r.value.message || ('Done: ' + serial);
-      return serial + ': ' + r.reason.message;
-    });
-    setMessage(messages.join('\n'));
-    if (onRefresh) onRefresh();
+    setJobRunning(true);
+    setMessage(`Starting uninstall on ${installedDevices.length} device(s)...`);
+    try {
+      const serials = installedDevices.map(d => d.deviceInfo.serialNumber);
+      const result = await startUninstallJob(serials);
+      await pollJobUntilDone(result.jobId);
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      setMessage('❌ ' + (err.response?.data?.message || err.message));
+    } finally {
+      setJobRunning(false);
+    }
   }
 
   return (
@@ -185,17 +194,17 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
           <button
             onClick={handleInstallAll}
             className="install-all-btn"
-            disabled={!selectedPath || selectedDevices.length === 0}
+            disabled={!selectedPath || selectedDevices.length === 0 || jobRunning}
           >
-            Install on Selected ({selectedDevices.length})
+            {jobRunning ? '⏳ Installing...' : `Install on Selected (${selectedDevices.length})`}
           </button>
         </div>
       </div>
 
       {devices.some(d => d.deviceInfo.appInstalled) && (
         <div className="uninstall-all-row">
-          <button onClick={handleUninstallAll} className="uninstall-all-btn">
-            Uninstall All
+          <button onClick={handleUninstallAll} className="uninstall-all-btn" disabled={jobRunning}>
+            {jobRunning ? '⏳ Uninstalling...' : 'Uninstall All'}
           </button>
         </div>
       )}
