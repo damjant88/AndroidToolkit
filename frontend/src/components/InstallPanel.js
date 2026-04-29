@@ -77,7 +77,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     setMessage(`Selected: ${entry.fileName}`);
   }
 
-  async function pollJobUntilDone(jobId) {
+  async function pollJobUntilDone(jobId, serialToName) {
     while (true) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       const job = await getJob(jobId);
@@ -85,10 +85,9 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       const total = job.totalCount || 0;
       const percent = job.progressPercent || 0;
 
-      // Build per-device status
       const results = job.deviceResults || {};
       const lines = Object.values(results).map(r =>
-        (r.success ? '✅' : '❌') + ' ' + r.serial + ': ' + r.message
+        (r.success ? '✅' : '❌') + ' ' + (serialToName[r.serial] || r.serial) + ': ' + r.message
       );
       const progress = `[${percent}%] ${completed}/${total} devices done`;
       setMessage(progress + (lines.length > 0 ? '\n' + lines.join('\n') : ''));
@@ -112,9 +111,11 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     setMessage(`Starting install on ${selectedDevices.length} device(s)...`);
     try {
       const serials = selectedDevices.map(d => d.deviceInfo.serialNumber);
+      const serialToName = {};
+      selectedDevices.forEach(d => { serialToName[d.deviceInfo.serialNumber] = d.deviceName; });
       const result = await startInstallJob(selectedPath, serials);
       addToHistory(selectedName, selectedPath);
-      await pollJobUntilDone(result.jobId);
+      await pollJobUntilDone(result.jobId, serialToName);
       if (onRefresh) onRefresh();
     } catch (err) {
       setMessage('❌ ' + (err.response?.data?.message || err.message));
@@ -134,8 +135,10 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     setMessage(`Starting uninstall on ${installedDevices.length} device(s)...`);
     try {
       const serials = installedDevices.map(d => d.deviceInfo.serialNumber);
+      const serialToName = {};
+      installedDevices.forEach(d => { serialToName[d.deviceInfo.serialNumber] = d.deviceName; });
       const result = await startUninstallJob(serials);
-      await pollJobUntilDone(result.jobId);
+      await pollJobUntilDone(result.jobId, serialToName);
       if (onRefresh) onRefresh();
     } catch (err) {
       setMessage('❌ ' + (err.response?.data?.message || err.message));
