@@ -71,7 +71,6 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     setDragging(false);
   }
 
-
   function handleHistorySelect(entry) {
     setSelectedPath(entry.path);
     setSelectedName(entry.fileName);
@@ -80,7 +79,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
 
   async function handleInstall(serial) {
     if (!selectedPath) {
-      setMessage('Select or enter an APK path first');
+      setMessage('Select an APK first');
       return;
     }
     setInstalling((prev) => ({ ...prev, [serial]: true }));
@@ -109,9 +108,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       return;
     }
     setMessage(`Installing ${selectedName} on ${selectedDevices.length} device(s)...`);
-    for (const device of selectedDevices) {
-      await handleInstall(device.serial);
-    }
+    await Promise.all(selectedDevices.map(device => handleInstall(device.serial)));
   }
 
   async function handleUninstallAll() {
@@ -120,18 +117,21 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       setMessage('No devices have the app installed');
       return;
     }
-    if (!window.confirm(`Uninstall from ${installedDevices.length} device(s)?`)) return;
+    if (!window.confirm('Uninstall from ' + installedDevices.length + ' device(s)?')) return;
     setMessage('Uninstalling from all devices...');
-    for (const device of installedDevices) {
-      const serial = device.deviceInfo.serialNumber;
-      const pkg = device.deviceInfo.safePathPackage;
-      try {
-        const result = await uninstallApp(serial, pkg);
-        setMessage(prev => prev + '\n' + (result.message || `Done: ${serial}`));
-      } catch (err) {
-        setMessage(prev => prev + '\n❌ ' + serial + ': ' + err.message);
-      }
-    }
+    const results = await Promise.allSettled(
+      installedDevices.map(async (device) => {
+        const serial = device.deviceInfo.serialNumber;
+        const pkg = device.deviceInfo.safePathPackage;
+        return uninstallApp(serial, pkg);
+      })
+    );
+    const messages = results.map((r, i) => {
+      const serial = installedDevices[i].deviceInfo.serialNumber;
+      if (r.status === 'fulfilled') return r.value.message || ('Done: ' + serial);
+      return serial + ': ' + r.reason.message;
+    });
+    setMessage(messages.join('\n'));
     if (onRefresh) onRefresh();
   }
 
@@ -139,7 +139,6 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     <div className="install-panel">
       <h3>📦 Install Build</h3>
 
-      {/* Drag and drop zone */}
       <div
         className={`drop-zone ${dragging ? 'drop-zone-active' : ''}`}
         onDrop={handleDrop}
@@ -161,7 +160,6 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
         )}
       </div>
 
-      {/* Build history dropdown */}
       {buildHistory.length > 0 && (
         <div className="build-history">
           <label><strong>Recent:</strong></label>
@@ -182,7 +180,6 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
         </div>
       )}
 
-      {/* Install button - always visible, grayed when no APK or no devices selected */}
       <div className="install-targets">
         <div className="install-buttons">
           <button
@@ -195,7 +192,6 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
         </div>
       </div>
 
-      {/* Uninstall All - always visible when devices have app installed */}
       {devices.some(d => d.deviceInfo.appInstalled) && (
         <div className="uninstall-all-row">
           <button onClick={handleUninstallAll} className="uninstall-all-btn">
@@ -204,7 +200,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
         </div>
       )}
 
-      {message && <p className="install-message">{message}</p>}
+      {message && <p className="install-message" style={{whiteSpace: 'pre-line'}}>{message}</p>}
     </div>
   );
 }
