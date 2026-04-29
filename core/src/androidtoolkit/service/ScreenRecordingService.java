@@ -84,12 +84,13 @@ public class ScreenRecordingService {
             return new StopScreenRecordingOutcome("", false);
         }
 
-        // Destroy the process and wait for it to actually terminate (no guessing with Thread.sleep)
+        // Stop the recording gracefully by sending SIGINT to screenrecord on the device.
+        // This lets it finalize the MP4 file header properly (destroying the local process corrupts the file).
         Process recordingProcess = recordingSession.getRecordingProcess();
         if (recordingProcess != null) {
-            recordingProcess.destroy();
-            // Timeout after 5 seconds in case the process hangs (e.g. WiFi device)
-            if (!recordingProcess.waitFor(5, TimeUnit.SECONDS)) {
+            commandExecutor.runCommand("adb -s " + serial + " shell pkill -INT screenrecord");
+            // Wait for the process to finish writing
+            if (!recordingProcess.waitFor(10, TimeUnit.SECONDS)) {
                 recordingProcess.destroyForcibly();
             }
         }
