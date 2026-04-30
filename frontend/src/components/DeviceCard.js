@@ -127,20 +127,31 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         <p><strong>IP:</strong> {info.ipAddress || 'N/A'}</p>
       </div>
 
-      <div className="device-actions">
-        {info.appInstalled && (
-          <>
-            <button disabled={loading} onClick={handlePullLogs}>Pull SP Logs</button>
-            <button disabled={loading} onClick={() => handleAction(() => enableFirebaseDebug(serial, info.safePathPackage))}>Firebase Debug</button>
-            <button disabled={loading} onClick={() => handleAction(() => uninstallApp(serial, info.safePathPackage), 'Are you sure you want to uninstall?')}>Uninstall</button>
-            <button disabled={loading} onClick={() => onOpenPermissions && onOpenPermissions(serial, info.safePathPackage)}>Permissions</button>
-          </>
-        )}
-        <button disabled={loading} onClick={handleScreenshot}>Screenshot</button>
-        <button disabled={loading} onClick={handleScreenMirror}>Screen Mirror</button>
-        <button disabled={loading} onClick={handleRecording} className={recording ? 'recording-active' : ''}>{recording ? '⏹ Stop Record' : '⏺ Start Record'}</button>
-        <button disabled={loading} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
-        <button disabled={loading} onClick={() => handleAction(() => rebootDevice(serial), 'Are you sure you want to reboot?')}>Reboot</button>
+      <div className="device-actions-grouped">
+        <div className="action-group">
+          <span className="action-group-label">App</span>
+          <div className="action-group-buttons">
+            <button disabled={loading || !info.appInstalled} onClick={handlePullLogs}>Pull SP Logs</button>
+            <button disabled={loading || !info.appInstalled} onClick={() => handleAction(() => uninstallApp(serial, info.safePathPackage), 'Are you sure you want to uninstall?')}>Uninstall</button>
+            <button disabled={loading || !info.appInstalled} onClick={() => handleAction(() => enableFirebaseDebug(serial, info.safePathPackage))}>Firebase Debug</button>
+            <button disabled={loading || !info.appInstalled} onClick={() => onOpenPermissions && onOpenPermissions(serial, info.safePathPackage)}>Permissions</button>
+          </div>
+        </div>
+        <div className="action-group">
+          <span className="action-group-label">Screen</span>
+          <div className="action-group-buttons">
+            <button disabled={loading} onClick={handleScreenshot}>Screenshot</button>
+            <button disabled={loading} onClick={handleScreenMirror}>Screen Mirror</button>
+            <button disabled={loading} onClick={handleRecording} className={recording ? 'recording-active' : ''}>{recording ? '⏹ Stop Record' : '⏺ Start Record'}</button>
+          </div>
+        </div>
+        <div className="action-group">
+          <span className="action-group-label">Device</span>
+          <div className="action-group-buttons">
+            <button disabled={loading} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
+            <button disabled={loading} onClick={() => handleAction(() => rebootDevice(serial), 'Are you sure you want to reboot?')}>Reboot</button>
+          </div>
+        </div>
       </div>
 
       {message && <p className="device-message" style={{whiteSpace: 'pre-line'}}>{message}</p>}

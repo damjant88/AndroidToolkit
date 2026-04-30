@@ -3,7 +3,7 @@
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
 
 /* ===== LAYOUT ===== */
-.app { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.app { max-width: 100%; margin: 0 auto; padding: 12px; }
 .app-header { background: #1a73e8; color: white; padding: 16px 24px; border-radius: 8px; margin-bottom: 20px; }
 .app-header h1 { font-size: 1.4rem; }
 
@@ -16,7 +16,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .selection-info { font-size: 0.85rem; color: #666; }
 
 /* ===== DEVICE GRID ===== */
-.device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.device-grid { display: flex; gap: 16px; overflow-x: auto; padding: 4px 4px 8px 4px; }
+.device-grid > * { width: 400px; flex-shrink: 0; }
 
 /* ===== DEVICE CARD ===== */
 .device-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: default; transition: all 0.15s ease; position: relative; top: 0; }
@@ -38,16 +39,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .device-info p { font-size: 0.85rem; margin-bottom: 4px; }
 
 /* ===== DEVICE ACTION BUTTONS ===== */
-.device-actions { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-.device-actions button { padding: 6px 12px; font-size: 0.8rem; border: 1px solid #bbb; border-radius: 4px; background: linear-gradient(to bottom, #f8f8f8, #e0e0e0); box-shadow: 0 2px 3px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.6); cursor: pointer; transition: all 0.1s ease; position: relative; top: 0; }
-.device-actions button:hover:not(:disabled) { background: linear-gradient(to bottom, #ffffff, #e8e8e8); border-color: #1a73e8; box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8); top: -1px; }
-.device-actions button:active:not(:disabled) { background: linear-gradient(to bottom, #d8d8d8, #e8e8e8); box-shadow: inset 0 2px 3px rgba(0,0,0,0.2); top: 1px; }
-.device-actions button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
-.recording-active { background: linear-gradient(to bottom, #ff4444, #cc0000) !important; color: white !important; border-color: #cc0000 !important; }
-.recording-active:hover:not(:disabled) { background: linear-gradient(to bottom, #ff6666, #dd0000) !important; }
+.device-actions-grouped { margin-top: 12px; display: flex; gap: 0; }
+.action-group { flex: 1; display: flex; flex-direction: column; align-items: stretch; padding: 8px; border-right: 1px solid #eee; }
+.action-group:last-child { border-right: none; }
+.action-group-label { font-size: 0.7rem; font-weight: bold; color: #888; text-transform: uppercase; margin-bottom: 6px; text-align: center; }
+.action-group-buttons { display: flex; flex-direction: column; gap: 6px; }
+.action-group-buttons button { padding: 6px 12px; font-size: 0.8rem; border: 1px solid #bbb; border-radius: 4px; background: linear-gradient(to bottom, #f8f8f8, #e0e0e0); box-shadow: 0 2px 3px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.6); cursor: pointer; transition: all 0.1s ease; position: relative; top: 0; }
+.action-group-buttons button:hover:not(:disabled) { background: linear-gradient(to bottom, #ffffff, #e8e8e8); border-color: #1a73e8; box-shadow: 0 3px 5px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8); top: -1px; }
+.action-group-buttons button:active:not(:disabled) { background: linear-gradient(to bottom, #d8d8d8, #e8e8e8); box-shadow: inset 0 2px 3px rgba(0,0,0,0.2); top: 1px; }
+.action-group-buttons button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+.action-group-buttons .recording-active { background: linear-gradient(to bottom, #ff4444, #cc0000) !important; color: white !important; border-color: #cc0000 !important; }
+.action-group-buttons .recording-active:hover:not(:disabled) { background: linear-gradient(to bottom, #ff6666, #dd0000) !important; }
 
 /* ===== DEVICE MESSAGE ===== */
-.device-message { margin-top: 8px; font-size: 0.8rem; color: #555; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; }
+.device-message { margin-top: 8px; font-size: 0.8rem; color: #555; background: #f0f0f0; padding: 6px 10px; border-radius: 4px; word-wrap: break-word; overflow-wrap: break-word; }
 
 /* ===== SCREENSHOT PREVIEW ===== */
 .screenshot-preview { margin-top: 12px; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; position: relative; }
@@ -67,17 +72,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .install-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
 .install-buttons button { padding: 6px 12px; font-size: 0.85rem; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer; }
 .install-buttons button:hover:not(:disabled) { background: #e8f0fe; border-color: #1a73e8; }
-.install-all-btn { background: #34a853 !important; color: white !important; border-color: #34a853 !important; cursor: pointer; }
+.install-all-btn { background: #34a853 !important; color: white !important; border-color: #34a853 !important; cursor: pointer; padding: 6px 12px !important; font-size: 0.85rem !important; border-radius: 4px !important; min-width: 200px; }
 .install-all-btn:hover:not(:disabled) { background: #2d8f47 !important; }
 .install-all-btn:disabled { background: linear-gradient(to bottom, #ccc, #aaa) !important; color: #666 !important; border-color: #aaa !important; box-shadow: none !important; cursor: not-allowed !important; }
 .uninstall-all-row { margin-top: 12px; }
-.uninstall-all-btn { background: linear-gradient(to bottom, #ff6666, #cc0000) !important; color: white !important; border-color: #cc0000 !important; box-shadow: 0 2px 3px rgba(204,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2) !important; cursor: pointer; padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; }
-.uninstall-all-btn:hover { background: linear-gradient(to bottom, #ff8888, #dd2222) !important; }
-.uninstall-all-btn:active { background: linear-gradient(to bottom, #bb0000, #cc0000) !important; box-shadow: inset 0 2px 3px rgba(0,0,0,0.3) !important; }
+.uninstall-all-btn { background: linear-gradient(to bottom, #ff6666, #cc0000) !important; color: white !important; border-color: #cc0000 !important; box-shadow: 0 2px 3px rgba(204,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2) !important; cursor: pointer; padding: 6px 12px !important; font-size: 0.85rem !important; border-radius: 4px !important; min-width: 200px; }
+.uninstall-all-btn:disabled { background: linear-gradient(to bottom, #ccc, #aaa) !important; color: #666 !important; border-color: #aaa !important; box-shadow: none !important; cursor: not-allowed; }
+.uninstall-all-btn:hover:not(:disabled) { background: linear-gradient(to bottom, #ff8888, #dd2222) !important; }
+.uninstall-all-btn:active:not(:disabled) { background: linear-gradient(to bottom, #bb0000, #cc0000) !important; box-shadow: inset 0 2px 3px rgba(0,0,0,0.3) !important; }
 .install-message { margin-top: 12px; font-size: 0.85rem; padding: 8px 12px; background: #f0f0f0; border-radius: 4px; }
 
 /* ===== DROP ZONE ===== */
-.drop-zone { border: 2px dashed #ccc; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s ease; margin-bottom: 12px; background: #fafafa; }
+.drop-zone { border: 2px dashed #ccc; border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s ease; margin-bottom: 12px; background: #fafafa; max-width: 500px; }
 .drop-zone:hover { border-color: #1a73e8; background: #e8f0fe; }
 .drop-zone-active { border-color: #1a73e8; background: #e8f0fe; box-shadow: inset 0 0 10px rgba(26,115,232,0.1); }
 .drop-zone p { margin: 0; color: #666; font-size: 0.9rem; }
@@ -85,7 +91,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 /* ===== BUILD HISTORY ===== */
 .build-history { margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 .build-history label { font-size: 0.85rem; white-space: nowrap; }
-.build-history select { flex: 1; padding: 6px 10px; font-size: 0.85rem; border: 1px solid #bbb; border-radius: 4px; background: white; max-width: 400px; }
+.build-history select { flex: 1; padding: 6px 10px; font-size: 0.85rem; border: 1px solid #bbb; border-radius: 4px; background: white; max-width: 430px; }
 
 /* ===== PERMISSIONS DIALOG ===== */
 .permissions-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -132,3 +138,4 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 /* ===== CONNECTION STATUS ===== */
 .connection-status { font-size: 0.7rem; }
+
