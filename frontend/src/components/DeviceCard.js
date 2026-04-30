@@ -1,17 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
-  pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder
+  pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder, setMockLocation, getDeviceLocation
 } from '../api/deviceApi';
 import { getIconForPackage, getLabelForPackage } from '../api/packageIcons';
+import MockLocationMap from './MockLocationMap';
 
 function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermissions }) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [mockAddress, setMockAddress] = useState('');
+  const [mocking, setMocking] = useState(false);
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
+
+  useEffect(() => {
+    getDeviceLocation(serial)
+      .then(data => {
+        if (data.lat && data.lng && data.found) {
+          fetch(`https://nominatim.openstreetmap.org/reverse?lat=${data.lat}&lon=${data.lng}&format=json&addressdetails=1`)
+            .then(r => r.json())
+            .then(geo => {
+              const a = geo.address || {};
+              const parts = [a.road, a.city || a.town || a.village, a.state].filter(Boolean);
+              setMockAddress(parts.join(', ') || geo.display_name || '');
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, [serial]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleAction(actionFn, confirmMessage) {
     if (confirmMessage && !window.confirm(confirmMessage)) return;
@@ -125,6 +146,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         <p><strong>Model:</strong> {info.model}</p>
         <p><strong>OS Version:</strong> Android {info.osVersion}</p>
         <p><strong>IP:</strong> {info.ipAddress || 'N/A'}</p>
+        {mockAddress && <p><strong>Location:</strong> {mockAddress}</p>}
       </div>
 
       <div className="device-actions-grouped">
@@ -150,11 +172,23 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           <div className="action-group-buttons">
             <button disabled={loading} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
             <button disabled={loading} onClick={() => handleAction(() => rebootDevice(serial), 'Are you sure you want to reboot?')}>Reboot</button>
+            <button disabled={loading} onClick={() => setShowMap(true)} className={mocking ? 'recording-active' : ''}>{mocking ? '📍 Mocking...' : 'Mock Location'}</button>
           </div>
         </div>
       </div>
 
       {message && <p className="device-message" style={{whiteSpace: 'pre-line'}}>{message}</p>}
+
+      {showMap && (
+        <MockLocationMap
+          serial={serial}
+          onClose={() => setShowMap(false)}
+          onSetLocation={setMockLocation}
+          onAddressResolved={(addr) => setMockAddress(addr)}
+          mocking={mocking}
+          onMockingChange={setMocking}
+        />
+      )}
     </div>
   );
 }

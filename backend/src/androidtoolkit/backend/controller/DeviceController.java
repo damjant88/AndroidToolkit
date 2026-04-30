@@ -12,6 +12,7 @@ import androidtoolkit.app.ScreenshotCaptureResponse;
 import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.UninstallAppResult;
 import androidtoolkit.app.WifiDebugResult;
+import androidtoolkit.service.CommandExecutor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static androidtoolkit.backend.validation.InputValidator.validatePackageName;
 import static androidtoolkit.backend.validation.InputValidator.validateSerial;
@@ -33,19 +39,24 @@ public class DeviceController {
     private final LogExportManager logExportManager;
     private final ScreenshotManager screenshotManager;
     private final AppServices appServices;
+    private final CommandExecutor commandExecutor;
+    private final ScheduledExecutorService mockScheduler = Executors.newScheduledThreadPool(2);
+    private final ConcurrentHashMap<String, ScheduledFuture<?>> activeMocks = new ConcurrentHashMap<>();
 
     public DeviceController(
             DeviceCatalog deviceCatalog,
             DeviceActionManager deviceActionManager,
             LogExportManager logExportManager,
             ScreenshotManager screenshotManager,
-            AppServices appServices
+            AppServices appServices,
+            CommandExecutor commandExecutor
     ) {
         this.deviceCatalog = deviceCatalog;
         this.deviceActionManager = deviceActionManager;
         this.logExportManager = logExportManager;
         this.screenshotManager = screenshotManager;
         this.appServices = appServices;
+        this.commandExecutor = commandExecutor;
     }
 
     @GetMapping
@@ -96,5 +107,73 @@ public class DeviceController {
         validateSerial(serial);
         String deviceName = (body != null) ? body.getOrDefault("deviceName", serial) : serial;
         return screenshotManager.captureScreenshot(serial, deviceName);
+    }
+
+    @GetMapping("/{serial}/location")
+    public Map<String, Object> getDeviceLocation(@PathVariable String serial) {
+        validateSerial(serial);
+        String output = commandExecutor.runCommand(
+            "adb -s " + serial + " shell dumpsys location"
+        );
+        double lat = 0, lng = 0;
+        boolean found = false;
+        for (String line : output.split("\n")) {
+            if (line.contains("last location=") && line.contains("Location[")) {
+                try {
+                    int idx = line.indexOf("Location[");
+                    String sub = line.substring(idx);
+                    int start = sub.indexOf(' ') + 1;
+                    int comma = sub.indexOf(',', start);
+                    int end = sub.indexOf(' ', comma);
+                    if (end == -1) end = sub.indexOf(']', comma);
+                    lat = Double.parseDouble(sub.substring(start, comma));
+                    lng = Double.parseDouble(sub.substring(comma + 1, end));
+                    found = true;
+                    break;
+                } catch (Exception ignored) {}
+            }
+        }
+        if (!found) {
+            return Map.of("lat", 0.0, "lng", 0.0, "found", false);
+        }
+        return Map.of("lat", lat, "lng", lng, "found", true);
+    }
+
+    @PostMapping("/{serial}/mock-location")
+    public Map<String, Object> setMockLocation(@PathVariable String serial, @RequestBody Map<String, Object> body) {
+        validateSerial(serial);
+        double lat = ((Number) body.get("lat")).doubleValue();
+        double lng = ((Number) body.get("lng")).doubleValue();
+        boolean start = (boolean) body.getOrDefault("start", true);
+
+        // Stop any existing mock for this device
+        ScheduledFuture<?> existing = activeMocks.remove(serial);
+        if (existing != null) existing.cancel(false);
+
+        if (!start) {
+            // Remove test provider to restore real GPS
+            commandExecutor.runCommand("adb -s " + serial + " shell cmd location providers remove-test-provider gps");
+            return Map.of("success", true, "message", "Mock location stopped", "mocking", false);
+        }
+
+        // Setup test provider and disable real GPS
+        commandExecutor.runCommand("adb -s " + serial + " shell appops set com.android.shell android:mock_location allow");
+        commandExecutor.runCommand("adb -s " + serial + " shell cmd location providers add-test-provider gps");
+        commandExecutor.runCommand("adb -s " + serial + " shell cmd location providers set-test-provider-enabled gps true");
+
+        // Continuously inject location every 1 second with fresh timestamp
+        ScheduledFuture<?> future = mockScheduler.scheduleAtFixedRate(
+            () -> commandExecutor.runCommand(String.format(
+                "adb -s %s shell cmd location providers set-test-provider-location gps --location %f,%f --accuracy 1.0 --time %d",
+                serial, lat, lng, System.currentTimeMillis()
+            )), 0, 1, TimeUnit.SECONDS
+        );
+        activeMocks.put(serial, future);
+
+        return Map.of(
+            "success", true,
+            "message", String.format("Mocking location: %.6f, %.6f", lat, lng),
+            "mocking", true
+        );
     }
 }

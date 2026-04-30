@@ -115,3 +115,13 @@ export async function getRecentJobs() {
   const response = await api.get('/jobs');
   return response.data;
 }
+
+export async function setMockLocation(serial, lat, lng, start = true) {
+  const response = await api.post(`/devices/${serial}/mock-location`, { lat, lng, start });
+  return response.data;
+}
+
+export async function getDeviceLocation(serial) {
+  const response = await api.get(`/devices/${serial}/location`);
+  return response.data;
+}

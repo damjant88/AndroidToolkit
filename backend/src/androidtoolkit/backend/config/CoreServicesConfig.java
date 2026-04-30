@@ -7,6 +7,7 @@ import androidtoolkit.app.PermissionManager;
 import androidtoolkit.app.RecordingManager;
 import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.LogExportManager;
+import androidtoolkit.service.CommandExecutor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -52,5 +53,10 @@ public class CoreServicesConfig {
     @Bean
     public LogExportManager logExportManager() {
         return appServices.logExportManager();
+    }
+
+    @Bean
+    public CommandExecutor commandExecutor() {
+        return appServices.commandExecutor();
     }
 }
