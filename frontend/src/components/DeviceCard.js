@@ -14,6 +14,8 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
   const [mockAddress, setMockAddress] = useState('');
   const [mocking, setMocking] = useState(false);
 
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
   const info = device.deviceInfo;
   const serial = info.serialNumber;
 
@@ -75,10 +77,12 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
     try {
       const result = await pullLogs(serial);
       setMessage('✅ Logs saved');
-      const folder = result.exportedLogsFolder || result.selectedFolder;
-      if (folder) {
-        const openResult = await openFolder(folder);
-        if (!openResult.success) setMessage('✅ Logs saved\n⚠️ ' + openResult.message);
+      if (isLocal) {
+        const folder = result.exportedLogsFolder || result.selectedFolder;
+        if (folder) {
+          const openResult = await openFolder(folder);
+          if (!openResult.success) setMessage('✅ Logs saved\n⚠️ ' + openResult.message);
+        }
       }
     } catch (err) {
       setMessage('Error: ' + (err.response?.data?.message || err.message));
@@ -88,6 +92,10 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
   }
 
   async function handleScreenMirror() {
+    if (!isLocal) {
+      setMessage('⚠️ Screen mirror is only available locally');
+      return;
+    }
     setLoading(true);
     setMessage('');
     try {
@@ -114,8 +122,10 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         setRecording(false);
         if (result.success && result.recordingLocation) {
           setMessage('Recording saved');
-          const openResult = await openFolder(result.recordingLocation);
-          if (!openResult.success) setMessage('Recording saved but: ' + openResult.message);
+          if (isLocal) {
+            const openResult = await openFolder(result.recordingLocation);
+            if (!openResult.success) setMessage('Recording saved but: ' + openResult.message);
+          }
         } else {
           setMessage(result.message || 'No active recording');
         }
@@ -163,8 +173,8 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           <span className="action-group-label">Screen</span>
           <div className="action-group-buttons">
             <button disabled={loading} onClick={handleScreenshot}>Screenshot</button>
-            <button disabled={loading} onClick={handleScreenMirror}>Screen Mirror</button>
-            <button disabled={loading} onClick={handleRecording} className={recording ? 'recording-active' : ''}>{recording ? '⏹ Stop Record' : '⏺ Start Record'}</button>
+            <button disabled={loading || !isLocal} onClick={handleScreenMirror}>Screen Mirror</button>
+            <button disabled={loading || !isLocal} onClick={handleRecording} className={recording ? 'recording-active' : ''}>{recording ? '⏹ Stop Record' : '⏺ Start Record'}</button>
           </div>
         </div>
         <div className="action-group">
