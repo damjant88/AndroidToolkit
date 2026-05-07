@@ -22,10 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static androidtoolkit.backend.validation.InputValidator.validatePackageName;
 import static androidtoolkit.backend.validation.InputValidator.validateSerial;
@@ -40,8 +36,7 @@ public class DeviceController {
     private final ScreenshotManager screenshotManager;
     private final AppServices appServices;
     private final CommandExecutor commandExecutor;
-    private final ScheduledExecutorService mockScheduler = Executors.newScheduledThreadPool(2);
-    private final ConcurrentHashMap<String, ScheduledFuture<?>> activeMocks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Process> activeMocks = new ConcurrentHashMap<>();
 
     public DeviceController(
             DeviceCatalog deviceCatalog,
@@ -147,8 +142,8 @@ public class DeviceController {
         boolean start = (boolean) body.getOrDefault("start", true);
 
         // Stop any existing mock for this device
-        ScheduledFuture<?> existing = activeMocks.remove(serial);
-        if (existing != null) existing.cancel(false);
+        Process existing = activeMocks.remove(serial);
+        if (existing != null) existing.destroyForcibly();
 
         if (!start) {
             // Remove test provider to restore real GPS
@@ -156,19 +151,24 @@ public class DeviceController {
             return Map.of("success", true, "message", "Mock location stopped", "mocking", false);
         }
 
-        // Setup test provider and disable real GPS
+        // Setup test provider
         commandExecutor.runCommand("adb -s " + serial + " shell appops set com.android.shell android:mock_location allow");
         commandExecutor.runCommand("adb -s " + serial + " shell cmd location providers add-test-provider gps");
         commandExecutor.runCommand("adb -s " + serial + " shell cmd location providers set-test-provider-enabled gps true");
 
-        // Continuously inject location every 1 second with fresh timestamp
-        ScheduledFuture<?> future = mockScheduler.scheduleAtFixedRate(
-            () -> commandExecutor.runCommand(String.format(
-                "adb -s %s shell cmd location providers set-test-provider-location gps --location %f,%f --accuracy 1.0 --time %d",
-                serial, lat, lng, System.currentTimeMillis()
-            )), 0, 1, TimeUnit.SECONDS
-        );
-        activeMocks.put(serial, future);
+        // Start persistent loop on device injecting every 300ms
+        try {
+            String loopCmd = String.format(
+                "while true; do cmd location providers set-test-provider-location gps --location %f,%f --accuracy 1.0; sleep 0.3; done",
+                lat, lng
+            );
+            ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "shell", loopCmd);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            activeMocks.put(serial, process);
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "Failed to start mock: " + e.getMessage(), "mocking", false);
+        }
 
         return Map.of(
             "success", true,

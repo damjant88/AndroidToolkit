@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getDevices } from '../api/deviceApi';
 import { useDeviceWebSocket } from '../api/useDeviceWebSocket';
+import { useAuth } from '../api/AuthContext';
 import DeviceCard from './DeviceCard';
 import InstallPanel from './InstallPanel';
 import PermissionsDialog from './PermissionsDialog';
 
 function DeviceList() {
+  const { user } = useAuth();
+  const maxDevices = user?.tier === 'FREE' ? 1 : Infinity;
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -79,22 +82,23 @@ function DeviceList() {
   if (error) return <p className="status error">{error}</p>;
   if (devices.length === 0) return <p className="status">No devices connected. Connect a device via USB and wait.</p>;
 
-  const selectedDevices = devices.filter(d => selectedSerials.has(d.serial));
+  const visibleDevices = devices.slice(0, maxDevices);
+  const selectedDevices = visibleDevices.filter(d => selectedSerials.has(d.serial));
 
   return (
     <div>
-      <InstallPanel devices={devices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
+      <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
       <div className="toolbar">
         <span className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
           {connected ? '🟢' : '🔴'}
         </span>
-        <span>{devices.length} device(s) connected</span>
+        <span>{visibleDevices.length} device(s) {maxDevices < Infinity ? `(limit: ${maxDevices})` : ''}</span>
         <span className="selection-info">{selectedSerials.size} selected</span>
         <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>
         <button onClick={deselectAllDevices} className="toolbar-small-btn">Deselect All</button>
       </div>
       <div className="device-grid">
-        {devices.map((device) => (
+        {visibleDevices.map((device) => (
           <DeviceCard
             key={device.deviceInfo.serialNumber}
             device={device}

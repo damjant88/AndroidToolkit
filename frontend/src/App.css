@@ -143,3 +143,28 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 /* ===== MOCK LOCATION MAP ===== */
 .mock-location-dialog { background: white; border-radius: 8px; padding: 24px; width: 600px; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
 .map-container { height: 350px; border-radius: 4px; overflow: hidden; border: 1px solid #ddd; }
+
+/* ===== LOGIN PAGE ===== */
+.login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #1a73e8, #34a853); }
+.login-card { background: white; border-radius: 12px; padding: 40px; width: 360px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.login-card h2 { text-align: center; margin-bottom: 4px; font-size: 1.5rem; }
+.login-card h3 { text-align: center; margin-bottom: 24px; color: #666; font-weight: normal; }
+.login-card form { display: flex; flex-direction: column; gap: 12px; }
+.login-card input[type="text"], .login-card input[type="email"], .login-card input[type="password"] { padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+.login-card input:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
+.login-card button[type="submit"] { padding: 10px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 0.95rem; cursor: pointer; }
+.login-card button[type="submit"]:hover { background: #1557b0; }
+.login-card button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
+.remember-me { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #555; cursor: pointer; }
+.remember-me input { cursor: pointer; }
+.login-error { color: #d32f2f; font-size: 0.85rem; margin-top: 8px; text-align: center; }
+.login-success { color: #2e7d32; font-size: 0.85rem; margin-top: 8px; text-align: center; }
+.login-toggle { text-align: center; margin-top: 16px; font-size: 0.85rem; color: #666; }
+.login-toggle button { background: none; border: none; color: #1a73e8; cursor: pointer; font-size: 0.85rem; text-decoration: underline; }
+
+/* ===== HEADER USER INFO ===== */
+.app-header { display: flex; justify-content: space-between; align-items: center; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.user-info { font-size: 0.85rem; opacity: 0.9; }
+.logout-btn { padding: 6px 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+.logout-btn:hover { background: rgba(255,255,255,0.3); }
