@@ -26,7 +26,7 @@ function LoginPage() {
         await login(username, password, rememberMe);
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message);
+      setError(err.response?.data?.message || err.response?.data?.error || err.message);
     } finally {
       setLoading(false);
     }

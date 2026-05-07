@@ -1,7 +1,10 @@
 package androidtoolkit.backend.controller;
 
+import androidtoolkit.backend.entity.AccessGrant;
 import androidtoolkit.backend.entity.RefreshToken;
 import androidtoolkit.backend.entity.User;
+import androidtoolkit.backend.repository.AccessGrantRepository;
+import androidtoolkit.backend.repository.PendingInviteRepository;
 import androidtoolkit.backend.repository.RefreshTokenRepository;
 import androidtoolkit.backend.repository.UserRepository;
 import androidtoolkit.backend.security.JwtService;
@@ -22,13 +25,18 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AccessGrantRepository accessGrantRepository;
+    private final PendingInviteRepository pendingInviteRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
 
     public AuthController(UserRepository userRepository, RefreshTokenRepository refreshTokenRepository,
+                          AccessGrantRepository accessGrantRepository, PendingInviteRepository pendingInviteRepository,
                           JwtService jwtService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.accessGrantRepository = accessGrantRepository;
+        this.pendingInviteRepository = pendingInviteRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -52,6 +60,15 @@ public class AuthController {
         User user = new User(username, email, passwordEncoder.encode(password));
         userRepository.save(user);
 
+        // Convert any pending invites for this email into actual grants
+        var pendingInvites = pendingInviteRepository.findByInvitedEmail(email);
+        for (var invite : pendingInvites) {
+            accessGrantRepository.save(new AccessGrant(invite.getOwner(), user, true));
+        }
+        if (!pendingInvites.isEmpty()) {
+            pendingInviteRepository.deleteAll(pendingInvites);
+        }
+
         return Map.of("message", "Registration successful", "username", username);
     }
 
@@ -68,6 +85,14 @@ public class AuthController {
 
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        }
+
+        // Non-admin users must be in the owner's allowed list
+        if (user.getRole() != User.Role.ADMIN) {
+            User owner = userRepository.findByUsername("admin").orElse(null);
+            if (owner != null && !accessGrantRepository.existsByOwnerIdAndGrantedUserId(owner.getId(), user.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access not granted. Ask the device owner to add you.");
+            }
         }
 
         String accessToken = jwtService.generateAccessToken(user);

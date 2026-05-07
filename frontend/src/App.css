@@ -168,3 +168,29 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .user-info { font-size: 0.85rem; opacity: 0.9; }
 .logout-btn { padding: 6px 12px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
 .logout-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* ===== ALLOWED USERS PANEL ===== */
+.allowed-users-panel { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; max-width: 400px; }
+.allowed-users-panel h4 { margin-bottom: 12px; }
+.grant-form { display: flex; gap: 8px; margin-bottom: 8px; }
+.grant-form input { flex: 1; padding: 6px 10px; border: 1px solid #bbb; border-radius: 4px; font-size: 0.85rem; }
+.grant-form button { padding: 6px 12px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+.grant-form button:hover { background: #1557b0; }
+.grant-message { font-size: 0.8rem; color: #666; margin-bottom: 8px; }
+.grant-empty { font-size: 0.8rem; color: #999; }
+.grant-list { list-style: none; }
+.grant-list li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; }
+.grant-list li:last-child { border-bottom: none; }
+.grant-list button { padding: 3px 8px; font-size: 0.75rem; background: #ff4444; color: white; border: none; border-radius: 3px; cursor: pointer; }
+.grant-list button:hover { background: #cc0000; }
+
+/* ===== ACCESS REQUEST POPUP ===== */
+.access-request-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.access-request-dialog { background: white; border-radius: 12px; padding: 32px; width: 380px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.access-request-dialog h3 { margin-bottom: 12px; }
+.access-request-dialog p { margin-bottom: 24px; font-size: 0.95rem; }
+.access-request-actions { display: flex; gap: 16px; justify-content: center; }
+.access-btn-yes { padding: 10px 32px; background: #34a853; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+.access-btn-yes:hover { background: #2d8f47; }
+.access-btn-no { padding: 10px 32px; background: #d32f2f; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+.access-btn-no:hover { background: #b71c1c; }

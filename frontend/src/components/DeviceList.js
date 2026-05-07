@@ -85,6 +85,10 @@ function DeviceList() {
   const visibleDevices = devices.slice(0, maxDevices);
   const selectedDevices = visibleDevices.filter(d => selectedSerials.has(d.serial));
 
+  // For FREE tier, always show 1 connected / 1 selected
+  const displayCount = maxDevices < Infinity ? Math.min(visibleDevices.length, maxDevices) : visibleDevices.length;
+  const displaySelected = maxDevices < Infinity ? Math.min(selectedSerials.size, maxDevices) : selectedSerials.size;
+
   return (
     <div>
       <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
@@ -92,8 +96,8 @@ function DeviceList() {
         <span className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
           {connected ? '🟢' : '🔴'}
         </span>
-        <span>{visibleDevices.length} device(s) {maxDevices < Infinity ? `(limit: ${maxDevices})` : ''}</span>
-        <span className="selection-info">{selectedSerials.size} selected</span>
+        <span>{displayCount} device(s) connected</span>
+        <span className="selection-info">{displaySelected} selected</span>
         <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>
         <button onClick={deselectAllDevices} className="toolbar-small-btn">Deselect All</button>
       </div>
@@ -106,6 +110,7 @@ function DeviceList() {
             onToggleSelect={() => toggleDeviceSelection(device.serial)}
             onRefresh={fetchDevices}
             onOpenPermissions={(serial, packageName) => openPermissions(serial, packageName, device.deviceName)}
+            tier={user?.tier}
           />
         ))}
       </div>
