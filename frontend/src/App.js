@@ -65,7 +65,7 @@ function AppContent() {
           )}
           {user?.role === 'ADMIN' && (
             <button className="toolbar-small-btn" onClick={() => setShowAdminProjects(!showAdminProjects)}>
-              {showAdminProjects ? 'Hide Projects' : 'Manage Projects'}
+              {showAdminProjects ? 'Hide Manage Projects' : 'Manage Projects'}
             </button>
           )}
           <button className="toolbar-small-btn" onClick={() => setShowProjects(!showProjects)}>
