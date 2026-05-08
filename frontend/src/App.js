@@ -4,6 +4,8 @@ import DeviceList from './components/DeviceList';
 import ScreenshotViewer from './components/ScreenshotViewer';
 import LoginPage from './components/LoginPage';
 import AllowedUsersPanel from './components/AllowedUsersPanel';
+import AdminProjectsPanel from './components/AdminProjectsPanel';
+import UserProjectsPanel from './components/UserProjectsPanel';
 import AccessRequestPopup from './components/AccessRequestPopup';
 import ErrorBoundary from './components/ErrorBoundary';
 import SockJS from 'sockjs-client';
@@ -14,6 +16,8 @@ function AppContent() {
   const { isAuthenticated, user, logout } = useAuth();
   const [accessRequest, setAccessRequest] = useState(null);
   const [showAllowedUsers, setShowAllowedUsers] = useState(false);
+  const [showAdminProjects, setShowAdminProjects] = useState(false);
+  const [showProjects, setShowProjects] = useState(false);
 
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
@@ -59,11 +63,21 @@ function AppContent() {
               {showAllowedUsers ? 'Hide Users' : 'Allowed Users'}
             </button>
           )}
+          {user?.role === 'ADMIN' && (
+            <button className="toolbar-small-btn" onClick={() => setShowAdminProjects(!showAdminProjects)}>
+              {showAdminProjects ? 'Hide Projects' : 'Manage Projects'}
+            </button>
+          )}
+          <button className="toolbar-small-btn" onClick={() => setShowProjects(!showProjects)}>
+            {showProjects ? 'Hide Projects' : 'Projects'}
+          </button>
           <span className="user-info">{user?.username} ({user?.tier})</span>
           <button className="logout-btn" onClick={logout}>Logout</button>
         </div>
       </header>
       {showAllowedUsers && <AllowedUsersPanel />}
+      {showAdminProjects && user?.role === 'ADMIN' && <AdminProjectsPanel />}
+      {showProjects && <UserProjectsPanel />}
       <main>
         <DeviceList />
       </main>
