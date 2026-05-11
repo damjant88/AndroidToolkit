@@ -30,13 +30,13 @@ public class ProjectController {
 
     @GetMapping
     public List<ProjectResponse> listProjects() {
-        requireAuthenticated();
+        requireAdmin();
         return projectService.findAll();
     }
 
     @GetMapping("/{id}")
     public ProjectResponse getProject(@PathVariable Long id) {
-        requireAuthenticated();
+        requireAdmin();
         return projectService.findById(id);
     }
 

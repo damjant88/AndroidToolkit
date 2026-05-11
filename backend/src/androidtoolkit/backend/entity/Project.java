@@ -23,6 +23,9 @@ public class Project {
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Column
+    private String sharedLogStoragePath;
+
     public Project() {}
 
     public Project(String name, String remoteApkLocation, String localApkFolder) {
@@ -43,4 +46,7 @@ public class Project {
     public void setLocalApkFolder(String localApkFolder) { this.localApkFolder = localApkFolder; }
 
     public Instant getCreatedAt() { return createdAt; }
+
+    public String getSharedLogStoragePath() { return sharedLogStoragePath; }
+    public void setSharedLogStoragePath(String sharedLogStoragePath) { this.sharedLogStoragePath = sharedLogStoragePath; }
 }

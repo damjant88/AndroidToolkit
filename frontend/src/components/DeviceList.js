@@ -93,8 +93,8 @@ function DeviceList() {
     <div>
       <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
       <div className="toolbar">
-        <span className={`connection-status ${connected ? 'connected' : 'disconnected'}`}>
-          {connected ? '🟢' : '🔴'}
+        <span className={`connection-status ${connected || devices.length > 0 ? 'connected' : 'disconnected'}`}>
+          {connected || devices.length > 0 ? '🟢' : '🔴'}
         </span>
         <span>{displayCount} device(s) connected</span>
         <span className="selection-info">{displaySelected} selected</span>

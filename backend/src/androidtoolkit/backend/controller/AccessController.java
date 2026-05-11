@@ -77,8 +77,8 @@ public class AccessController {
     public Map<String, Object> grantAccess(@RequestBody Map<String, String> body) {
         User owner = getCurrentUser();
         if (owner == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-        if (!owner.canCollaborate()) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "ADVANCED tier required for collaboration");
+        if (owner.getRole() != User.Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
         }
         String email = body.getOrDefault("email", "").trim();
         if (email.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email required");

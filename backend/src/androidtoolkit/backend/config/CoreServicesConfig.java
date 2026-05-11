@@ -8,6 +8,8 @@ import androidtoolkit.app.RecordingManager;
 import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.LogExportManager;
 import androidtoolkit.service.CommandExecutor;
+import androidtoolkit.service.DeviceGateway;
+import androidtoolkit.service.PackageClassifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -58,5 +60,15 @@ public class CoreServicesConfig {
     @Bean
     public CommandExecutor commandExecutor() {
         return appServices.commandExecutor();
+    }
+
+    @Bean
+    public DeviceGateway deviceGateway() {
+        return appServices.deviceGateway();
+    }
+
+    @Bean
+    public PackageClassifier packageClassifier() {
+        return new PackageClassifier();
     }
 }

@@ -58,7 +58,7 @@ function AppContent() {
       <header className="app-header">
         <h1>{'\ud83e\udd16'} Adb Toolkit</h1>
         <div className="header-right">
-          {isLocal && user?.tier === 'ADVANCED' && (
+          {user?.role === 'ADMIN' && (
             <button className="toolbar-small-btn" onClick={() => setShowAllowedUsers(!showAllowedUsers)}>
               {showAllowedUsers ? 'Hide Users' : 'Allowed Users'}
             </button>
@@ -68,9 +68,11 @@ function AppContent() {
               {showAdminProjects ? 'Hide Manage Projects' : 'Manage Projects'}
             </button>
           )}
-          <button className="toolbar-small-btn" onClick={() => setShowProjects(!showProjects)}>
-            {showProjects ? 'Hide Projects' : 'Projects'}
-          </button>
+          {user?.role === 'ADMIN' && (
+            <button className="toolbar-small-btn" onClick={() => setShowProjects(!showProjects)}>
+              {showProjects ? 'Hide Projects' : 'Projects'}
+            </button>
+          )}
           <span className="user-info">{user?.username} ({user?.tier})</span>
           <button className="logout-btn" onClick={logout}>Logout</button>
         </div>

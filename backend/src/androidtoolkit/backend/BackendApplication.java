@@ -2,6 +2,7 @@ package androidtoolkit.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -9,6 +10,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * Run this to start the REST API on http://localhost:8080
  */
 @SpringBootApplication
+@EnableAsync
 @EnableScheduling
 public class BackendApplication {
 

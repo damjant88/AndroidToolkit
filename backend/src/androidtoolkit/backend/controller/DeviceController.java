@@ -12,12 +12,15 @@ import androidtoolkit.app.ScreenshotCaptureResponse;
 import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.UninstallAppResult;
 import androidtoolkit.app.WifiDebugResult;
+import androidtoolkit.backend.dto.LogCollectionResponse;
+import androidtoolkit.backend.service.LogCollectionService;
 import androidtoolkit.service.CommandExecutor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -33,6 +36,7 @@ public class DeviceController {
     private final DeviceCatalog deviceCatalog;
     private final DeviceActionManager deviceActionManager;
     private final LogExportManager logExportManager;
+    private final LogCollectionService logCollectionService;
     private final ScreenshotManager screenshotManager;
     private final AppServices appServices;
     private final CommandExecutor commandExecutor;
@@ -42,6 +46,7 @@ public class DeviceController {
             DeviceCatalog deviceCatalog,
             DeviceActionManager deviceActionManager,
             LogExportManager logExportManager,
+            LogCollectionService logCollectionService,
             ScreenshotManager screenshotManager,
             AppServices appServices,
             CommandExecutor commandExecutor
@@ -49,6 +54,7 @@ public class DeviceController {
         this.deviceCatalog = deviceCatalog;
         this.deviceActionManager = deviceActionManager;
         this.logExportManager = logExportManager;
+        this.logCollectionService = logCollectionService;
         this.screenshotManager = screenshotManager;
         this.appServices = appServices;
         this.commandExecutor = commandExecutor;
@@ -91,10 +97,10 @@ public class DeviceController {
     }
 
     @PostMapping("/{serial}/pull-logs")
-    public LogExportResponse pullLogs(@PathVariable String serial) {
+    public LogCollectionResponse pullLogs(@PathVariable String serial,
+                                          @RequestParam(required = false) Long projectId) {
         validateSerial(serial);
-        String targetFolder = appServices.storagePaths().logsDir().getPath();
-        return logExportManager.exportDeviceLogs(serial, serial, targetFolder);
+        return logCollectionService.collectLogs(serial, projectId);
     }
 
     @PostMapping("/{serial}/screenshot")
