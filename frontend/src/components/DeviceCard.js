@@ -180,7 +180,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         <div className="action-group">
           <span className="action-group-label">Device</span>
           <div className="action-group-buttons">
-            <button disabled={loading || !isLocal || tier === 'FREE'} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
+            <button disabled={loading || !isLocal || tier === 'BASIC'} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
             <button disabled={loading} onClick={() => handleAction(() => rebootDevice(serial), 'Are you sure you want to reboot?')}>Reboot</button>
             <button disabled={loading} onClick={() => setShowMap(true)} className={mocking ? 'recording-active' : ''}>{mocking ? '📍 Mocking...' : 'Mock Location'}</button>
           </div>

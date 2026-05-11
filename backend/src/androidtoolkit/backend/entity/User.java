@@ -7,7 +7,7 @@ import java.time.Instant;
 @Table(name = "users")
 public class User {
 
-    public enum Tier { FREE, BASIC, ADVANCED }
+    public enum Tier { BASIC, ADVANCED }
     public enum Role { USER, ADMIN }
 
     @Id
@@ -29,7 +29,7 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Tier tier = Tier.FREE;
+    private Tier tier = Tier.BASIC;
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
@@ -54,8 +54,8 @@ public class User {
 
     public int getMaxDevices() {
         return switch (tier) {
-            case FREE -> 1;
-            case BASIC, ADVANCED -> Integer.MAX_VALUE;
+            case BASIC -> 1;
+            case ADVANCED -> Integer.MAX_VALUE;
         };
     }
 

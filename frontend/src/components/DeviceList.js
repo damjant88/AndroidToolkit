@@ -8,7 +8,7 @@ import PermissionsDialog from './PermissionsDialog';
 
 function DeviceList() {
   const { user } = useAuth();
-  const maxDevices = user?.tier === 'FREE' ? 1 : Infinity;
+  const maxDevices = user?.tier === 'BASIC' ? 1 : Infinity;
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -85,7 +85,7 @@ function DeviceList() {
   const visibleDevices = devices.slice(0, maxDevices);
   const selectedDevices = visibleDevices.filter(d => selectedSerials.has(d.serial));
 
-  // For FREE tier, always show 1 connected / 1 selected
+  // For BASIC tier, always show 1 connected / 1 selected
   const displayCount = maxDevices < Infinity ? Math.min(visibleDevices.length, maxDevices) : visibleDevices.length;
   const displaySelected = maxDevices < Infinity ? Math.min(selectedSerials.size, maxDevices) : selectedSerials.size;
 

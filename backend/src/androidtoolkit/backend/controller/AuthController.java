@@ -64,8 +64,13 @@ public class AuthController {
         var pendingInvites = pendingInviteRepository.findByInvitedEmail(email);
         for (var invite : pendingInvites) {
             accessGrantRepository.save(new AccessGrant(invite.getOwner(), user, true));
+            // Apply the assigned tier from the invite (use the highest tier if multiple invites)
+            if (invite.getAssignedTier() != null && invite.getAssignedTier().ordinal() > user.getTier().ordinal()) {
+                user.setTier(invite.getAssignedTier());
+            }
         }
         if (!pendingInvites.isEmpty()) {
+            userRepository.save(user);
             pendingInviteRepository.deleteAll(pendingInvites);
         }
 

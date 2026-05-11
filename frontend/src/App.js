@@ -73,7 +73,7 @@ function AppContent() {
               {showProjects ? 'Hide Projects' : 'Projects'}
             </button>
           )}
-          <span className="user-info">{user?.username} ({user?.tier})</span>
+          <span className="user-info">{user?.username} ({user?.role === 'ADMIN' ? user.role : user?.tier})</span>
           <button className="logout-btn" onClick={logout}>Logout</button>
         </div>
       </header>

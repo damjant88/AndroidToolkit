@@ -16,6 +16,7 @@ api.interceptors.response.use(r => r, error => {
 function AllowedUsersPanel() {
   const [grants, setGrants] = useState([]);
   const [email, setEmail] = useState('');
+  const [tier, setTier] = useState('BASIC');
   const [message, setMessage] = useState('');
 
   const fetchGrants = useCallback(async () => {
@@ -32,9 +33,10 @@ function AllowedUsersPanel() {
     if (!email.trim()) return;
     setMessage('');
     try {
-      const res = await api.post('/grant', { email: email.trim() });
+      const res = await api.post('/grant', { email: email.trim(), tier });
       setMessage(res.data.message);
       setEmail('');
+      setTier('BASIC');
       fetchGrants();
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || err.message;
@@ -61,6 +63,10 @@ function AllowedUsersPanel() {
           value={email}
           onChange={e => setEmail(e.target.value)}
         />
+        <select value={tier} onChange={e => setTier(e.target.value)}>
+          <option value="BASIC">Basic</option>
+          <option value="ADVANCED">Advanced</option>
+        </select>
         <button type="submit">Grant</button>
       </form>
       {message && <p className="grant-message">{message}</p>}
@@ -70,7 +76,7 @@ function AllowedUsersPanel() {
         <ul className="grant-list">
           {grants.map(g => (
             <li key={g.email}>
-              <span>{g.status === 'pending' ? '⏳' : '✅'} {g.username !== '(pending)' ? g.username + ' ' : ''}{g.email}</span>
+              <span>{g.status === 'pending' ? '⏳' : '✅'} {g.username !== '(pending)' ? g.username + ' ' : ''}{g.email} ({g.tier})</span>
               <button onClick={() => handleRevoke(g.email)}>Revoke</button>
             </li>
           ))}

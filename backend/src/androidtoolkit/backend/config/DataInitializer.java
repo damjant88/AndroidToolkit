@@ -18,6 +18,20 @@ public class DataInitializer {
                 admin.setRole(User.Role.ADMIN);
                 admin.setTier(User.Tier.ADVANCED);
                 userRepository.save(admin);
+            } else {
+                // Ensure existing admin has correct role and tier
+                userRepository.findByUsername("admin").ifPresent(admin -> {
+                    boolean changed = false;
+                    if (admin.getRole() != User.Role.ADMIN) {
+                        admin.setRole(User.Role.ADMIN);
+                        changed = true;
+                    }
+                    if (admin.getTier() != User.Tier.ADVANCED) {
+                        admin.setTier(User.Tier.ADVANCED);
+                        changed = true;
+                    }
+                    if (changed) userRepository.save(admin);
+                });
             }
         };
     }

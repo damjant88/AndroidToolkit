@@ -51,19 +51,31 @@ public class AccessController {
         User owner = getCurrentUser();
         if (owner == null) return List.of();
 
-        List<Map<String, Object>> result = new java.util.ArrayList<>(accessGrantRepository.findByOwnerId(owner.getId()).stream()
+        // For admin, show all grants (not just own)
+        List<AccessGrant> grants = owner.getRole() == User.Role.ADMIN
+                ? accessGrantRepository.findAll()
+                : accessGrantRepository.findByOwnerId(owner.getId());
+
+        List<Map<String, Object>> result = new java.util.ArrayList<>(grants.stream()
                 .map(g -> Map.<String, Object>of(
                         "username", g.getGrantedUser().getUsername(),
                         "email", g.getGrantedUser().getEmail(),
+                        "tier", g.getGrantedUser().getTier().name(),
                         "permanent", g.isPermanent(),
                         "status", "active",
                         "createdAt", g.getCreatedAt().toString()
                 )).toList());
 
-        pendingInviteRepository.findByOwnerId(owner.getId()).forEach(invite ->
+        // Show pending invites
+        var pendingInvites = owner.getRole() == User.Role.ADMIN
+                ? pendingInviteRepository.findAll()
+                : pendingInviteRepository.findByOwnerId(owner.getId());
+
+        pendingInvites.forEach(invite ->
             result.add(Map.of(
                     "username", "(pending)",
                     "email", invite.getInvitedEmail(),
+                    "tier", invite.getAssignedTier() != null ? invite.getAssignedTier().name() : "BASIC",
                     "permanent", true,
                     "status", "pending",
                     "createdAt", invite.getCreatedAt().toString()
@@ -83,23 +95,37 @@ public class AccessController {
         String email = body.getOrDefault("email", "").trim();
         if (email.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email required");
 
+        // Parse tier from request (default to BASIC if not provided)
+        User.Tier assignedTier = User.Tier.BASIC;
+        String tierStr = body.getOrDefault("tier", "").trim().toUpperCase();
+        if (!tierStr.isEmpty()) {
+            try {
+                assignedTier = User.Tier.valueOf(tierStr);
+            } catch (IllegalArgumentException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid tier. Must be BASIC or ADVANCED");
+            }
+        }
+
         var existingUser = userRepository.findByEmail(email);
         if (existingUser.isPresent()) {
             User grantedUser = existingUser.get();
             if (grantedUser.getId().equals(owner.getId())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot grant access to yourself");
             }
+            // Update tier
+            grantedUser.setTier(assignedTier);
+            userRepository.save(grantedUser);
             if (accessGrantRepository.existsByOwnerIdAndGrantedUserId(owner.getId(), grantedUser.getId())) {
-                return Map.of("message", "User already has access");
+                return Map.of("message", "User already has access. Tier updated to " + assignedTier.name());
             }
             accessGrantRepository.save(new AccessGrant(owner, grantedUser, true));
-            return Map.of("message", "Access granted to " + grantedUser.getUsername());
+            return Map.of("message", "Access granted to " + grantedUser.getUsername() + " (tier: " + assignedTier.name() + ")");
         } else {
             if (pendingInviteRepository.existsByOwnerIdAndInvitedEmail(owner.getId(), email)) {
                 return Map.of("message", "Invite already sent to " + email);
             }
-            pendingInviteRepository.save(new PendingInvite(owner, email));
-            return Map.of("message", "Invite saved \u2014 access will be granted when " + email + " registers");
+            pendingInviteRepository.save(new PendingInvite(owner, email, assignedTier));
+            return Map.of("message", "Invite saved \u2014 access will be granted when " + email + " registers (tier: " + assignedTier.name() + ")");
         }
     }
 
