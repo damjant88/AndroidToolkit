@@ -148,7 +148,6 @@ public class LogcatStreamManager {
                     while ((line = reader.readLine()) != null) {
                         Optional<ParsedField> parsed = logcatParser.parseLine(line);
                         if (parsed.isPresent()) {
-                            log.info("Parsed {} = {} for device {}", parsed.get().type(), parsed.get().value(), serial);
                             updateAndBroadcast(session, parsed.get());
                         }
                     }

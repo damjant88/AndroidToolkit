@@ -27,19 +27,19 @@ public class SharedStorageService {
 
     /**
      * Uploads a file to the shared storage location.
-     * Path structure: {basePath}/{projectName}/{date}/{deviceSerial}/{fileName}
+     * Path structure: {basePath}/{flavor}/{deviceFolder}/{date}/{fileName}
      *
      * @param localFile     the local file to upload
      * @param basePath      the root shared storage path (from project's sharedLogStoragePath)
-     * @param projectName   the project name for directory organization
+     * @param flavor        the app flavor name for directory organization
      * @param date          the date string in ISO 8601 format (YYYY-MM-DD)
-     * @param deviceSerial  the device serial for directory organization
+     * @param deviceFolder  the device folder name (model_serial) for directory organization
      * @return the full path where the file was stored, or empty if upload failed
      */
-    public Optional<String> upload(Path localFile, String basePath, String projectName,
-                                   String date, String deviceSerial) {
-        if (localFile == null || basePath == null || projectName == null
-                || date == null || deviceSerial == null) {
+    public Optional<String> upload(Path localFile, String basePath, String flavor,
+                                   String date, String deviceFolder) {
+        if (localFile == null || basePath == null || flavor == null
+                || date == null || deviceFolder == null) {
             log.warn("Upload called with null parameters");
             return Optional.empty();
         }
@@ -47,9 +47,9 @@ public class SharedStorageService {
         try {
             String fileName = localFile.getFileName().toString();
             Path targetDir = Path.of(basePath)
-                    .resolve(projectName)
-                    .resolve(date)
-                    .resolve(deviceSerial);
+                    .resolve(flavor)
+                    .resolve(deviceFolder)
+                    .resolve(date);
 
             Files.createDirectories(targetDir);
 

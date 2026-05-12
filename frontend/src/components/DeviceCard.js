@@ -146,7 +146,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           <input type="checkbox" checked={selected} onChange={onToggleSelect} />
           <h3>{device.deviceName}</h3>
         </label>
-        {logcatData?.tokenType && <h3 className="token-type-header">{logcatData.tokenType === 'godevice' ? (info.safePathPackage === 'com.smithmicro.cci.test' ? 'Senior' : 'Child') : logcatData.tokenType === 'admin' ? 'Adult' : logcatData.tokenType}</h3>}
+        {info.appInstalled && logcatData?.tokenType && <h3 className="token-type-header">{logcatData.tokenType === 'godevice' ? (info.safePathPackage === 'com.smithmicro.cci.test' ? 'Senior' : 'Child') : logcatData.tokenType === 'admin' ? 'Adult' : logcatData.tokenType}</h3>}
         <div className="device-icon-group">
           <img className="device-icon" src={`/icons/${getIconForPackage(info.safePathPackage)}`} alt="app icon" />
           <span className="device-icon-label">{getLabelForPackage(info.safePathPackage)}</span>
@@ -160,14 +160,16 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         <p><strong>OS Version:</strong> Android {info.osVersion}</p>
         <p><strong>IP:</strong> {info.ipAddress || 'N/A'}</p>
         {mockAddress && <p><strong>Location:</strong> {mockAddress}</p>}
-        <p><strong>Environment:</strong> {logcatData?.environment || '—'}</p>
-        <p><strong>Client Version:</strong> {logcatData?.clientVersion || '—'}</p>
-        <p><strong>Server Product Version:</strong> {logcatData?.serverProductVersion || '—'}</p>
-        <p><strong>Server Project Version:</strong> {logcatData?.serverProjectVersion || '—'}</p>
-        <p className="token-row"><strong>Access Token:</strong> {logcatData?.accessToken
-          ? <><span className="token-value">{logcatData.accessToken.substring(0, 20)}...</span><button className="copy-token-btn" onClick={() => navigator.clipboard.writeText(logcatData.accessToken)}>Copy Token</button></>
-          : '—'
-        }</p>
+        {info.appInstalled && <>
+          <p><strong>Client Version:</strong> {logcatData?.clientVersion || '—'}</p>
+          <p><strong>Environment:</strong> {logcatData?.environment || '—'}</p>
+          <p><strong>Server Product Version:</strong> {logcatData?.serverProductVersion || '—'}</p>
+          <p><strong>Server Project Version:</strong> {logcatData?.serverProjectVersion || '—'}</p>
+          <p className="token-row"><strong>Access Token:</strong> {logcatData?.accessToken
+            ? <><span className="token-value">{logcatData.accessToken.substring(0, 20)}...</span><button className="copy-token-btn" onClick={() => navigator.clipboard.writeText(logcatData.accessToken)}>Copy Token</button></>
+            : '—'
+          }</p>
+        </>}
       </div>
 
       <div className="device-actions-grouped">
