@@ -15,6 +15,7 @@ function DeviceList() {
   const [selectedSerials, setSelectedSerials] = useState(new Set());
   const [permissionsTarget, setPermissionsTarget] = useState(null);
   const initialLoadDone = useRef(false);
+  const knownOrder = useRef([]); // stable serial order
 
   const { deviceUpdate, connected } = useDeviceWebSocket();
 
@@ -25,16 +26,33 @@ function DeviceList() {
   }, [deviceUpdate]);
 
   function applyDeviceUpdate(fetched) {
-    setDevices(fetched);
+    const fetchedMap = new Map(fetched.map(d => [d.serial, d]));
     const currentSerials = new Set(fetched.map(d => d.serial));
+
+    // Update stable order: keep existing serials in position, remove disconnected, append new to end
+    const prevOrder = knownOrder.current;
+    const stableSerials = prevOrder.filter(s => currentSerials.has(s));
+    const newSerials = fetched.filter(d => !prevOrder.includes(d.serial)).map(d => d.serial);
+    const finalOrder = [...stableSerials, ...newSerials];
+    knownOrder.current = finalOrder;
+
+    // Build device list in stable order
+    const ordered = finalOrder.map(s => fetchedMap.get(s)).filter(Boolean);
+    setDevices(ordered);
+
     if (!initialLoadDone.current) {
       initialLoadDone.current = true;
       setSelectedSerials(currentSerials);
     } else {
       setSelectedSerials(prev => {
         const updated = new Set(prev);
+        // Remove disconnected devices
         for (const s of updated) {
           if (!currentSerials.has(s)) updated.delete(s);
+        }
+        // Auto-select newly connected devices
+        for (const s of newSerials) {
+          updated.add(s);
         }
         return updated;
       });

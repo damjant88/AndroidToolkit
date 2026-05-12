@@ -278,9 +278,16 @@ public class LogcatStreamManager {
                     changed = true;
                 }
             }
+            case SERVER_PROJECT_VERSION -> {
+                if (!Objects.equals(data.getServerProjectVersion(), field.value())) {
+                    data.setServerProjectVersion(field.value());
+                    changed = true;
+                }
+            }
             case ACCESS_TOKEN -> {
                 if (!Objects.equals(data.getAccessToken(), field.value())) {
                     data.setAccessToken(field.value());
+                    data.setTokenType(extractJwtType(field.value()));
                     changed = true;
                 }
             }
@@ -294,6 +301,32 @@ public class LogcatStreamManager {
     // Package-private accessor for testing
     ConcurrentHashMap<String, LogcatSession> getActiveSessions() {
         return activeSessions;
+    }
+
+    /**
+     * Extracts the "type" field from a JWT token's payload.
+     * JWT format: header.payload.signature — payload is base64url-encoded JSON.
+     */
+    private String extractJwtType(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) return null;
+            String payload = parts[1];
+            // Base64url decode
+            byte[] decoded = java.util.Base64.getUrlDecoder().decode(payload);
+            String json = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+            // Simple extraction — find "type":"value"
+            int idx = json.indexOf("\"type\"");
+            if (idx == -1) return null;
+            int colon = json.indexOf(':', idx);
+            int quote1 = json.indexOf('"', colon + 1);
+            int quote2 = json.indexOf('"', quote1 + 1);
+            if (quote1 == -1 || quote2 == -1) return null;
+            return json.substring(quote1 + 1, quote2);
+        } catch (Exception e) {
+            log.debug("Failed to parse JWT type: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

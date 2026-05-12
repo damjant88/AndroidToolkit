@@ -29,7 +29,7 @@ const PACKAGE_LABEL_MAP = {
   'com.smithmicro.safepath.family.child': 'SPFamily',
   'com.smithmicro.safepath.family.light': 'SPFamily',
   'com.smithmicro.safepath.family.speakeasy': 'SPFamily',
-  'com.smithmicro.cci.test': 'SPFamily',
+  'com.smithmicro.cci.test': 'SpeakEasy',
   'com.smithmicro.att.securefamily': 'SF IAP',
   'com.wavemarket.waplauncher': 'SF EAP',
   'com.att.securefamilycompanion': 'SF Companion',

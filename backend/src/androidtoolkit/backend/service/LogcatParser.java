@@ -17,10 +17,13 @@ public class LogcatParser {
             Pattern.compile("-->\\s+\\w+\\s+https?://([^/]+)/");
 
     private static final Pattern CLIENT_VERSION_PATTERN =
-            Pattern.compile("User-Agent:\\s+SP\\+\\w+\\+\\w+\\s+(\\S+)");
+            Pattern.compile("User-Agent:\\s+(?:SP\\+\\w+\\+\\w+|SpeakEasy\\+\\w+)\\s+(\\S+)");
 
     private static final Pattern SERVER_PRODUCT_VERSION_PATTERN =
             Pattern.compile("x-safepath-product-version:\\s+(\\S+)");
+
+    private static final Pattern SERVER_PROJECT_VERSION_PATTERN =
+            Pattern.compile("x-safepath-project-version:\\s+(\\S+)");
 
     private static final Pattern ACCESS_TOKEN_RESPONSE_PATTERN =
             Pattern.compile("\"accessToken\"\\s*:\\s*\"([^\"]+)\"");
@@ -44,8 +47,8 @@ public class LogcatParser {
         matcher = ENVIRONMENT_PATTERN.matcher(line);
         if (matcher.find()) {
             String host = matcher.group(1);
-            // Exclude download-prefixed and api-prefixed environments
-            if (!host.startsWith("download.") && !host.startsWith("api.")) {
+            // Exclude download-prefixed, api-prefixed, vc01-prefixed, and urldb-prefixed environments
+            if (!host.startsWith("download.") && !host.startsWith("api.") && !host.startsWith("vc01.") && !host.startsWith("urldb.")) {
                 return Optional.of(new ParsedField(FieldType.ENVIRONMENT, host));
             }
         }
@@ -58,6 +61,11 @@ public class LogcatParser {
         matcher = SERVER_PRODUCT_VERSION_PATTERN.matcher(line);
         if (matcher.find()) {
             return Optional.of(new ParsedField(FieldType.SERVER_PRODUCT_VERSION, matcher.group(1)));
+        }
+
+        matcher = SERVER_PROJECT_VERSION_PATTERN.matcher(line);
+        if (matcher.find()) {
+            return Optional.of(new ParsedField(FieldType.SERVER_PROJECT_VERSION, matcher.group(1)));
         }
 
         matcher = ACCESS_TOKEN_RESPONSE_PATTERN.matcher(line);

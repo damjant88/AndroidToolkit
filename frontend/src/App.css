@@ -237,3 +237,5 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .token-value { font-family: monospace; font-size: 0.8rem; color: #555; }
 .copy-token-btn { padding: 2px 8px; font-size: 0.7rem; border: 1px solid #bbb; border-radius: 3px; background: #f8f8f8; cursor: pointer; white-space: nowrap; }
 .copy-token-btn:hover { background: #e8f0fe; border-color: #1a73e8; color: #1a73e8; }
+
+.token-type-header { margin: 0; color: #1a73e8; font-weight: 600; text-transform: capitalize; }
