@@ -6,6 +6,7 @@ import LoginPage from './components/LoginPage';
 import AllowedUsersPanel from './components/AllowedUsersPanel';
 import AdminProjectsPanel from './components/AdminProjectsPanel';
 import UserProjectsPanel from './components/UserProjectsPanel';
+import MyDevicesPanel from './components/MyDevicesPanel';
 import AccessRequestPopup from './components/AccessRequestPopup';
 import ErrorBoundary from './components/ErrorBoundary';
 import SockJS from 'sockjs-client';
@@ -18,6 +19,7 @@ function AppContent() {
   const [showAllowedUsers, setShowAllowedUsers] = useState(false);
   const [showAdminProjects, setShowAdminProjects] = useState(false);
   const [showProjects, setShowProjects] = useState(false);
+  const [showMyDevices, setShowMyDevices] = useState(false);
 
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
@@ -74,12 +76,16 @@ function AppContent() {
             </button>
           )}
           <span className="user-info">{user?.username} ({user?.role === 'ADMIN' ? user.role : user?.tier})</span>
+          <button className="toolbar-small-btn" onClick={() => setShowMyDevices(!showMyDevices)}>
+            {showMyDevices ? 'Hide My Devices' : '📱 My Devices'}
+          </button>
           <button className="logout-btn" onClick={logout}>Logout</button>
         </div>
       </header>
       {showAllowedUsers && <AllowedUsersPanel />}
       {showAdminProjects && user?.role === 'ADMIN' && <AdminProjectsPanel />}
       {showProjects && <UserProjectsPanel />}
+      {showMyDevices && <MyDevicesPanel />}
       <main>
         <DeviceList />
       </main>

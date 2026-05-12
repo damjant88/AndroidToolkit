@@ -5,6 +5,7 @@ import { useAuth } from '../api/AuthContext';
 import DeviceCard from './DeviceCard';
 import InstallPanel from './InstallPanel';
 import PermissionsDialog from './PermissionsDialog';
+import BugTemplate from './BugTemplate';
 
 function DeviceList() {
   const { user } = useAuth();
@@ -14,6 +15,7 @@ function DeviceList() {
   const [error, setError] = useState('');
   const [selectedSerials, setSelectedSerials] = useState(new Set());
   const [permissionsTarget, setPermissionsTarget] = useState(null);
+  const [showBugTemplate, setShowBugTemplate] = useState(false);
   const initialLoadDone = useRef(false);
   const knownOrder = useRef([]); // stable serial order
 
@@ -118,6 +120,7 @@ function DeviceList() {
         <span className="selection-info">{displaySelected} selected</span>
         <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>
         <button onClick={deselectAllDevices} className="toolbar-small-btn">Deselect All</button>
+        <button onClick={() => setShowBugTemplate(true)} className="toolbar-small-btn">🐛 Bug Template</button>
       </div>
       <div className="device-grid">
         {visibleDevices.map((device) => (
@@ -140,6 +143,10 @@ function DeviceList() {
           deviceName={permissionsTarget.deviceName}
           onClose={closePermissions}
         />
+      )}
+
+      {showBugTemplate && (
+        <BugTemplate devices={visibleDevices} onClose={() => setShowBugTemplate(false)} />
       )}
     </div>
   );

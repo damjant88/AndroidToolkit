@@ -265,3 +265,39 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .event-context h4 { margin: 0 0 8px 0; font-size: 0.85rem; }
 .event-context-lines { margin: 0; font-size: 0.75rem; line-height: 1.6; overflow-x: auto; white-space: pre; }
 .event-context-lines .highlighted-line { background: #fff3cd; font-weight: 600; color: #c62828; }
+
+/* ===== BUG TEMPLATE ===== */
+.bug-template-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.bug-template-dialog { background: white; border-radius: 8px; padding: 24px; width: 90vw; max-width: 1100px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.bug-template-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.bug-template-header h3 { margin: 0; }
+.bug-template-header-actions { display: flex; gap: 8px; align-items: center; }
+.bug-template-form label { display: block; font-size: 0.8rem; font-weight: 600; color: #555; margin: 8px 0 4px; }
+.bug-template-form input, .bug-template-form textarea { width: 100%; padding: 6px 10px; border: 1px solid #bbb; border-radius: 4px; font-size: 0.85rem; font-family: inherit; }
+.bug-template-form textarea { resize: vertical; }
+.bug-template-form .auto-field { background: #f0f8ff; border-color: #a0c4e8; color: #333; }
+.bug-template-columns { display: flex; gap: 24px; }
+.bug-template-left, .bug-template-right { flex: 1; }
+.manual-devices { margin-top: 8px; }
+.manual-device-input { display: flex; gap: 6px; }
+.manual-device-input input { flex: 1; }
+.manual-device-input button { padding: 6px 12px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem; }
+.manual-device-list { list-style: none; margin-top: 6px; padding: 0; }
+.manual-device-list li { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; background: #f8f8f8; border-radius: 3px; margin-bottom: 3px; font-size: 0.8rem; }
+.manual-device-list button { background: none; border: none; color: #d32f2f; cursor: pointer; font-size: 0.9rem; }
+.bug-template-preview { margin-top: 16px; border: 1px solid #ddd; border-radius: 4px; padding: 12px; background: #fafafa; }
+.bug-template-preview h4 { margin: 0 0 8px; font-size: 0.85rem; }
+.bug-template-preview pre { margin: 0; font-size: 0.8rem; white-space: pre-wrap; word-wrap: break-word; max-height: 200px; overflow-y: auto; }
+.bug-template-actions { margin-top: 12px; display: flex; gap: 8px; }
+.bug-template-actions .copy-btn { padding: 10px 24px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+.bug-template-actions .copy-btn:hover { background: #1557b0; }
+.bug-template-editor { }
+.bug-template-editor textarea { width: 100%; font-family: monospace; font-size: 0.8rem; padding: 12px; border: 1px solid #bbb; border-radius: 4px; }
+.bug-template-editor .template-hint { font-size: 0.75rem; color: #888; margin-bottom: 8px; }
+.template-editor-actions { margin-top: 8px; display: flex; gap: 8px; }
+.template-editor-actions button { padding: 8px 16px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
+.template-editor-actions .reset-btn { background: #f8f8f8; color: #333; border: 1px solid #bbb; }
+
+.manual-devices-panel h4 { margin: 0 0 8px; }
+.manual-devices-hint { font-size: 0.8rem; color: #666; margin-bottom: 12px; }
+.manual-devices-empty { font-size: 0.85rem; color: #999; margin-top: 12px; }

@@ -148,7 +148,14 @@ public class LogCollectionService {
             String date = LocalDate.now().toString();
             String time = LocalTime.now().format(TIME_FORMATTER);
             String tokenType = resolveTokenType(serial);
-            String archiveName = deviceName + "_" + sanitizeSerial(serial) + "_" + tokenType + "_" + date + "_" + time + ".zip";
+
+            // Build archive name, skipping unknown parts
+            StringBuilder archiveBuilder = new StringBuilder();
+            if (!"Device".equals(deviceName)) archiveBuilder.append(deviceName).append("_");
+            archiveBuilder.append(sanitizeSerial(serial));
+            if (!"unknown".equals(tokenType)) archiveBuilder.append("_").append(tokenType);
+            archiveBuilder.append("_").append(date).append("_").append(time).append(".zip");
+            String archiveName = archiveBuilder.toString();
 
             Path zipFile = zipArchiveService.createArchive(sourceDir, archiveName);
 
@@ -274,14 +281,22 @@ public class LogCollectionService {
     private void renameLogFiles(Path exportedDir, String deviceName, String serial, String date) {
         if (!Files.exists(exportedDir) || !Files.isDirectory(exportedDir)) return;
         String tokenType = resolveTokenType(serial);
-        String prefix = deviceName + "_" + sanitizeSerial(serial) + "_" + tokenType + "_" + date;
+
+        // Build prefix, skipping unknown parts
+        StringBuilder prefix = new StringBuilder();
+        if (!"Device".equals(deviceName)) prefix.append(deviceName).append("_");
+        prefix.append(sanitizeSerial(serial));
+        if (!"unknown".equals(tokenType)) prefix.append("_").append(tokenType);
+        prefix.append("_").append(date);
+
+        String finalPrefix = prefix.toString();
         try (var files = Files.list(exportedDir)) {
             files.filter(Files::isRegularFile)
                     .filter(f -> f.getFileName().toString().endsWith(".log"))
                     .forEach(f -> {
                         try {
                             String originalName = f.getFileName().toString();
-                            String newName = prefix + "_" + originalName;
+                            String newName = finalPrefix + "_" + originalName;
                             Files.move(f, f.resolveSibling(newName));
                         } catch (IOException e) {
                             log.warn("Failed to rename log file {}: {}", f, e.getMessage());
