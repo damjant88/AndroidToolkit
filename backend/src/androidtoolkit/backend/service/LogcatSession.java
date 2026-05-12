@@ -2,6 +2,9 @@ package androidtoolkit.backend.service;
 
 import androidtoolkit.backend.dto.LogcatData;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 /**
  * Internal state tracking for an active logcat stream session.
  * Each connected device with a valid PID has exactly one LogcatSession.
@@ -15,6 +18,12 @@ class LogcatSession {
     private StreamState state;
     private int restartAttempts;
     private LogcatData currentData;
+
+    // Event tracking
+    private volatile String trackingKeyword;
+    private final Deque<String> lineBuffer = new ArrayDeque<>(12);
+    private int afterMatchCount = -1; // -1 means not collecting "after" lines
+    private java.util.List<String> pendingContext;
 
     LogcatSession(String serial, String pid) {
         this.serial = serial;
@@ -78,5 +87,33 @@ class LogcatSession {
 
     void setCurrentData(LogcatData currentData) {
         this.currentData = currentData;
+    }
+
+    String getTrackingKeyword() {
+        return trackingKeyword;
+    }
+
+    void setTrackingKeyword(String trackingKeyword) {
+        this.trackingKeyword = trackingKeyword;
+    }
+
+    Deque<String> getLineBuffer() {
+        return lineBuffer;
+    }
+
+    int getAfterMatchCount() {
+        return afterMatchCount;
+    }
+
+    void setAfterMatchCount(int afterMatchCount) {
+        this.afterMatchCount = afterMatchCount;
+    }
+
+    java.util.List<String> getPendingContext() {
+        return pendingContext;
+    }
+
+    void setPendingContext(java.util.List<String> pendingContext) {
+        this.pendingContext = pendingContext;
     }
 }

@@ -6,6 +6,7 @@ import {
 import { getIconForPackage, getLabelForPackage } from '../api/packageIcons';
 import { useLogcatWebSocket } from '../api/useLogcatWebSocket';
 import MockLocationMap from './MockLocationMap';
+import EventTracker from './EventTracker';
 
 function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermissions, tier }) {
   const [message, setMessage] = useState('');
@@ -14,6 +15,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
   const [showMap, setShowMap] = useState(false);
   const [mockAddress, setMockAddress] = useState('');
   const [mocking, setMocking] = useState(false);
+  const [showEventTracker, setShowEventTracker] = useState(false);
 
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
@@ -180,6 +182,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
             <button disabled={loading || !info.appInstalled} onClick={() => handleAction(() => uninstallApp(serial, info.safePathPackage), 'Are you sure you want to uninstall?')}>Uninstall</button>
             <button disabled={loading || !info.appInstalled} onClick={() => handleAction(() => enableFirebaseDebug(serial, info.safePathPackage))}>Firebase Debug</button>
             <button disabled={loading || !info.appInstalled} onClick={() => onOpenPermissions && onOpenPermissions(serial, info.safePathPackage)}>Permissions</button>
+            <button disabled={loading || !info.appInstalled} onClick={() => setShowEventTracker(true)}>Event Tracker</button>
           </div>
         </div>
         <div className="action-group">
@@ -211,6 +214,10 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           mocking={mocking}
           onMockingChange={setMocking}
         />
+      )}
+
+      {showEventTracker && (
+        <EventTracker serial={serial} onClose={() => setShowEventTracker(false)} />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 package androidtoolkit.backend.service;
 
+import androidtoolkit.backend.dto.EventMatch;
 import androidtoolkit.backend.dto.LogcatData;
 import androidtoolkit.domain.DeviceInfo;
 import org.slf4j.Logger;
@@ -133,7 +134,7 @@ public class LogcatStreamManager {
 
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(
-                    "adb", "-s", serial, "logcat", "-s", "OkHttp:I", "--pid=" + pid
+                    "adb", "-s", serial, "logcat", "--pid=" + pid
             );
             processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
@@ -150,6 +151,8 @@ public class LogcatStreamManager {
                         if (parsed.isPresent()) {
                             updateAndBroadcast(session, parsed.get());
                         }
+                        // Event tracking on all lines
+                        processEventTracking(session, line);
                     }
                 } catch (IOException e) {
                     if (!Thread.currentThread().isInterrupted()) {
@@ -300,6 +303,97 @@ public class LogcatStreamManager {
     // Package-private accessor for testing
     ConcurrentHashMap<String, LogcatSession> getActiveSessions() {
         return activeSessions;
+    }
+
+    /**
+     * Starts tracking a keyword in the logcat stream for the given device.
+     * Uses the existing logcat process (which now reads all PID lines).
+     */
+    public void startTracking(String serial, String keyword) {
+        LogcatSession session = activeSessions.get(serial);
+        if (session == null) {
+            log.warn("No active session for device {}, cannot start tracking", serial);
+            return;
+        }
+        session.setTrackingKeyword(keyword);
+        session.setAfterMatchCount(-1);
+        session.getLineBuffer().clear();
+        log.info("Started tracking '{}' for device {}", keyword, serial);
+    }
+
+    /**
+     * Stops tracking for the given device.
+     */
+    public void stopTracking(String serial) {
+        LogcatSession session = activeSessions.get(serial);
+        if (session != null) {
+            session.setTrackingKeyword(null);
+            session.setAfterMatchCount(-1);
+            session.getLineBuffer().clear();
+        }
+        log.info("Stopped tracking for device {}", serial);
+    }
+
+    /**
+     * Processes event tracking for a single logcat line.
+     * Maintains a rolling buffer of 5 lines. When a match is found,
+     * captures 5 lines before + matched line, then collects 5 lines after,
+     * and broadcasts the full context via WebSocket.
+     */
+    private void processEventTracking(LogcatSession session, String line) {
+        String keyword = session.getTrackingKeyword();
+        if (keyword == null) return;
+
+        // If we're collecting "after" lines following a match
+        if (session.getAfterMatchCount() >= 0) {
+            session.getPendingContext().add(line);
+            session.setAfterMatchCount(session.getAfterMatchCount() + 1);
+            if (session.getAfterMatchCount() >= 5) {
+                // We have all 5 "after" lines — broadcast the event
+                broadcastEventMatch(session);
+                session.setAfterMatchCount(-1);
+                session.setPendingContext(null);
+            }
+            // Also add to rolling buffer for future matches
+            addToBuffer(session, line);
+            return;
+        }
+
+        // Check if this line matches the keyword
+        if (line.contains(keyword)) {
+            // Capture: 5 lines before (from buffer) + matched line
+            java.util.List<String> context = new java.util.ArrayList<>(session.getLineBuffer());
+            context.add(line); // the matched line
+            session.setPendingContext(context);
+            session.setAfterMatchCount(0);
+        }
+
+        // Always maintain the rolling buffer (last 5 lines)
+        addToBuffer(session, line);
+    }
+
+    private void addToBuffer(LogcatSession session, String line) {
+        java.util.Deque<String> buffer = session.getLineBuffer();
+        if (buffer.size() >= 5) {
+            buffer.pollFirst();
+        }
+        buffer.addLast(line);
+    }
+
+    private void broadcastEventMatch(LogcatSession session) {
+        String serial = session.getSerial();
+        java.util.List<String> contextLines = session.getPendingContext();
+        // The matched line is at index (contextLines.size() - 6) approximately,
+        // but we know it's the line right after the "before" lines
+        // Find it: it's the first line that contains the keyword
+        String keyword = session.getTrackingKeyword();
+        String matchedLine = contextLines.stream()
+                .filter(l -> l.contains(keyword))
+                .findFirst()
+                .orElse("");
+
+        EventMatch event = new EventMatch(serial, matchedLine, contextLines);
+        messagingTemplate.convertAndSend("/topic/events/" + serial, event);
     }
 
     /**

@@ -194,4 +194,22 @@ public class DeviceController {
         LogcatData data = logcatStreamManager.getCurrentData(serial);
         return data != null ? data : new LogcatData(serial);
     }
+
+    @PostMapping("/{serial}/track-event")
+    public Map<String, Object> startTracking(@PathVariable String serial, @RequestBody Map<String, String> body) {
+        validateSerial(serial);
+        String keyword = body.getOrDefault("keyword", "").trim();
+        if (keyword.isEmpty()) {
+            return Map.of("success", false, "message", "Keyword is required");
+        }
+        logcatStreamManager.startTracking(serial, keyword);
+        return Map.of("success", true, "message", "Tracking started for: " + keyword);
+    }
+
+    @PostMapping("/{serial}/stop-tracking")
+    public Map<String, Object> stopTracking(@PathVariable String serial) {
+        validateSerial(serial);
+        logcatStreamManager.stopTracking(serial);
+        return Map.of("success", true, "message", "Tracking stopped");
+    }
 }

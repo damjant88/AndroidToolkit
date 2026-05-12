@@ -48,7 +48,7 @@ public class LogcatParser {
         if (matcher.find()) {
             String host = matcher.group(1);
             // Exclude download-prefixed, api-prefixed, vc01-prefixed, and urldb-prefixed environments
-            if (!host.startsWith("download.") && !host.startsWith("api.") && !host.startsWith("vc01.") && !host.startsWith("urldb.")) {
+            if (!host.startsWith("download.") && !host.startsWith("api.") && !host.startsWith("vc01.") && !host.startsWith("urldb.") && !host.contains("assets") && !host.contains("aws")) {
                 return Optional.of(new ParsedField(FieldType.ENVIRONMENT, host));
             }
         }

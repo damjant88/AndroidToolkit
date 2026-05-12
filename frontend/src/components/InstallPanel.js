@@ -100,8 +100,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
   }
 
   const jobRunning = installing || uninstalling;
-  const [uninstallDone, setUninstallDone] = useState(false);
-  const hasInstalledDevices = !uninstallDone && devices.some(d => d.deviceInfo.appInstalled);
+  const hasInstalledDevices = devices.some(d => d.deviceInfo.appInstalled);
 
   async function handleInstallAll() {
     if (!selectedPath) {
@@ -138,7 +137,6 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     if (installedDevices.length === 0) return;
     if (!window.confirm('Uninstall from ' + installedDevices.length + ' device(s)?')) return;
     setUninstalling(true);
-    setUninstallDone(false);
     setMessage('⏳ Uninstalling...');
     try {
       const serials = installedDevices.map(d => d.deviceInfo.serialNumber);
@@ -146,7 +144,6 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       installedDevices.forEach(d => { serialToName[d.deviceInfo.serialNumber] = d.deviceName; });
       const result = await startUninstallJob(serials);
       await pollJobUntilDone(result.jobId, serialToName);
-      setUninstallDone(true);
       if (onRefresh) onRefresh();
     } catch (err) {
       setMessage('❌ ' + (err.response?.data?.message || err.message));

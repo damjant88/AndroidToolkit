@@ -98,10 +98,13 @@ public class LogCollectionService {
         String targetFolder = localTargetDir.toString();
         LogExportResponse exportResponse = logExportManager.exportDeviceLogs(serial, deviceName, targetFolder);
 
-        // 4. Determine project association
+        // 4. Rename pulled log files to include metadata: {model}_{serial}_{type}_{date}.log
+        renameLogFiles(Path.of(exportResponse.getExportedLogsFolder()), deviceName, serial, date);
+
+        // 5. Determine project association
         Project project = resolveProject(serial, projectId);
 
-        // 5. Trigger async ZIP + upload if project has shared storage configured
+        // 6. Trigger async ZIP + upload if project has shared storage configured
         if (project != null && project.getSharedLogStoragePath() != null
                 && !project.getSharedLogStoragePath().isBlank()) {
             if (sharedStorageService.isAccessible(project.getSharedLogStoragePath())) {
@@ -262,6 +265,31 @@ public class LogCollectionService {
      */
     private String sanitizeSerial(String serial) {
         return serial.replace(":", "-").replace(".", "_");
+    }
+
+    /**
+     * Renames log files in the exported folder to include device metadata.
+     * Format: {model}_{serial}_{type}_{date}.log
+     */
+    private void renameLogFiles(Path exportedDir, String deviceName, String serial, String date) {
+        if (!Files.exists(exportedDir) || !Files.isDirectory(exportedDir)) return;
+        String tokenType = resolveTokenType(serial);
+        String prefix = deviceName + "_" + sanitizeSerial(serial) + "_" + tokenType + "_" + date;
+        try (var files = Files.list(exportedDir)) {
+            files.filter(Files::isRegularFile)
+                    .filter(f -> f.getFileName().toString().endsWith(".log"))
+                    .forEach(f -> {
+                        try {
+                            String originalName = f.getFileName().toString();
+                            String newName = prefix + "_" + originalName;
+                            Files.move(f, f.resolveSibling(newName));
+                        } catch (IOException e) {
+                            log.warn("Failed to rename log file {}: {}", f, e.getMessage());
+                        }
+                    });
+        } catch (IOException e) {
+            log.warn("Failed to list log files in {}: {}", exportedDir, e.getMessage());
+        }
     }
 
     /**
