@@ -86,8 +86,14 @@ function BugTemplate({ devices, onClose }) {
 
   function getDeviceInfo() {
     const lines = [];
-    // Manual devices only
+    // Manual devices
     manualDevices.forEach(md => lines.push(md));
+    // Auto-detected client version
+    const versions = new Set();
+    Object.values(logcatDataMap).forEach(data => {
+      if (data.clientVersion) versions.add(data.clientVersion);
+    });
+    if (versions.size > 0) lines.push('Android: ' + [...versions].join(', '));
     return lines.join('\n');
   }
 
