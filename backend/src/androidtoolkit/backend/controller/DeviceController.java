@@ -13,7 +13,9 @@ import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.UninstallAppResult;
 import androidtoolkit.app.WifiDebugResult;
 import androidtoolkit.backend.dto.LogCollectionResponse;
+import androidtoolkit.backend.dto.LogcatData;
 import androidtoolkit.backend.service.LogCollectionService;
+import androidtoolkit.backend.service.LogcatStreamManager;
 import androidtoolkit.service.CommandExecutor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,6 +42,7 @@ public class DeviceController {
     private final ScreenshotManager screenshotManager;
     private final AppServices appServices;
     private final CommandExecutor commandExecutor;
+    private final LogcatStreamManager logcatStreamManager;
     private final ConcurrentHashMap<String, Process> activeMocks = new ConcurrentHashMap<>();
 
     public DeviceController(
@@ -49,7 +52,8 @@ public class DeviceController {
             LogCollectionService logCollectionService,
             ScreenshotManager screenshotManager,
             AppServices appServices,
-            CommandExecutor commandExecutor
+            CommandExecutor commandExecutor,
+            LogcatStreamManager logcatStreamManager
     ) {
         this.deviceCatalog = deviceCatalog;
         this.deviceActionManager = deviceActionManager;
@@ -58,6 +62,7 @@ public class DeviceController {
         this.screenshotManager = screenshotManager;
         this.appServices = appServices;
         this.commandExecutor = commandExecutor;
+        this.logcatStreamManager = logcatStreamManager;
     }
 
     @GetMapping
@@ -181,5 +186,12 @@ public class DeviceController {
             "message", String.format("Mocking location: %.6f, %.6f", lat, lng),
             "mocking", true
         );
+    }
+
+    @GetMapping("/{serial}/logcat-data")
+    public LogcatData getLogcatData(@PathVariable String serial) {
+        validateSerial(serial);
+        LogcatData data = logcatStreamManager.getCurrentData(serial);
+        return data != null ? data : new LogcatData(serial);
     }
 }

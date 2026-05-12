@@ -80,7 +80,7 @@ function DeviceList() {
 
   if (loading && devices.length === 0) return <p className="status">Loading devices...</p>;
   if (error) return <p className="status error">{error}</p>;
-  if (devices.length === 0) return <p className="status">No devices connected. Connect a device via USB and wait.</p>;
+  if (devices.length === 0) return <p className="status">No devices connected.</p>;
 
   const visibleDevices = devices.slice(0, maxDevices);
   const selectedDevices = visibleDevices.filter(d => selectedSerials.has(d.serial));

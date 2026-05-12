@@ -4,6 +4,7 @@ import {
   pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder, setMockLocation, getDeviceLocation
 } from '../api/deviceApi';
 import { getIconForPackage, getLabelForPackage } from '../api/packageIcons';
+import { useLogcatWebSocket } from '../api/useLogcatWebSocket';
 import MockLocationMap from './MockLocationMap';
 
 function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermissions, tier }) {
@@ -18,6 +19,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
+  const { logcatData } = useLogcatWebSocket(serial);
 
   useEffect(() => {
     getDeviceLocation(serial)
@@ -157,6 +159,13 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         <p><strong>OS Version:</strong> Android {info.osVersion}</p>
         <p><strong>IP:</strong> {info.ipAddress || 'N/A'}</p>
         {mockAddress && <p><strong>Location:</strong> {mockAddress}</p>}
+        <p><strong>Environment:</strong> {logcatData?.environment || '—'}</p>
+        <p><strong>Client Version:</strong> {logcatData?.clientVersion || '—'}</p>
+        <p><strong>Server Version:</strong> {logcatData?.serverProductVersion || '—'}</p>
+        <p className="token-row"><strong>Access Token:</strong> {logcatData?.accessToken
+          ? <><span className="token-value">{logcatData.accessToken.substring(0, 20)}...</span><button className="copy-token-btn" onClick={() => navigator.clipboard.writeText(logcatData.accessToken)}>Copy Token</button></>
+          : '—'
+        }</p>
       </div>
 
       <div className="device-actions-grouped">
