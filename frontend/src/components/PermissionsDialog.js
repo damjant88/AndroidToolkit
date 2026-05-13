@@ -21,8 +21,11 @@ function PermissionsDialog({ serial, packageName, deviceName, onClose }) {
       setDefinitions(state.definitions || []);
       setActiveIds(state.activePermissionIds || []);
       setUnavailableIds(state.unavailablePermissionIds || []);
-      // Pre-select active permissions
-      setSelectedIds(state.activePermissionIds || []);
+      // Pre-select all available permissions by default
+      const allAvailable = (state.definitions || [])
+        .filter(d => !(state.unavailablePermissionIds || []).includes(d.id))
+        .map(d => d.id);
+      setSelectedIds(allAvailable);
     } catch (err) {
       setMessage('Failed to load permissions: ' + (err.response?.data?.message || err.message));
     } finally {
