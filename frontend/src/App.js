@@ -60,6 +60,9 @@ function AppContent() {
       <header className="app-header">
         <h1>{'\ud83e\udd16'} Adb Toolkit</h1>
         <div className="header-right">
+          <button className="toolbar-small-btn" onClick={() => setShowMyDevices(!showMyDevices)}>
+            {showMyDevices ? 'Hide My Devices' : '📱 My Devices'}
+          </button>
           {user?.role === 'ADMIN' && (
             <button className="toolbar-small-btn" onClick={() => setShowAllowedUsers(!showAllowedUsers)}>
               {showAllowedUsers ? 'Hide Users' : 'Allowed Users'}
@@ -76,9 +79,6 @@ function AppContent() {
             </button>
           )}
           <span className="user-info">{user?.username} ({user?.role === 'ADMIN' ? user.role : user?.tier})</span>
-          <button className="toolbar-small-btn" onClick={() => setShowMyDevices(!showMyDevices)}>
-            {showMyDevices ? 'Hide My Devices' : '📱 My Devices'}
-          </button>
           <button className="logout-btn" onClick={logout}>Logout</button>
         </div>
       </header>

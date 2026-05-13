@@ -5,15 +5,23 @@ import axios from 'axios';
 
 /**
  * Hook that fetches initial logcat data via REST and subscribes to real-time updates via WebSocket.
- * Returns { logcatData } with fields: environment, clientVersion, serverProductVersion, accessToken
+ * Clears data when appInstalled becomes false, re-fetches when it becomes true.
+ * Returns { logcatData }
  */
-export function useLogcatWebSocket(serial) {
+export function useLogcatWebSocket(serial, appInstalled) {
   const [logcatData, setLogcatData] = useState(null);
   const clientRef = useRef(null);
 
-  // Fetch initial state via REST
+  // Clear data when app is uninstalled
   useEffect(() => {
-    if (!serial) return;
+    if (!appInstalled) {
+      setLogcatData(null);
+    }
+  }, [appInstalled]);
+
+  // Fetch initial state via REST when app is installed
+  useEffect(() => {
+    if (!serial || !appInstalled) return;
     axios.get(`/api/devices/${encodeURIComponent(serial)}/logcat-data`)
       .then(res => {
         if (res.data && (res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken)) {
@@ -21,7 +29,7 @@ export function useLogcatWebSocket(serial) {
         }
       })
       .catch(() => {});
-  }, [serial]);
+  }, [serial, appInstalled]);
 
   // Subscribe to real-time updates via WebSocket
   useEffect(() => {

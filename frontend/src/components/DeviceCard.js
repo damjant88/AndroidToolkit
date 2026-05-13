@@ -21,7 +21,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
-  const { logcatData } = useLogcatWebSocket(serial);
+  const { logcatData } = useLogcatWebSocket(serial, info.appInstalled);
 
   useEffect(() => {
     getDeviceLocation(serial)

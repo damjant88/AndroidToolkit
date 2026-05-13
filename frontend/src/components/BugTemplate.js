@@ -49,6 +49,9 @@ function BugTemplate({ devices, onClose }) {
 
   // Logcat data for all devices
   const [logcatDataMap, setLogcatDataMap] = useState({});
+  const [selectedEnv, setSelectedEnv] = useState(null);
+  const [selectedVersion, setSelectedVersion] = useState(null);
+  const [copyError, setCopyError] = useState('');
 
   useEffect(() => {
     if (devices && devices.length > 0) {
@@ -65,33 +68,57 @@ function BugTemplate({ devices, onClose }) {
     }
   }, [devices]);
 
-  function getEnvironment() {
-    const lines = [];
+  function getAllEnvironments() {
     const envs = new Set();
-    const productVersions = new Set();
-    const projectVersions = new Set();
-
     Object.values(logcatDataMap).forEach(data => {
       if (data.environment) envs.add(data.environment);
-      if (data.serverProductVersion) productVersions.add(data.serverProductVersion);
-      if (data.serverProjectVersion) projectVersions.add(data.serverProjectVersion);
     });
+    return [...envs];
+  }
 
-    if (envs.size > 0) lines.push([...envs].join(', '));
-    if (productVersions.size > 0) lines.push('Server Product Version: ' + [...productVersions].join(', '));
-    if (projectVersions.size > 0) lines.push('Server Project Version: ' + [...projectVersions].join(', '));
+  function getEnvironment() {
+    const lines = [];
+    const allEnvs = getAllEnvironments();
+    const env = selectedEnv || (allEnvs.length === 1 ? allEnvs[0] : null);
+
+    if (env) {
+      lines.push(env);
+      // Show versions only for the selected environment's devices
+      const productVersions = new Set();
+      const projectVersions = new Set();
+      Object.values(logcatDataMap).forEach(data => {
+        if (data.environment === env || allEnvs.length <= 1) {
+          if (data.serverProductVersion) productVersions.add(data.serverProductVersion);
+          if (data.serverProjectVersion) projectVersions.add(data.serverProjectVersion);
+        }
+      });
+      if (productVersions.size > 0) lines.push('Server Product Version: ' + [...productVersions].join(', '));
+      if (projectVersions.size > 0) lines.push('Server Project Version: ' + [...projectVersions].join(', '));
+    } else if (allEnvs.length > 1) {
+      lines.push('(select environment above)');
+    }
 
     return lines.join('\n');
   }
 
-  function getDeviceInfo() {
-    const lines = [];
-    // Auto-detected Android client version first
+  function getAllClientVersions() {
     const versions = new Set();
     Object.values(logcatDataMap).forEach(data => {
       if (data.clientVersion) versions.add(data.clientVersion);
     });
-    if (versions.size > 0) lines.push('Android Client Version: ' + [...versions].join(', '));
+    return [...versions];
+  }
+
+  function getDeviceInfo() {
+    const lines = [];
+    // Auto-detected Android client version
+    const allVersions = getAllClientVersions();
+    const version = selectedVersion || (allVersions.length === 1 ? allVersions[0] : null);
+    if (version) {
+      lines.push('Android Client Version: ' + version);
+    } else if (allVersions.length > 1) {
+      lines.push('Android Client Version: (select version above)');
+    }
     // Manual devices
     manualDevices.forEach(md => lines.push(md));
     return lines.join('\n');
@@ -112,8 +139,22 @@ function BugTemplate({ devices, onClose }) {
   }
 
   function handleCopy() {
+    const allEnvs = getAllEnvironments();
+    const allVersions = getAllClientVersions();
+    const missing = [];
+
+    if (allEnvs.length > 1 && !selectedEnv) missing.push('Environment');
+    if (allVersions.length > 1 && !selectedVersion) missing.push('Android Client Version');
+
+    if (missing.length > 0) {
+      setCopyError('Please select: ' + missing.join(' and '));
+      setTimeout(() => setCopyError(''), 3000);
+      return;
+    }
+
     navigator.clipboard.writeText(generateOutput());
     setCopied(true);
+    setCopyError('');
     setTimeout(() => setCopied(false), 2000);
   }
 
@@ -178,9 +219,25 @@ function BugTemplate({ devices, onClose }) {
 
               <div className="bug-template-right">
                 <label>Environment (auto-detected)</label>
+                {getAllEnvironments().length > 1 && !selectedEnv && (
+                  <div className="env-selector">
+                    <p className="env-selector-hint">Multiple environments detected. Select one:</p>
+                    {getAllEnvironments().map(env => (
+                      <button key={env} className="toolbar-small-btn" onClick={() => setSelectedEnv(env)}>{env}</button>
+                    ))}
+                  </div>
+                )}
                 <textarea value={getEnvironment()} readOnly rows={3} className="auto-field" />
 
                 <label>Device Info (auto-detected + manual devices)</label>
+                {getAllClientVersions().length > 1 && !selectedVersion && (
+                  <div className="env-selector">
+                    <p className="env-selector-hint">Which Android Client Version was used for the test?</p>
+                    {getAllClientVersions().map(v => (
+                      <button key={v} className="toolbar-small-btn" onClick={() => setSelectedVersion(v)}>{v}</button>
+                    ))}
+                  </div>
+                )}
                 <textarea value={getDeviceInfo()} readOnly rows={5} className="auto-field" />
 
                 <label>Additional Info</label>
@@ -192,6 +249,7 @@ function BugTemplate({ devices, onClose }) {
               <button onClick={handleCopy} className="copy-btn">
                 {copied ? '✅ Copied!' : '📋 Copy to Clipboard'}
               </button>
+              {copyError && <span className="copy-error">{copyError}</span>}
             </div>
           </div>
         )}

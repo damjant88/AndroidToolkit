@@ -39,6 +39,11 @@ sourceSets {
             srcDirs = ['resources']
         }
     }
+    test {
+        java {
+            srcDirs = ['test']
+        }
+    }
 }
 
 // Copy React build output into the Spring Boot static resources
