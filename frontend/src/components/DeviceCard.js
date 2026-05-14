@@ -23,6 +23,13 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
   const serial = info.serialNumber;
   const { logcatData } = useLogcatWebSocket(serial, info.appInstalled);
 
+  // Clear message when a new app is installed
+  useEffect(() => {
+    if (info.appInstalled) {
+      setMessage('');
+    }
+  }, [info.appInstalled]);
+
   useEffect(() => {
     getDeviceLocation(serial)
       .then(data => {
