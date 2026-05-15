@@ -1,10 +1,15 @@
 package androidtoolkit.backend.entity;
 
+import androidtoolkit.domain.tenant.TenantRole;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+/**
+ * Represents a pending invitation for a user to join a tenant.
+ */
 @Entity
-@Table(name = "pending_invites", uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "invited_email"}))
+@Table(name = "pending_invites",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "email"}))
 public class PendingInvite {
 
     @Id
@@ -12,36 +17,51 @@ public class PendingInvite {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private User owner;
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
 
-    @Column(name = "invited_email", nullable = false)
-    private String invitedEmail;
+    @Column(nullable = false)
+    private String email;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private User.Tier assignedTier;
+    @Column(nullable = false, length = 20)
+    private TenantRole role = TenantRole.USER;
+
+    @Column(nullable = false, unique = true)
+    private String inviteToken;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invited_by", nullable = false)
+    private User invitedBy;
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Column(nullable = false)
+    private Instant expiresAt;
+
+    @Column(nullable = false)
+    private boolean accepted = false;
+
     public PendingInvite() {}
 
-    public PendingInvite(User owner, String invitedEmail) {
-        this.owner = owner;
-        this.invitedEmail = invitedEmail;
-    }
-
-    public PendingInvite(User owner, String invitedEmail, User.Tier assignedTier) {
-        this.owner = owner;
-        this.invitedEmail = invitedEmail;
-        this.assignedTier = assignedTier;
+    public PendingInvite(Tenant tenant, String email, TenantRole role, String inviteToken, User invitedBy, Instant expiresAt) {
+        this.tenant = tenant;
+        this.email = email;
+        this.role = role;
+        this.inviteToken = inviteToken;
+        this.invitedBy = invitedBy;
+        this.expiresAt = expiresAt;
     }
 
     public Long getId() { return id; }
-    public User getOwner() { return owner; }
-    public String getInvitedEmail() { return invitedEmail; }
+    public Tenant getTenant() { return tenant; }
+    public String getEmail() { return email; }
+    public TenantRole getRole() { return role; }
+    public String getInviteToken() { return inviteToken; }
+    public User getInvitedBy() { return invitedBy; }
     public Instant getCreatedAt() { return createdAt; }
-    public User.Tier getAssignedTier() { return assignedTier; }
-    public void setAssignedTier(User.Tier assignedTier) { this.assignedTier = assignedTier; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public boolean isAccepted() { return accepted; }
+    public void setAccepted(boolean accepted) { this.accepted = accepted; }
 }

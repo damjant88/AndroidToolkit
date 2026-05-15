@@ -40,6 +40,7 @@ public class LogCollectionService {
     private final AppServices appServices;
     private final ZipArchiveService zipArchiveService;
     private final SharedStorageService sharedStorageService;
+    private final ObjectStorageService objectStorageService;
     private final LogUploadMetadataRepository metadataRepository;
     private final ProjectRepository projectRepository;
     private final DeviceGateway deviceGateway;
@@ -51,6 +52,7 @@ public class LogCollectionService {
             AppServices appServices,
             ZipArchiveService zipArchiveService,
             SharedStorageService sharedStorageService,
+            ObjectStorageService objectStorageService,
             LogUploadMetadataRepository metadataRepository,
             ProjectRepository projectRepository,
             DeviceGateway deviceGateway,
@@ -61,6 +63,7 @@ public class LogCollectionService {
         this.appServices = appServices;
         this.zipArchiveService = zipArchiveService;
         this.sharedStorageService = sharedStorageService;
+        this.objectStorageService = objectStorageService;
         this.metadataRepository = metadataRepository;
         this.projectRepository = projectRepository;
         this.deviceGateway = deviceGateway;
@@ -112,12 +115,15 @@ public class LogCollectionService {
             } else {
                 log.warn("Shared storage unreachable for project '{}': {}",
                         project.getName(), project.getSharedLogStoragePath());
+                // Still upload to object storage even if shared storage is unreachable
+                uploadToObjectStorageAsync(exportResponse.getExportedLogsFolder(), project, serial, flavor, deviceName);
             }
         } else if (project != null) {
-            log.info("Project '{}' has no shared log storage path configured, skipping upload",
+            log.info("Project '{}' has no shared log storage path configured, uploading to object storage only",
                     project.getName());
+            uploadToObjectStorageAsync(exportResponse.getExportedLogsFolder(), project, serial, flavor, deviceName);
         } else {
-            log.info("No project association found for device {}, skipping shared upload", serial);
+            log.info("No project association found for device {}, skipping upload", serial);
         }
 
         // 6. Return response immediately
@@ -128,6 +134,55 @@ public class LogCollectionService {
                 project != null ? project.getSharedLogStoragePath() : null,
                 project != null ? project.getId() : null
         );
+    }
+
+    /**
+     * Asynchronously creates ZIP archive and uploads ONLY to Object Storage (MinIO/S3).
+     * Used when shared network storage is not configured or unreachable.
+     */
+    @Async
+    public void uploadToObjectStorageAsync(String exportedLogsFolder, Project project, String serial,
+                                           String flavor, String deviceName) {
+        try {
+            Path sourceDir = Path.of(exportedLogsFolder);
+            if (!Files.exists(sourceDir) || !Files.isDirectory(sourceDir)) {
+                log.warn("Exported logs folder does not exist: {}", exportedLogsFolder);
+                return;
+            }
+
+            String date = LocalDate.now().toString();
+            String time = LocalTime.now().format(TIME_FORMATTER);
+            String tokenType = resolveTokenType(serial);
+
+            StringBuilder archiveBuilder = new StringBuilder();
+            if (!"Device".equals(deviceName)) archiveBuilder.append(deviceName).append("_");
+            archiveBuilder.append(sanitizeSerial(serial));
+            if (!"unknown".equals(tokenType)) archiveBuilder.append("_").append(tokenType);
+            archiveBuilder.append("_").append(date).append("_").append(time).append(".zip");
+            String archiveName = archiveBuilder.toString();
+
+            Path zipFile = zipArchiveService.createArchive(sourceDir, archiveName);
+
+            long fileSize = Files.size(zipFile);
+            String objectKey = objectStorageService.upload(
+                    1L, // default tenant
+                    project.getName(),
+                    archiveName,
+                    Files.newInputStream(zipFile),
+                    fileSize
+            );
+            log.info("Uploaded to object storage: {}", objectKey);
+
+            // Persist metadata
+            LogUploadMetadata metadata = new LogUploadMetadata(
+                    project, serial, Instant.now(), objectKey, fileSize, LocalDate.now()
+            );
+            metadataRepository.save(metadata);
+
+            Files.deleteIfExists(zipFile);
+        } catch (Exception e) {
+            log.error("Failed to upload to object storage for device {}: {}", serial, e.getMessage(), e);
+        }
     }
 
     /**
@@ -184,6 +239,21 @@ public class LogCollectionService {
                 log.info("Upload metadata saved for device {} project '{}'", serial, project.getName());
             }
 
+            // Also upload to Object Storage (MinIO/S3) for cloud backup
+            try {
+                long fileSize = Files.size(zipFile);
+                String objectKey = objectStorageService.upload(
+                        1L, // default tenant for standalone/dev
+                        project.getName(),
+                        archiveName,
+                        Files.newInputStream(zipFile),
+                        fileSize
+                );
+                log.info("Uploaded to object storage: {}", objectKey);
+            } catch (Exception e) {
+                log.warn("Object storage upload failed (non-fatal): {}", e.getMessage());
+            }
+
             // Clean up local ZIP file
             Files.deleteIfExists(zipFile);
 
@@ -197,6 +267,7 @@ public class LogCollectionService {
     /**
      * Resolves the project for this log pull.
      * Uses provided projectId first, then tries to detect from installed packages.
+     * Falls back to a "Default" project so files always get uploaded to Object Storage.
      */
     private Project resolveProject(String serial, Long projectId) {
         // If projectId is explicitly provided, use it
@@ -211,18 +282,25 @@ public class LogCollectionService {
 
             if (!detectedPackage.isEmpty()) {
                 // Try to find a project that matches this package
-                // For now, search all projects and match by name heuristic
-                return projectRepository.findAll().stream()
+                Project matched = projectRepository.findAll().stream()
                         .filter(p -> packageMatchesProject(detectedPackage, p))
                         .findFirst()
                         .orElse(null);
+                if (matched != null) return matched;
             }
         } catch (Exception e) {
             log.warn("Failed to detect project from device packages for serial {}: {}",
                     serial, e.getMessage());
         }
 
-        return null;
+        // Fall back to "Default" project — create it if it doesn't exist
+        return projectRepository.findByName("Default")
+                .orElseGet(() -> {
+                    Project defaultProject = new Project("Default", "", "");
+                    projectRepository.save(defaultProject);
+                    log.info("Created 'Default' project for unassociated log uploads");
+                    return defaultProject;
+                });
     }
 
     /**
@@ -296,8 +374,12 @@ public class LogCollectionService {
                     .forEach(f -> {
                         try {
                             String originalName = f.getFileName().toString();
+                            // Strip existing prefix if already applied (prevents duplication)
+                            if (originalName.startsWith(finalPrefix + "_")) {
+                                originalName = originalName.substring(finalPrefix.length() + 1);
+                            }
                             String newName = finalPrefix + "_" + originalName;
-                            Files.move(f, f.resolveSibling(newName));
+                            Files.move(f, f.resolveSibling(newName), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                         } catch (IOException e) {
                             log.warn("Failed to rename log file {}: {}", f, e.getMessage());
                         }

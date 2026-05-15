@@ -60,18 +60,13 @@ public class AuthController {
         User user = new User(username, email, passwordEncoder.encode(password));
         userRepository.save(user);
 
-        // Convert any pending invites for this email into actual grants
-        var pendingInvites = pendingInviteRepository.findByInvitedEmail(email);
+        // Convert any pending invites for this email into accepted state
+        var pendingInvites = pendingInviteRepository.findByEmail(email);
         for (var invite : pendingInvites) {
-            accessGrantRepository.save(new AccessGrant(invite.getOwner(), user, true));
-            // Apply the assigned tier from the invite (use the highest tier if multiple invites)
-            if (invite.getAssignedTier() != null && invite.getAssignedTier().ordinal() > user.getTier().ordinal()) {
-                user.setTier(invite.getAssignedTier());
-            }
-        }
-        if (!pendingInvites.isEmpty()) {
-            userRepository.save(user);
-            pendingInviteRepository.deleteAll(pendingInvites);
+            invite.setAccepted(true);
+            pendingInviteRepository.save(invite);
+            // Also create a legacy access grant for backward compatibility
+            accessGrantRepository.save(new AccessGrant(invite.getInvitedBy(), user, true));
         }
 
         return Map.of("message", "Registration successful", "username", username);

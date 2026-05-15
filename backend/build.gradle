@@ -13,14 +13,30 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     runtimeOnly 'com.mysql:mysql-connector-j'
     runtimeOnly 'com.h2database:h2'
+
+    // PostgreSQL driver for cloud/SaaS deployment (Requirement 5.2)
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // AWS SDK v2 S3 client for cloud-agnostic Object Storage (Requirement 5.3)
+    implementation platform('software.amazon.awssdk:bom:2.29.1')
+    implementation 'software.amazon.awssdk:s3'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'net.jqwik:jqwik:1.9.1'
+
+    // Testcontainers for integration tests with PostgreSQL and MinIO
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.20.4')
+    testImplementation 'org.testcontainers:testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:minio'
 }
 
 // Spring Boot requires Java 17+
@@ -63,4 +79,6 @@ tasks.named('test') {
 
 bootRun {
     jvmArgs = ['-Djava.awt.headless=false']
+    // Pass all environment variables to the Spring Boot process
+    environment System.getenv()
 }

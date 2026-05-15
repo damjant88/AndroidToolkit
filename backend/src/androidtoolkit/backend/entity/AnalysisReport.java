@@ -1,16 +1,23 @@
 package androidtoolkit.backend.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Filter;
+
 import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "analysis_reports")
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class AnalysisReport {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id")
+    private Tenant tenant;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
@@ -49,6 +56,9 @@ public class AnalysisReport {
     public AnalysisReport() {}
 
     public Long getId() { return id; }
+
+    public Tenant getTenant() { return tenant; }
+    public void setTenant(Tenant tenant) { this.tenant = tenant; }
 
     public Project getProject() { return project; }
     public void setProject(Project project) { this.project = project; }
