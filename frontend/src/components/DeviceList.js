@@ -4,6 +4,7 @@ import { useDeviceWebSocket } from '../api/useDeviceWebSocket';
 import { useAuth } from '../api/AuthContext';
 import DeviceCard from './DeviceCard';
 import InstallPanel from './InstallPanel';
+import ProjectQuickAccess from './ProjectQuickAccess';
 import PermissionsDialog from './PermissionsDialog';
 import BugTemplate from './BugTemplate';
 
@@ -98,9 +99,18 @@ function DeviceList() {
     setPermissionsTarget(null);
   }
 
-  if (loading && devices.length === 0) return <p className="status">Loading devices...</p>;
+  if (loading && devices.length === 0) {
+    return (
+      <div>
+        <div className="top-panels-row">
+          <InstallPanel devices={[]} selectedDevices={[]} onRefresh={fetchDevices} />
+          <ProjectQuickAccess devices={[]} />
+        </div>
+        <p className="status">Loading devices...</p>
+      </div>
+    );
+  }
   if (error) return <p className="status error">{error}</p>;
-  if (devices.length === 0) return <p className="status">No devices connected.</p>;
 
   const visibleDevices = devices.slice(0, maxDevices);
   const selectedDevices = visibleDevices.filter(d => selectedSerials.has(d.serial));
@@ -111,42 +121,51 @@ function DeviceList() {
 
   return (
     <div>
-      <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
-      <div className="toolbar">
-        <span className={`connection-status ${connected || devices.length > 0 ? 'connected' : 'disconnected'}`}>
-          {connected || devices.length > 0 ? '🟢' : '🔴'}
-        </span>
-        <span>{displayCount} device(s) connected</span>
-        <span className="selection-info">{displaySelected} selected</span>
-        <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>
-        <button onClick={deselectAllDevices} className="toolbar-small-btn">Deselect All</button>
-        <button onClick={() => setShowBugTemplate(true)} className="toolbar-small-btn">🐛 Bug Template</button>
+      <div className="top-panels-row">
+        <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
+        <ProjectQuickAccess devices={visibleDevices} />
       </div>
-      <div className="device-grid">
-        {visibleDevices.map((device) => (
-          <DeviceCard
-            key={device.deviceInfo.serialNumber}
-            device={device}
-            selected={selectedSerials.has(device.serial)}
-            onToggleSelect={() => toggleDeviceSelection(device.serial)}
-            onRefresh={fetchDevices}
-            onOpenPermissions={(serial, packageName) => openPermissions(serial, packageName, device.deviceName)}
-            tier={user?.tier}
-          />
-        ))}
-      </div>
+      {devices.length === 0 ? (
+        <p className="status">No devices connected.</p>
+      ) : (
+        <>
+          <div className="toolbar">
+            <span className={`connection-status ${connected || devices.length > 0 ? 'connected' : 'disconnected'}`}>
+              {connected || devices.length > 0 ? '🟢' : '🔴'}
+            </span>
+            <span>{displayCount} device(s) connected</span>
+            <span className="selection-info">{displaySelected} selected</span>
+            <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>
+            <button onClick={deselectAllDevices} className="toolbar-small-btn">Deselect All</button>
+            <button onClick={() => setShowBugTemplate(true)} className="toolbar-small-btn">🐛 Bug Template</button>
+          </div>
+          <div className="device-grid">
+            {visibleDevices.map((device) => (
+              <DeviceCard
+                key={device.deviceInfo.serialNumber}
+                device={device}
+                selected={selectedSerials.has(device.serial)}
+                onToggleSelect={() => toggleDeviceSelection(device.serial)}
+                onRefresh={fetchDevices}
+                onOpenPermissions={(serial, packageName) => openPermissions(serial, packageName, device.deviceName)}
+                tier={user?.tier}
+              />
+            ))}
+          </div>
 
-      {permissionsTarget && (
-        <PermissionsDialog
-          serial={permissionsTarget.serial}
-          packageName={permissionsTarget.packageName}
-          deviceName={permissionsTarget.deviceName}
-          onClose={closePermissions}
-        />
-      )}
+          {permissionsTarget && (
+            <PermissionsDialog
+              serial={permissionsTarget.serial}
+              packageName={permissionsTarget.packageName}
+              deviceName={permissionsTarget.deviceName}
+              onClose={closePermissions}
+            />
+          )}
 
-      {showBugTemplate && (
-        <BugTemplate devices={visibleDevices} onClose={() => setShowBugTemplate(false)} />
+          {showBugTemplate && (
+            <BugTemplate devices={visibleDevices} onClose={() => setShowBugTemplate(false)} />
+          )}
+        </>
       )}
     </div>
   );
