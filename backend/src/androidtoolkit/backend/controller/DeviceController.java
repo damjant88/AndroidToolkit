@@ -1,20 +1,13 @@
 package androidtoolkit.backend.controller;
 
-import androidtoolkit.app.AppServices;
-import androidtoolkit.app.DeviceActionManager;
-import androidtoolkit.app.DeviceCatalog;
-import androidtoolkit.app.DeviceDiscoveryRequest;
 import androidtoolkit.app.DeviceDiscoveryResult;
 import androidtoolkit.app.DeviceMessageResult;
-import androidtoolkit.app.LogExportManager;
-import androidtoolkit.app.LogExportResponse;
 import androidtoolkit.app.ScreenshotCaptureResponse;
-import androidtoolkit.app.ScreenshotManager;
 import androidtoolkit.app.UninstallAppResult;
 import androidtoolkit.app.WifiDebugResult;
-import androidtoolkit.backend.dto.LogCollectionResponse;
+import androidtoolkit.backend.device.DeviceProvider;
 import androidtoolkit.backend.dto.LogcatData;
-import androidtoolkit.backend.service.LogCollectionService;
+import androidtoolkit.backend.security.TenantContext;
 import androidtoolkit.backend.service.LogcatStreamManager;
 import androidtoolkit.service.CommandExecutor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +15,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -35,84 +27,74 @@ import static androidtoolkit.backend.validation.InputValidator.validateSerial;
 @RequestMapping("/api/devices")
 public class DeviceController {
 
-    private final DeviceCatalog deviceCatalog;
-    private final DeviceActionManager deviceActionManager;
-    private final LogExportManager logExportManager;
-    private final LogCollectionService logCollectionService;
-    private final ScreenshotManager screenshotManager;
-    private final AppServices appServices;
+    private final DeviceProvider deviceProvider;
     private final CommandExecutor commandExecutor;
     private final LogcatStreamManager logcatStreamManager;
     private final ConcurrentHashMap<String, Process> activeMocks = new ConcurrentHashMap<>();
 
     public DeviceController(
-            DeviceCatalog deviceCatalog,
-            DeviceActionManager deviceActionManager,
-            LogExportManager logExportManager,
-            LogCollectionService logCollectionService,
-            ScreenshotManager screenshotManager,
-            AppServices appServices,
+            DeviceProvider deviceProvider,
             CommandExecutor commandExecutor,
             LogcatStreamManager logcatStreamManager
     ) {
-        this.deviceCatalog = deviceCatalog;
-        this.deviceActionManager = deviceActionManager;
-        this.logExportManager = logExportManager;
-        this.logCollectionService = logCollectionService;
-        this.screenshotManager = screenshotManager;
-        this.appServices = appServices;
+        this.deviceProvider = deviceProvider;
         this.commandExecutor = commandExecutor;
         this.logcatStreamManager = logcatStreamManager;
     }
 
     @GetMapping
     public DeviceDiscoveryResult getConnectedDevices() {
-        return deviceCatalog.discoverDevices(new DeviceDiscoveryRequest());
+        Long tenantId = getTenantId();
+        return deviceProvider.discoverDevices(tenantId);
     }
 
     @PostMapping("/{serial}/reboot")
     public DeviceMessageResult reboot(@PathVariable String serial) {
         validateSerial(serial);
-        return deviceActionManager.rebootDevice(serial, serial);
+        Long tenantId = getTenantId();
+        return deviceProvider.reboot(tenantId, serial);
     }
 
     @PostMapping("/{serial}/uninstall")
     public UninstallAppResult uninstall(@PathVariable String serial, @RequestBody Map<String, String> body) {
         validateSerial(serial);
+        Long tenantId = getTenantId();
         String packageName = body.getOrDefault("packageName", "");
         validatePackageName(packageName);
-        return deviceActionManager.uninstallApp(serial, serial, packageName);
+        return deviceProvider.uninstall(tenantId, serial, packageName);
     }
 
     @PostMapping("/{serial}/wifi-debug")
     public WifiDebugResult toggleWifiDebug(@PathVariable String serial, @RequestBody Map<String, Object> body) {
         validateSerial(serial);
+        Long tenantId = getTenantId();
         String ipAddress = (String) body.getOrDefault("ipAddress", "");
         boolean wifiDebugSession = (boolean) body.getOrDefault("wifiDebugSession", false);
         boolean hasWifiIp = (boolean) body.getOrDefault("hasWifiIp", false);
-        return deviceActionManager.toggleWifiDebugging(serial, serial, ipAddress, wifiDebugSession, hasWifiIp);
+        return deviceProvider.toggleWifiDebug(tenantId, serial, ipAddress, wifiDebugSession, hasWifiIp);
     }
 
     @PostMapping("/{serial}/firebase-debug")
     public DeviceMessageResult enableFirebaseDebug(@PathVariable String serial, @RequestBody Map<String, String> body) {
         validateSerial(serial);
+        Long tenantId = getTenantId();
         String packageName = body.getOrDefault("packageName", "");
         validatePackageName(packageName);
-        return deviceActionManager.enableFirebaseDebugging(serial, serial, packageName);
+        return deviceProvider.enableFirebaseDebug(tenantId, serial, packageName);
     }
 
     @PostMapping("/{serial}/pull-logs")
-    public LogCollectionResponse pullLogs(@PathVariable String serial,
-                                          @RequestParam(required = false) Long projectId) {
+    public DeviceMessageResult pullLogs(@PathVariable String serial) {
         validateSerial(serial);
-        return logCollectionService.collectLogs(serial, projectId);
+        Long tenantId = getTenantId();
+        return deviceProvider.pullLogs(tenantId, serial);
     }
 
     @PostMapping("/{serial}/screenshot")
     public ScreenshotCaptureResponse takeScreenshot(@PathVariable String serial, @RequestBody(required = false) Map<String, String> body) {
         validateSerial(serial);
-        String deviceName = (body != null) ? body.getOrDefault("deviceName", serial) : serial;
-        return screenshotManager.captureScreenshot(serial, deviceName);
+        Long tenantId = getTenantId();
+        return deviceProvider.screenshot(tenantId, serial);
     }
 
     @GetMapping("/{serial}/location")
@@ -211,5 +193,15 @@ public class DeviceController {
         validateSerial(serial);
         logcatStreamManager.stopTracking(serial);
         return Map.of("success", true, "message", "Tracking stopped");
+    }
+
+    /**
+     * Extracts the tenant ID from the current request's TenantContext.
+     * In standalone mode (no tenant context set), returns null which is acceptable
+     * since LocalDeviceProvider ignores the tenantId parameter.
+     * In SaaS mode, the TenantContextInterceptor sets this from the JWT's tenantId claim.
+     */
+    private Long getTenantId() {
+        return TenantContext.getTenantId();
     }
 }

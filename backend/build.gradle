@@ -30,6 +30,7 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'net.jqwik:jqwik:1.9.1'
+    testImplementation project(':agent')
 
     // Testcontainers for integration tests with PostgreSQL and MinIO
     testImplementation platform('org.testcontainers:testcontainers-bom:1.20.4')

@@ -3,6 +3,8 @@ package androidtoolkit.agent.connection;
 import androidtoolkit.domain.agent.AgentCommand;
 import androidtoolkit.domain.agent.AgentMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
@@ -25,6 +27,8 @@ import java.util.function.Consumer;
 @Component
 public class ServerConnection extends TextWebSocketHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(ServerConnection.class);
+
     @Value("${agent.server-url:ws://localhost:8080/ws/agent}")
     private String serverUrl;
 
@@ -37,6 +41,7 @@ public class ServerConnection extends TextWebSocketHandler {
 
     private WebSocketSession session;
     private Consumer<AgentCommand> commandHandler;
+    private Runnable onReconnected;
     private int consecutiveFailures = 0;
     private static final long INITIAL_DELAY_MS = 1000;
     private static final long MAX_DELAY_MS = 60000;
@@ -44,6 +49,15 @@ public class ServerConnection extends TextWebSocketHandler {
 
     public void setCommandHandler(Consumer<AgentCommand> handler) {
         this.commandHandler = handler;
+    }
+
+    /**
+     * Sets a callback to be invoked after a successful (re)connection.
+     * The agent application uses this to re-send the current DeviceList
+     * within 5 seconds of connection establishment.
+     */
+    public void setOnReconnected(Runnable onReconnected) {
+        this.onReconnected = onReconnected;
     }
 
     @PostConstruct
@@ -54,13 +68,20 @@ public class ServerConnection extends TextWebSocketHandler {
     private void attemptConnection() {
         try {
             String url = serverUrl + "?token=" + authToken;
+            log.info("Connecting to server: {} (token length: {})", serverUrl, authToken.length());
             var client = new StandardWebSocketClient();
             this.session = client.execute(this, url).get(10, TimeUnit.SECONDS);
             consecutiveFailures = 0;
+            log.info("Connected to server successfully");
             flushPendingMessages();
+            if (onReconnected != null) {
+                onReconnected.run();
+            }
         } catch (Exception e) {
             consecutiveFailures++;
             long delay = calculateBackoffDelay();
+            log.warn("Connection attempt failed (attempt {}), retrying in {}ms: {}", 
+                    consecutiveFailures, delay, e.getMessage());
             scheduler.schedule(this::attemptConnection, delay, TimeUnit.MILLISECONDS);
         }
     }
@@ -96,6 +117,7 @@ public class ServerConnection extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         this.session = null;
+        log.warn("Connection closed: {}. Reconnecting...", status);
         consecutiveFailures++;
         long delay = calculateBackoffDelay();
         scheduler.schedule(this::attemptConnection, delay, TimeUnit.MILLISECONDS);

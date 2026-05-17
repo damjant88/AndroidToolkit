@@ -1,6 +1,8 @@
 package androidtoolkit.domain.agent;
 
 import androidtoolkit.domain.DeviceInfo;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import java.util.List;
 
@@ -9,6 +11,13 @@ import java.util.List;
  * Each message reports the result of an ADB operation or streams
  * real-time data from a connected device.
  */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = AgentMessage.LogcatLine.class, name = "LogcatLine"),
+    @JsonSubTypes.Type(value = AgentMessage.DeviceList.class, name = "DeviceList"),
+    @JsonSubTypes.Type(value = AgentMessage.OperationResult.class, name = "OperationResult"),
+    @JsonSubTypes.Type(value = AgentMessage.LogArchiveReady.class, name = "LogArchiveReady")
+})
 public sealed interface AgentMessage {
 
     /**

@@ -1,5 +1,9 @@
 package androidtoolkit.backend.config;
 
+import androidtoolkit.backend.device.AgentDisconnectedException;
+import androidtoolkit.backend.device.CommandTimeoutException;
+import androidtoolkit.backend.device.DeviceUnreachableException;
+import androidtoolkit.backend.device.UnsupportedCommandException;
 import androidtoolkit.backend.service.TierLimitExceededException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +41,45 @@ public class GlobalExceptionHandler {
                                 "resource", e.getResource()
                         ),
                         "timestamp", Instant.now().toString()
+                ));
+    }
+
+    @ExceptionHandler(DeviceUnreachableException.class)
+    public ResponseEntity<Map<String, Object>> handleDeviceUnreachable(DeviceUnreachableException e) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(Map.of(
+                        "error", "device_unreachable",
+                        "serial", e.getSerial(),
+                        "reason", e.getReason()
+                ));
+    }
+
+    @ExceptionHandler(CommandTimeoutException.class)
+    public ResponseEntity<Map<String, Object>> handleCommandTimeout(CommandTimeoutException e) {
+        return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT)
+                .body(Map.of(
+                        "error", "command_timeout",
+                        "serial", e.getSerial(),
+                        "timeoutSeconds", e.getTimeoutSeconds()
+                ));
+    }
+
+    @ExceptionHandler(AgentDisconnectedException.class)
+    public ResponseEntity<Map<String, Object>> handleAgentDisconnected(AgentDisconnectedException e) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of(
+                        "error", "agent_disconnected",
+                        "serial", e.getSerial(),
+                        "agentId", e.getAgentId()
+                ));
+    }
+
+    @ExceptionHandler(UnsupportedCommandException.class)
+    public ResponseEntity<Map<String, Object>> handleUnsupportedCommand(UnsupportedCommandException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of(
+                        "error", "unsupported_command",
+                        "commandType", e.getCommandType()
                 ));
     }
 }

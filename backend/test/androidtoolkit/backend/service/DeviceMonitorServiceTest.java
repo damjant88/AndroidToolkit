@@ -28,7 +28,7 @@ class DeviceMonitorServiceTest {
         deviceCatalog = mock(DeviceCatalog.class);
         messagingTemplate = mock(SimpMessagingTemplate.class);
         logcatStreamManager = mock(LogcatStreamManager.class);
-        service = new DeviceMonitorService(deviceCatalog, messagingTemplate, logcatStreamManager);
+        service = new DeviceMonitorService(deviceCatalog, messagingTemplate, logcatStreamManager, "standalone");
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────────

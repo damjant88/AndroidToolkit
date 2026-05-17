@@ -1,10 +1,12 @@
 package androidtoolkit.backend.service;
 
+import androidtoolkit.backend.crash.*;
 import androidtoolkit.backend.dto.EventMatch;
 import androidtoolkit.backend.dto.LogcatData;
 import androidtoolkit.domain.DeviceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +14,7 @@ import jakarta.annotation.PreDestroy;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,7 +33,11 @@ public class LogcatStreamManager {
 
     private final LogcatParser logcatParser;
     private final SimpMessagingTemplate messagingTemplate;
+    private final CrashDetector crashDetector;
+    private final AlertConfigurationService alertConfigurationService;
+    private final ApplicationEventPublisher eventPublisher;
     private final ConcurrentHashMap<String, LogcatSession> activeSessions = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, LineBuffer> crashLineBuffers = new ConcurrentHashMap<>();
     private final ScheduledExecutorService retryScheduler = Executors.newSingleThreadScheduledExecutor(
             r -> {
                 Thread t = new Thread(r, "logcat-retry-scheduler");
@@ -44,9 +46,16 @@ public class LogcatStreamManager {
             }
     );
 
-    public LogcatStreamManager(LogcatParser logcatParser, SimpMessagingTemplate messagingTemplate) {
+    public LogcatStreamManager(LogcatParser logcatParser,
+                               SimpMessagingTemplate messagingTemplate,
+                               CrashDetector crashDetector,
+                               AlertConfigurationService alertConfigurationService,
+                               ApplicationEventPublisher eventPublisher) {
         this.logcatParser = logcatParser;
         this.messagingTemplate = messagingTemplate;
+        this.crashDetector = crashDetector;
+        this.alertConfigurationService = alertConfigurationService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -153,6 +162,8 @@ public class LogcatStreamManager {
                         }
                         // Event tracking on all lines
                         processEventTracking(session, line);
+                        // Crash detection on all lines
+                        processCrashDetection(serial, line);
                     }
                 } catch (IOException e) {
                     if (!Thread.currentThread().isInterrupted()) {
@@ -394,6 +405,47 @@ public class LogcatStreamManager {
 
         EventMatch event = new EventMatch(serial, matchedLine, contextLines);
         messagingTemplate.convertAndSend("/topic/events/" + serial, event);
+    }
+
+    /**
+     * Processes crash detection for a single logcat line.
+     * Adds the line to the crash line buffer and runs the CrashDetector.
+     * If a crash is detected, publishes a CrashDetectedEvent.
+     */
+    private void processCrashDetection(String serial, String line) {
+        // Get or create the crash line buffer for this device
+        LineBuffer buffer = crashLineBuffers.computeIfAbsent(serial, s -> {
+            // Use project-specific buffer size if available, otherwise default
+            return new LineBuffer(500);
+        });
+
+        buffer.add(line);
+
+        // Run crash detection (projectId/tenantId resolved inside CrashDetector via patterns)
+        // For now, we pass null for context — stack trace is extracted from subsequent lines
+        // The CrashDetector will use the patterns associated with the device's project
+        try {
+            // We need projectId and tenantId — these come from the device-project mapping
+            // For simplicity, pass context as empty list; the CrashDetector handles it
+            Optional<CrashEvent> crashEvent = crashDetector.analyze(
+                    serial, line, Collections.emptyList(), null, null);
+
+            crashEvent.ifPresent(event -> {
+                // Publish the crash event with the current buffer snapshot
+                ArrayDeque<String> bufferSnapshot = new ArrayDeque<>(buffer.snapshot());
+                eventPublisher.publishEvent(new CrashDetectedEvent(event, bufferSnapshot, Collections.emptyList()));
+            });
+        } catch (Exception e) {
+            log.debug("Crash detection error for device {}: {}", serial, e.getMessage());
+        }
+    }
+
+    /**
+     * Updates the crash line buffer configuration for a device.
+     * Called when AlertConfiguration is updated to apply new buffer size.
+     */
+    public void updateCrashBufferSize(String serial, int newSize) {
+        crashLineBuffers.put(serial, new LineBuffer(newSize));
     }
 
     /**

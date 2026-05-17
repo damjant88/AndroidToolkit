@@ -30,6 +30,7 @@ public class JwtService {
         return Jwts.builder()
                 .subject(user.getUsername())
                 .claim("userId", user.getId())
+                .claim("tenantId", user.getId())
                 .claim("tier", user.getTier().name())
                 .claim("role", user.getRole().name())
                 .issuedAt(new Date())

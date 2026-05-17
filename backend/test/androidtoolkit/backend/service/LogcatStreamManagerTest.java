@@ -1,10 +1,13 @@
 package androidtoolkit.backend.service;
 
+import androidtoolkit.backend.crash.CrashDetector;
+import androidtoolkit.backend.crash.AlertConfigurationService;
 import androidtoolkit.domain.DeviceInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.List;
@@ -18,12 +21,18 @@ class LogcatStreamManagerTest {
     private LogcatStreamManager manager;
     private SimpMessagingTemplate messagingTemplate;
     private LogcatParser logcatParser;
+    private CrashDetector crashDetector;
+    private AlertConfigurationService alertConfigurationService;
+    private ApplicationEventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
         messagingTemplate = mock(SimpMessagingTemplate.class);
         logcatParser = new LogcatParser();
-        manager = new LogcatStreamManager(logcatParser, messagingTemplate);
+        crashDetector = mock(CrashDetector.class);
+        alertConfigurationService = mock(AlertConfigurationService.class);
+        eventPublisher = mock(ApplicationEventPublisher.class);
+        manager = new LogcatStreamManager(logcatParser, messagingTemplate, crashDetector, alertConfigurationService, eventPublisher);
     }
 
     // ─── Helper ──────────────────────────────────────────────────────────────────
