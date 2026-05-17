@@ -26,6 +26,25 @@ public class AgentDeviceController {
     private final ConcurrentHashMap<String, Process> activeRecordings = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Process> activeMirrors = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> recordingMeta = new ConcurrentHashMap<>();
+    private final DeviceDiscoveryScheduler deviceDiscoveryScheduler;
+
+    public AgentDeviceController(DeviceDiscoveryScheduler deviceDiscoveryScheduler) {
+        this.deviceDiscoveryScheduler = deviceDiscoveryScheduler;
+    }
+
+    /**
+     * Triggers an immediate device info refresh so the backend/frontend
+     * gets updated package and PID info after install/uninstall.
+     */
+    private void triggerDeviceRefresh() {
+        try {
+            // Small delay to let the package manager settle
+            Thread.sleep(1000);
+            deviceDiscoveryScheduler.refreshDeviceInfo();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     /**
      * Capture a screenshot and return it directly as PNG bytes.
@@ -181,7 +200,9 @@ public class AgentDeviceController {
         if (packageName.isEmpty()) {
             return Map.of("success", false, "message", "packageName required");
         }
-        return runSimpleCommand(serial, "uninstall", "adb", "-s", serial, "uninstall", packageName);
+        Map<String, Object> result = runSimpleCommand(serial, "uninstall", "adb", "-s", serial, "uninstall", packageName);
+        triggerDeviceRefresh();
+        return result;
     }
 
     /**
@@ -276,7 +297,10 @@ public class AgentDeviceController {
         if (!apkFile.exists()) {
             return Map.of("success", false, "message", "APK not found: " + apkPath + " (also checked apks/" + apkPath + ")");
         }
-        return runSimpleCommand(serial, "install", "adb", "-s", serial, "install", "-r", apkFile.getAbsolutePath());
+        Map<String, Object> result = runSimpleCommand(serial, "install", "adb", "-s", serial, "install", "-r", apkFile.getAbsolutePath());
+        // Trigger immediate device info refresh so the UI updates with new package info
+        triggerDeviceRefresh();
+        return result;
     }
 
     /**
