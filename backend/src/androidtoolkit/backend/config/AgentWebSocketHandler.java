@@ -131,6 +131,7 @@ public class AgentWebSocketHandler extends TextWebSocketHandler {
                         "/topic/devices/tenant/" + tenantId,
                         discoveryResult
                 );
+                messagingTemplate.convertAndSend("/topic/devices", discoveryResult);
             }
         }
     }
@@ -202,6 +203,7 @@ public class AgentWebSocketHandler extends TextWebSocketHandler {
                         "/topic/devices/tenant/" + tenantId,
                         discoveryResult
                 );
+                messagingTemplate.convertAndSend("/topic/devices", discoveryResult);
             }
         }
     }
