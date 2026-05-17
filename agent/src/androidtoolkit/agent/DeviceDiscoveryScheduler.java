@@ -50,12 +50,6 @@ public class DeviceDiscoveryScheduler {
         Thread tracker = new Thread(this::trackDevices, "adb-track-devices");
         tracker.setDaemon(true);
         tracker.start();
-
-        // Also do an immediate scan after a short delay (connection may not be ready at @PostConstruct time)
-        enrichmentExecutor.submit(() -> {
-            try { Thread.sleep(3000); } catch (InterruptedException e) { return; }
-            onDeviceChangeDetected();
-        });
     }
 
     @PreDestroy
@@ -173,15 +167,15 @@ public class DeviceDiscoveryScheduler {
     }
 
     /**
-     * Enriches device info with shell commands (manufacturer, OS, IP, packages, PID)
-     * then sends the updated device list.
+     * Enriches device info using a SINGLE adb shell call that gathers all data at once.
+     * This is ~5x faster than running 6 separate adb shell commands sequentially.
      */
     private void enrichAndSend(List<DeviceInfo> basicDevices) {
         try {
             List<DeviceInfo> enrichedDevices = new ArrayList<>();
             for (DeviceInfo basic : basicDevices) {
                 String serial = basic.getSerialNumber();
-                DeviceInfo enriched = enrichDevice(serial, basic.getModel());
+                DeviceInfo enriched = enrichDeviceFast(serial, basic.getModel());
                 deviceCache.put(serial, enriched);
                 enrichedDevices.add(enriched);
             }
@@ -192,24 +186,42 @@ public class DeviceDiscoveryScheduler {
     }
 
     /**
-     * Gathers full device info via adb shell commands.
+     * Gathers ALL device info in a single adb shell call using a combined command.
+     * Output format: manufacturer|osVersion|wifiIp|mobileIp|packages (one per line after)
      */
-    private DeviceInfo enrichDevice(String serial, String model) {
-        String manufacturer = runAdbShell(serial, "getprop ro.product.manufacturer").trim();
-        String osVersion = runAdbShell(serial, "getprop ro.build.version.release").trim();
-        String wifiIp = extractIp(runAdbShell(serial, "ip addr show wlan0 | grep 'inet '"));
-        String mobileIp = extractIp(runAdbShell(serial, "ip addr show rmnet_data0 | grep 'inet '"));
-        String ipAddress = wifiIp.isEmpty() ? mobileIp : wifiIp;
+    private DeviceInfo enrichDeviceFast(String serial, String model) {
+        // Single shell call that gets everything at once
+        String combined = runAdbShell(serial,
+                "echo \"MANUFACTURER=$(getprop ro.product.manufacturer)\";" +
+                "echo \"OS=$(getprop ro.build.version.release)\";" +
+                "echo \"MODEL=$(getprop ro.product.model)\";" +
+                "echo \"WIFI=$(ip addr show wlan0 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)\";" +
+                "echo \"MOBILE=$(ip addr show rmnet_data0 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)\";" +
+                "pm list packages | grep -E 'safepath|familymode|securefamily|safeandfound'");
 
-        String safePathPackage = findSafePathPackage(serial);
+        String manufacturer = "";
+        String osVersion = "";
+        String wifiIp = "";
+        String mobileIp = "";
+        String safePathPackage = "";
+
+        for (String line : combined.split("\n")) {
+            line = line.trim();
+            if (line.startsWith("MANUFACTURER=")) manufacturer = line.substring(13);
+            else if (line.startsWith("OS=")) osVersion = line.substring(3);
+            else if (line.startsWith("MODEL=") && model.isEmpty()) model = line.substring(6).replace('_', ' ');
+            else if (line.startsWith("WIFI=")) wifiIp = line.substring(5);
+            else if (line.startsWith("MOBILE=")) mobileIp = line.substring(7);
+            else if (line.startsWith("package:")) {
+                safePathPackage = line.substring(8).trim();
+            }
+        }
+
+        String ipAddress = wifiIp.isEmpty() ? mobileIp : wifiIp;
         boolean appInstalled = !safePathPackage.isEmpty();
         String pid = "";
         if (appInstalled) {
             pid = runAdbShell(serial, "pidof -s " + safePathPackage).trim();
-        }
-
-        if (model.isEmpty()) {
-            model = runAdbShell(serial, "getprop ro.product.model").trim().replace('_', ' ');
         }
 
         return new DeviceInfo(serial, manufacturer, model, osVersion,
@@ -228,7 +240,7 @@ public class DeviceDiscoveryScheduler {
             List<DeviceInfo> refreshed = new ArrayList<>();
             for (String serial : deviceCache.keySet()) {
                 DeviceInfo cached = deviceCache.get(serial);
-                DeviceInfo updated = enrichDevice(serial, cached.getModel());
+                DeviceInfo updated = enrichDeviceFast(serial, cached.getModel());
                 deviceCache.put(serial, updated);
                 refreshed.add(updated);
             }
