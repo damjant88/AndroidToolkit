@@ -82,6 +82,9 @@ public class DeviceDiscoveryScheduler {
     /**
      * Called when adb detects a device change. Runs fast enrichment (single shell call)
      * and sends the complete device list immediately.
+     * 
+     * For device removals, applies a 3-second debounce to avoid flickering during
+     * WiFi debug toggle (adb tcpip causes brief USB disconnect/reconnect).
      */
     private void onDeviceChangeDetected() {
         try {
@@ -94,13 +97,32 @@ public class DeviceDiscoveryScheduler {
 
             // Only process if the serial set actually changed
             if (!currentSerials.equals(lastKnownSerials)) {
+                
+                // Check if devices were REMOVED (not added)
+                Set<String> removedSerials = new HashSet<>(lastKnownSerials);
+                removedSerials.removeAll(currentSerials);
+                
+                if (!removedSerials.isEmpty() && !currentSerials.isEmpty()) {
+                    // Devices were removed but some remain — debounce to handle WiFi debug flicker
+                    // Wait 3 seconds and re-scan to see if the device comes back
+                    try { Thread.sleep(3000); } catch (InterruptedException e) { return; }
+                    basicDevices = fastScan();
+                    currentSerials = new HashSet<>();
+                    for (DeviceInfo d : basicDevices) {
+                        currentSerials.add(d.getSerialNumber());
+                    }
+                    // If nothing actually changed after debounce, skip
+                    if (currentSerials.equals(lastKnownSerials)) return;
+                }
+
                 lastKnownSerials = currentSerials;
 
                 // Remove disconnected devices from cache
-                deviceCache.keySet().removeIf(s -> !currentSerials.contains(s));
+                final Set<String> finalSerials = currentSerials;
+                deviceCache.keySet().removeIf(s -> !finalSerials.contains(s));
 
                 if (currentSerials.isEmpty()) {
-                    // All devices disconnected — send empty list immediately
+                    // All devices disconnected — send empty list
                     sendDeviceList(List.of());
                 } else {
                     // Enrich all devices with single shell call each (~1s total)
