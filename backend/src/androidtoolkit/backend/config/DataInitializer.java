@@ -68,7 +68,7 @@ public class DataInitializer {
             for (Map<String, Object> def : DEFAULT_PROJECTS) {
                 String name = (String) def.get("name");
                 if (!projectRepository.existsByName(name)) {
-                    Project project = new Project(name, "", "");
+                    Project project = new Project(name, "", "", "");
                     projectRepository.save(project);
                     log.info("Created default project: {}", name);
                 }

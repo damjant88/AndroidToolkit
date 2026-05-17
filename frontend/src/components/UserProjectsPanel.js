@@ -4,6 +4,7 @@ import { projectApi } from '../api/projectApi';
 function UserProjectsPanel() {
   const [projects, setProjects] = useState([]);
   const [localPaths, setLocalPaths] = useState({});
+  const [logPaths, setLogPaths] = useState({});
   const [message, setMessage] = useState('');
 
   const fetchProjects = useCallback(async () => {
@@ -15,8 +16,13 @@ function UserProjectsPanel() {
       );
       setProjects(resolved);
       const paths = {};
-      resolved.forEach(p => { paths[p.id] = p.localApkFolder; });
+      const logs = {};
+      resolved.forEach(p => {
+        paths[p.id] = p.localApkFolder;
+        logs[p.id] = p.localLogFolder;
+      });
       setLocalPaths(paths);
+      setLogPaths(logs);
     } catch {
       setMessage('Failed to load projects');
     }
@@ -26,6 +32,10 @@ function UserProjectsPanel() {
 
   function handlePathChange(projectId, value) {
     setLocalPaths(prev => ({ ...prev, [projectId]: value }));
+  }
+
+  function handleLogPathChange(projectId, value) {
+    setLogPaths(prev => ({ ...prev, [projectId]: value }));
   }
 
   async function handleSave(projectId) {
@@ -57,6 +67,35 @@ function UserProjectsPanel() {
     }
   }
 
+  async function handleLogSave(projectId) {
+    setMessage('');
+    const value = logPaths[projectId];
+    if (!value || !value.trim()) {
+      setMessage('Local log folder cannot be empty');
+      return;
+    }
+    try {
+      await projectApi.setMyOverride(projectId, { localLogFolder: value.trim() });
+      setMessage('Log folder override saved');
+      fetchProjects();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+      setMessage('Error: ' + msg);
+    }
+  }
+
+  async function handleLogReset(projectId) {
+    setMessage('');
+    try {
+      await projectApi.deleteMyOverride(projectId);
+      setMessage('Log folder override removed');
+      fetchProjects();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.message;
+      setMessage('Error: ' + msg);
+    }
+  }
+
   return (
     <div className="user-projects-panel">
       <h4>Projects</h4>
@@ -80,6 +119,19 @@ function UserProjectsPanel() {
                 />
                 <button onClick={() => handleSave(p.id)}>Save</button>
                 <button className="reset-btn" onClick={() => handleReset(p.id)}>Reset</button>
+              </div>
+              <div className="project-override project-override-log">
+                <label className={`override-label${p.overriddenLogFolder ? ' override-active' : ''}`}>
+                  {p.overriddenLogFolder ? 'Log Folder (override)' : 'Log Folder'}
+                </label>
+                <input
+                  type="text"
+                  value={logPaths[p.id] || ''}
+                  onChange={e => handleLogPathChange(p.id, e.target.value)}
+                  placeholder="Local Log folder"
+                />
+                <button onClick={() => handleLogSave(p.id)}>Save</button>
+                <button className="reset-btn" onClick={() => handleLogReset(p.id)}>Reset</button>
               </div>
             </li>
           ))}

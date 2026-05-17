@@ -56,6 +56,7 @@ public class ProjectService {
         project.setName(request.name().trim());
         project.setRemoteApkLocation(request.remoteApkLocation().trim());
         project.setLocalApkFolder(request.localApkFolder().trim());
+        project.setLocalLogFolder(request.localLogFolder().trim());
         return toResponse(projectRepository.save(project));
     }
 
@@ -72,6 +73,7 @@ public class ProjectService {
         project.setName(request.name().trim());
         project.setRemoteApkLocation(request.remoteApkLocation().trim());
         project.setLocalApkFolder(request.localApkFolder().trim());
+        project.setLocalLogFolder(request.localLogFolder().trim());
         return toResponse(projectRepository.save(project));
     }
 
@@ -94,6 +96,12 @@ public class ProjectService {
         if (request.localApkFolder() == null || request.localApkFolder().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local APK folder is required");
         }
+        if (request.localLogFolder() == null || request.localLogFolder().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local log folder is required");
+        }
+        if (request.localLogFolder().trim().length() > 500) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local log folder exceeds the maximum allowed length");
+        }
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
         UserProjectOverride override = overrideRepository.findByUserAndProject(user, project)
@@ -104,6 +112,7 @@ public class ProjectService {
                     return o;
                 });
         override.setLocalApkFolder(request.localApkFolder().trim());
+        override.setLocalLogFolder(request.localLogFolder().trim());
         return toOverrideResponse(overrideRepository.save(override));
     }
 
@@ -120,9 +129,14 @@ public class ProjectService {
         Optional<UserProjectOverride> override = overrideRepository.findByUserAndProject(user, project);
         String resolvedLocalPath = override.map(UserProjectOverride::getLocalApkFolder)
                 .orElse(project.getLocalApkFolder());
+        boolean overriddenLogFolder = override.isPresent() && override.get().getLocalLogFolder() != null;
+        String resolvedLogFolder = override
+                .map(UserProjectOverride::getLocalLogFolder)
+                .orElse(project.getLocalLogFolder());
         return new ResolvedProjectResponse(
                 project.getId(), project.getName(), project.getRemoteApkLocation(),
-                resolvedLocalPath, override.isPresent()
+                resolvedLocalPath, override.isPresent(),
+                resolvedLogFolder, overriddenLogFolder
         );
     }
 
@@ -136,6 +150,12 @@ public class ProjectService {
         if (request.localApkFolder() == null || request.localApkFolder().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local APK folder is required");
         }
+        if (request.localLogFolder() == null || request.localLogFolder().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local log folder is required");
+        }
+        if (request.localLogFolder().trim().length() > 1024) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local log folder exceeds the maximum allowed length");
+        }
     }
 
     private ProjectResponse toResponse(Project project) {
@@ -144,6 +164,7 @@ public class ProjectService {
                 project.getName(),
                 project.getRemoteApkLocation(),
                 project.getLocalApkFolder(),
+                project.getLocalLogFolder(),
                 project.getCreatedAt()
         );
     }
@@ -152,7 +173,8 @@ public class ProjectService {
         return new OverrideResponse(
                 override.getId(),
                 override.getProject().getId(),
-                override.getLocalApkFolder()
+                override.getLocalApkFolder(),
+                override.getLocalLogFolder()
         );
     }
 }

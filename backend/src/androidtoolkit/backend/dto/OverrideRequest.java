@@ -1,3 +1,3 @@
 package androidtoolkit.backend.dto;
 
-public record OverrideRequest(String localApkFolder) {}
+public record OverrideRequest(String localApkFolder, String localLogFolder) {}

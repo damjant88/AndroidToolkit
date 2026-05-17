@@ -6,11 +6,13 @@ function AdminProjectsPanel() {
   const [name, setName] = useState('');
   const [remoteApkLocation, setRemoteApkLocation] = useState('');
   const [localApkFolder, setLocalApkFolder] = useState('');
+  const [localLogFolder, setLocalLogFolder] = useState('');
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
   const [editRemoteApkLocation, setEditRemoteApkLocation] = useState('');
   const [editLocalApkFolder, setEditLocalApkFolder] = useState('');
+  const [editLocalLogFolder, setEditLocalLogFolder] = useState('');
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -23,13 +25,14 @@ function AdminProjectsPanel() {
 
   async function handleCreate(e) {
     e.preventDefault();
-    if (!name.trim() || !remoteApkLocation.trim() || !localApkFolder.trim()) return;
+    if (!name.trim() || !remoteApkLocation.trim() || !localApkFolder.trim() || !localLogFolder.trim()) return;
     setError('');
     try {
-      await projectApi.create({ name: name.trim(), remoteApkLocation: remoteApkLocation.trim(), localApkFolder: localApkFolder.trim() });
+      await projectApi.create({ name: name.trim(), remoteApkLocation: remoteApkLocation.trim(), localApkFolder: localApkFolder.trim(), localLogFolder: localLogFolder.trim() });
       setName('');
       setRemoteApkLocation('');
       setLocalApkFolder('');
+      setLocalLogFolder('');
       fetchProjects();
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.error || err.message;
@@ -42,6 +45,7 @@ function AdminProjectsPanel() {
     setEditName(project.name);
     setEditRemoteApkLocation(project.remoteApkLocation);
     setEditLocalApkFolder(project.localApkFolder);
+    setEditLocalLogFolder(project.localLogFolder);
     setError('');
   }
 
@@ -52,10 +56,10 @@ function AdminProjectsPanel() {
 
   async function handleUpdate(e) {
     e.preventDefault();
-    if (!editName.trim() || !editRemoteApkLocation.trim() || !editLocalApkFolder.trim()) return;
+    if (!editName.trim() || !editRemoteApkLocation.trim() || !editLocalApkFolder.trim() || !editLocalLogFolder.trim()) return;
     setError('');
     try {
-      await projectApi.update(editingId, { name: editName.trim(), remoteApkLocation: editRemoteApkLocation.trim(), localApkFolder: editLocalApkFolder.trim() });
+      await projectApi.update(editingId, { name: editName.trim(), remoteApkLocation: editRemoteApkLocation.trim(), localApkFolder: editLocalApkFolder.trim(), localLogFolder: editLocalLogFolder.trim() });
       setEditingId(null);
       fetchProjects();
     } catch (err) {
@@ -98,6 +102,12 @@ function AdminProjectsPanel() {
           value={localApkFolder}
           onChange={e => setLocalApkFolder(e.target.value)}
         />
+        <input
+          type="text"
+          placeholder="Local Log Folder"
+          value={localLogFolder}
+          onChange={e => setLocalLogFolder(e.target.value)}
+        />
         <button type="submit">Create</button>
       </form>
       {error && <p className="project-error">{error}</p>}
@@ -110,6 +120,7 @@ function AdminProjectsPanel() {
               <th>Name</th>
               <th>Remote APK Location</th>
               <th>Local APK Folder</th>
+              <th>Local Log Folder</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -127,6 +138,9 @@ function AdminProjectsPanel() {
                     <input type="text" value={editLocalApkFolder} onChange={e => setEditLocalApkFolder(e.target.value)} />
                   </td>
                   <td>
+                    <input type="text" value={editLocalLogFolder} onChange={e => setEditLocalLogFolder(e.target.value)} />
+                  </td>
+                  <td>
                     <button onClick={handleUpdate}>Save</button>
                     <button onClick={handleCancelEdit}>Cancel</button>
                   </td>
@@ -136,6 +150,7 @@ function AdminProjectsPanel() {
                   <td>{p.name}</td>
                   <td>{p.remoteApkLocation}</td>
                   <td>{p.localApkFolder}</td>
+                  <td>{p.localLogFolder}</td>
                   <td>
                     <button onClick={() => handleEditClick(p)}>Edit</button>
                     <button onClick={() => handleDelete(p)}>Delete</button>

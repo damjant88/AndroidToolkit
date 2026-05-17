@@ -27,6 +27,9 @@ public class Project {
     @Column(nullable = false)
     private String localApkFolder;
 
+    @Column(nullable = false, length = 1024)
+    private String localLogFolder;
+
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -35,10 +38,11 @@ public class Project {
 
     public Project() {}
 
-    public Project(String name, String remoteApkLocation, String localApkFolder) {
+    public Project(String name, String remoteApkLocation, String localApkFolder, String localLogFolder) {
         this.name = name;
         this.remoteApkLocation = remoteApkLocation;
         this.localApkFolder = localApkFolder;
+        this.localLogFolder = localLogFolder;
     }
 
     public Long getId() { return id; }
@@ -54,6 +58,9 @@ public class Project {
 
     public String getLocalApkFolder() { return localApkFolder; }
     public void setLocalApkFolder(String localApkFolder) { this.localApkFolder = localApkFolder; }
+
+    public String getLocalLogFolder() { return localLogFolder; }
+    public void setLocalLogFolder(String localLogFolder) { this.localLogFolder = localLogFolder; }
 
     public Instant getCreatedAt() { return createdAt; }
 

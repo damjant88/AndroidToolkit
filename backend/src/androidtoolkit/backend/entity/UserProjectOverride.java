@@ -22,6 +22,9 @@ public class UserProjectOverride {
     @Column(nullable = false)
     private String localApkFolder;
 
+    @Column(length = 500)
+    private String localLogFolder;
+
     public UserProjectOverride() {}
 
     public UserProjectOverride(User user, Project project, String localApkFolder) {
@@ -37,4 +40,6 @@ public class UserProjectOverride {
     public void setProject(Project project) { this.project = project; }
     public String getLocalApkFolder() { return localApkFolder; }
     public void setLocalApkFolder(String localApkFolder) { this.localApkFolder = localApkFolder; }
+    public String getLocalLogFolder() { return localLogFolder; }
+    public void setLocalLogFolder(String localLogFolder) { this.localLogFolder = localLogFolder; }
 }

@@ -53,7 +53,7 @@ public class MigrationService {
                     if (projectRepository.existsByName(projectName)) {
                         conflicts.add(new MigrationConflict("project", projectName, "Already exists"));
                     } else {
-                        Project project = new Project(projectName, "", "");
+                        Project project = new Project(projectName, "", "", "");
                         project.setTenant(tenant);
                         projectRepository.save(project);
                         projectsImported++;

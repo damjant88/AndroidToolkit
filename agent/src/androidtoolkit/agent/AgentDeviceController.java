@@ -252,18 +252,19 @@ public class AgentDeviceController {
             String packageName = detectPackage(serial);
             String deviceModel = runCmd("adb", "-s", serial, "shell", "getprop", "ro.product.model").trim().replace(' ', '_');
             String date = java.time.LocalDate.now().toString();
-            String outputDir = "logs/" + deviceModel + "_" + serial + "/" + date;
+            String safeSerial = serial.replace(":", "-").replace(".", "_");
+            String outputDir = "logs/" + deviceModel + "_" + safeSerial + "/" + date;
             new File(outputDir).mkdirs();
 
             // 1. Capture logcat (full device log)
-            String logcatFile = outputDir + "/" + deviceModel + "_" + serial + "_logcat_" + date + ".log";
+            String logcatFile = outputDir + "/" + deviceModel + "_" + safeSerial + "_logcat_" + date + ".log";
             runCmdAndSave("adb -s " + serial + " logcat -d", logcatFile);
 
             // 2. If app is installed, capture PID-filtered logcat
             if (!packageName.isEmpty()) {
                 String pid = runCmd("adb", "-s", serial, "shell", "pidof", "-s", packageName).trim();
                 if (!pid.isEmpty()) {
-                    String appLogFile = outputDir + "/" + deviceModel + "_" + serial + "_app_" + date + ".log";
+                    String appLogFile = outputDir + "/" + deviceModel + "_" + safeSerial + "_app_" + date + ".log";
                     runCmdAndSave("adb -s " + serial + " logcat -d --pid=" + pid, appLogFile);
                 }
             }

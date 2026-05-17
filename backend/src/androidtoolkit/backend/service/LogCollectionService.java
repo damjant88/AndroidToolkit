@@ -5,8 +5,10 @@ import androidtoolkit.app.LogExportManager;
 import androidtoolkit.app.LogExportResponse;
 import androidtoolkit.backend.dto.LogCollectionResponse;
 import androidtoolkit.backend.dto.LogcatData;
+import androidtoolkit.backend.dto.ResolvedProjectResponse;
 import androidtoolkit.backend.entity.LogUploadMetadata;
 import androidtoolkit.backend.entity.Project;
+import androidtoolkit.backend.entity.User;
 import androidtoolkit.backend.repository.LogUploadMetadataRepository;
 import androidtoolkit.backend.repository.ProjectRepository;
 import androidtoolkit.service.DeviceGateway;
@@ -43,6 +45,7 @@ public class LogCollectionService {
     private final ObjectStorageService objectStorageService;
     private final LogUploadMetadataRepository metadataRepository;
     private final ProjectRepository projectRepository;
+    private final ProjectService projectService;
     private final DeviceGateway deviceGateway;
     private final PackageClassifier packageClassifier;
     private final LogcatStreamManager logcatStreamManager;
@@ -55,6 +58,7 @@ public class LogCollectionService {
             ObjectStorageService objectStorageService,
             LogUploadMetadataRepository metadataRepository,
             ProjectRepository projectRepository,
+            ProjectService projectService,
             DeviceGateway deviceGateway,
             PackageClassifier packageClassifier,
             LogcatStreamManager logcatStreamManager
@@ -66,6 +70,7 @@ public class LogCollectionService {
         this.objectStorageService = objectStorageService;
         this.metadataRepository = metadataRepository;
         this.projectRepository = projectRepository;
+        this.projectService = projectService;
         this.deviceGateway = deviceGateway;
         this.packageClassifier = packageClassifier;
         this.logcatStreamManager = logcatStreamManager;
@@ -78,15 +83,20 @@ public class LogCollectionService {
      * Local structure: {logsDir}/{flavor}/{deviceName}_{serial}/{date}/logs/
      * Remote structure: {basePath}/{flavor}/{deviceName}_{serial}/{date}/{archiveName}
      */
-    public LogCollectionResponse collectLogs(String serial, Long projectId) {
+    public LogCollectionResponse collectLogs(String serial, Long projectId, User user) {
         // 1. Resolve device info for folder structure
         String packageName = deviceGateway.getSafePathPackage(serial);
         String flavor = resolveFlavorName(packageName);
         String deviceName = resolveDeviceName(serial);
         String date = LocalDate.now().toString();
 
-        // 2. Build local target folder: {logsDir}/{flavor}/{deviceName}_{serial}/{date}
-        String baseLogsDir = appServices.storagePaths().logsDir().getPath();
+        // 2. Resolve the project first (needed for log folder resolution)
+        Project project = resolveProject(serial, projectId);
+
+        // 3. Resolve base logs directory: user override > project default > app default
+        String baseLogsDir = resolveBaseLogsDir(project, user);
+
+        // 4. Build local target folder: {baseLogsDir}/{flavor}/{deviceName}_{serial}/{date}
         Path localTargetDir = Path.of(baseLogsDir)
                 .resolve(flavor)
                 .resolve(deviceName + "_" + sanitizeSerial(serial))
@@ -97,17 +107,14 @@ public class LogCollectionService {
             log.warn("Failed to create local log directory: {}", localTargetDir, e);
         }
 
-        // 3. Local save via existing LogExportManager
+        // 5. Local save via existing LogExportManager
         String targetFolder = localTargetDir.toString();
         LogExportResponse exportResponse = logExportManager.exportDeviceLogs(serial, deviceName, targetFolder);
 
-        // 4. Rename pulled log files to include metadata: {model}_{serial}_{type}_{date}.log
+        // 6. Rename pulled log files to include metadata: {model}_{serial}_{type}_{date}.log
         renameLogFiles(Path.of(exportResponse.getExportedLogsFolder()), deviceName, serial, date);
 
-        // 5. Determine project association
-        Project project = resolveProject(serial, projectId);
-
-        // 6. Trigger async ZIP + upload if project has shared storage configured
+        // 7. Trigger async ZIP + upload if project has shared storage configured
         if (project != null && project.getSharedLogStoragePath() != null
                 && !project.getSharedLogStoragePath().isBlank()) {
             if (sharedStorageService.isAccessible(project.getSharedLogStoragePath())) {
@@ -126,7 +133,7 @@ public class LogCollectionService {
             log.info("No project association found for device {}, skipping upload", serial);
         }
 
-        // 6. Return response immediately
+        // 8. Return response immediately
         return new LogCollectionResponse(
                 exportResponse.getSelectedFolder(),
                 exportResponse.getExportedLogsFolder(),
@@ -265,6 +272,27 @@ public class LogCollectionService {
     }
 
     /**
+     * Resolves the base logs directory for the given project and user.
+     * Priority: user override localLogFolder > project default localLogFolder > app default logsDir.
+     * Falls back to the application default when no project is associated or the resolved path is empty.
+     */
+    String resolveBaseLogsDir(Project project, User user) {
+        if (project != null && user != null) {
+            try {
+                ResolvedProjectResponse resolved = projectService.getResolved(project.getId(), user);
+                String resolvedLogFolder = resolved.localLogFolder();
+                if (resolvedLogFolder != null && !resolvedLogFolder.isBlank()) {
+                    return resolvedLogFolder;
+                }
+            } catch (Exception e) {
+                log.warn("Failed to resolve localLogFolder for project '{}' and user '{}': {}",
+                        project.getName(), user.getUsername(), e.getMessage());
+            }
+        }
+        return appServices.storagePaths().logsDir().getPath();
+    }
+
+    /**
      * Resolves the project for this log pull.
      * Uses provided projectId first, then tries to detect from installed packages.
      * Falls back to a "Default" project so files always get uploaded to Object Storage.
@@ -296,7 +324,7 @@ public class LogCollectionService {
         // Fall back to "Default" project — create it if it doesn't exist
         return projectRepository.findByName("Default")
                 .orElseGet(() -> {
-                    Project defaultProject = new Project("Default", "", "");
+                    Project defaultProject = new Project("Default", "", "", "");
                     projectRepository.save(defaultProject);
                     log.info("Created 'Default' project for unassociated log uploads");
                     return defaultProject;
