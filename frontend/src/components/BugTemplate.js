@@ -57,7 +57,8 @@ function BugTemplate({ devices, onClose }) {
     if (devices && devices.length > 0) {
       devices.forEach(d => {
         const serial = d.deviceInfo.serialNumber;
-        axios.get(`/api/devices/${encodeURIComponent(serial)}/logcat-data`)
+        const AGENT_URL = localStorage.getItem('agentUrl') || 'http://localhost:8082';
+        axios.get(`${AGENT_URL}/api/agent/devices/${encodeURIComponent(serial)}/logcat-data`)
           .then(res => {
             if (res.data) {
               setLogcatDataMap(prev => ({ ...prev, [serial]: res.data }));

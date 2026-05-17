@@ -19,16 +19,24 @@ export function useLogcatWebSocket(serial, appInstalled) {
     }
   }, [appInstalled]);
 
-  // Fetch initial state via REST when app is installed
+  // Fetch initial state via REST from agent, then poll for updates
   useEffect(() => {
     if (!serial || !appInstalled) return;
-    axios.get(`/api/devices/${encodeURIComponent(serial)}/logcat-data`)
-      .then(res => {
-        if (res.data && (res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken)) {
-          setLogcatData(res.data);
-        }
-      })
-      .catch(() => {});
+    const AGENT_URL = localStorage.getItem('agentUrl') || 'http://localhost:8082';
+    
+    const fetchData = () => {
+      axios.get(`${AGENT_URL}/api/agent/devices/${encodeURIComponent(serial)}/logcat-data`)
+        .then(res => {
+          if (res.data && (res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken)) {
+            setLogcatData(res.data);
+          }
+        })
+        .catch(() => {});
+    };
+    
+    fetchData();
+    const interval = setInterval(fetchData, 3000); // Poll every 3s for real-time feel
+    return () => clearInterval(interval);
   }, [serial, appInstalled]);
 
   // Subscribe to real-time updates via WebSocket

@@ -28,9 +28,11 @@ public class AgentDeviceController {
     private final ConcurrentHashMap<String, Process> activeMirrors = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Map<String, String>> recordingMeta = new ConcurrentHashMap<>();
     private final DeviceDiscoveryScheduler deviceDiscoveryScheduler;
+    private final AgentLogcatService logcatService;
 
-    public AgentDeviceController(DeviceDiscoveryScheduler deviceDiscoveryScheduler) {
+    public AgentDeviceController(DeviceDiscoveryScheduler deviceDiscoveryScheduler, AgentLogcatService logcatService) {
         this.deviceDiscoveryScheduler = deviceDiscoveryScheduler;
+        this.logcatService = logcatService;
     }
 
     /**
@@ -351,6 +353,42 @@ public class AgentDeviceController {
         // Trigger immediate device info refresh so the UI updates with new package info
         triggerDeviceRefresh();
         return result;
+    }
+
+    /**
+     * Get parsed logcat metadata for a device (environment, version, token, etc.)
+     */
+    @GetMapping("/{serial}/logcat-data")
+    public Map<String, Object> getLogcatData(@PathVariable String serial) {
+        AgentLogcatService.LogcatMetadata meta = logcatService.getMetadata(serial);
+        return Map.of(
+                "serial", serial,
+                "environment", meta.environment != null ? meta.environment : "",
+                "clientVersion", meta.clientVersion != null ? meta.clientVersion : "",
+                "serverProductVersion", meta.serverProductVersion != null ? meta.serverProductVersion : "",
+                "serverProjectVersion", meta.serverProjectVersion != null ? meta.serverProjectVersion : "",
+                "accessToken", meta.accessToken != null ? meta.accessToken : "",
+                "tokenType", meta.tokenType != null ? meta.tokenType : ""
+        );
+    }
+
+    /**
+     * Start logcat monitoring for a device.
+     */
+    @PostMapping("/{serial}/start-logcat")
+    public Map<String, Object> startLogcat(@PathVariable String serial, @RequestBody(required = false) Map<String, String> body) {
+        String pid = body != null ? body.getOrDefault("pid", "") : "";
+        logcatService.startMonitoring(serial, pid);
+        return Map.of("success", true, "message", "Logcat monitoring started");
+    }
+
+    /**
+     * Stop logcat monitoring for a device.
+     */
+    @PostMapping("/{serial}/stop-logcat")
+    public Map<String, Object> stopLogcat(@PathVariable String serial) {
+        logcatService.stopMonitoring(serial);
+        return Map.of("success", true, "message", "Logcat monitoring stopped");
     }
 
     /**

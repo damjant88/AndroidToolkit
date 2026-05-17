@@ -34,13 +34,15 @@ public class DeviceDiscoveryScheduler {
     private final ServerConnection serverConnection;
     private final ExecutorService enrichmentExecutor = Executors.newSingleThreadExecutor();
     private final ConcurrentHashMap<String, DeviceInfo> deviceCache = new ConcurrentHashMap<>();
+    private final AgentLogcatService logcatService;
 
     private volatile Process trackProcess;
     private volatile boolean running = true;
     private volatile Set<String> lastKnownSerials = Set.of();
 
-    public DeviceDiscoveryScheduler(ServerConnection serverConnection) {
+    public DeviceDiscoveryScheduler(ServerConnection serverConnection, AgentLogcatService logcatService) {
         this.serverConnection = serverConnection;
+        this.logcatService = logcatService;
         serverConnection.setOnReconnected(this::sendCurrentDeviceList);
     }
 
@@ -135,6 +137,17 @@ public class DeviceDiscoveryScheduler {
                         enrichedDevices.add(enriched);
                     }
                     sendDeviceList(enrichedDevices);
+                    
+                    // Start logcat monitoring for devices with installed apps
+                    Map<String, String> serialToPid = new HashMap<>();
+                    for (DeviceInfo d : enrichedDevices) {
+                        if (d.isAppInstalled() && !d.getPid().isEmpty()) {
+                            serialToPid.put(d.getSerialNumber(), d.getPid());
+                        }
+                    }
+                    if (!serialToPid.isEmpty()) {
+                        logcatService.onDevicesChanged(serialToPid);
+                    }
                 }
             }
         } catch (Exception e) {
