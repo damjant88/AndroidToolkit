@@ -157,7 +157,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       const serials = installedDevices.map(d => d.deviceInfo.serialNumber);
       const serialToName = {};
       installedDevices.forEach(d => { serialToName[d.deviceInfo.serialNumber] = d.deviceName; });
-      const result = await startUninstallJob(serials);
+      const result = await startUninstallJob(serials, installedDevices);
       const results = Object.values(result.deviceResults || {});
       const lines = results.map(r => (r.success ? '✅' : '❌') + ' ' + (serialToName[r.serial] || r.serial) + ': ' + r.message);
       setMessage(lines.join('\n') || '✅ Uninstall complete');

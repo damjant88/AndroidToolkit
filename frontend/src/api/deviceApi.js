@@ -138,11 +138,18 @@ export async function startInstallJob(apkPath, serials) {
   };
 }
 
-export async function startUninstallJob(serials) {
+export async function startUninstallJob(serials, devices) {
   const results = {};
   for (const serial of serials) {
     try {
-      const res = await agentApi.post(`/devices/${serial}/uninstall`, { packageName: '' });
+      // Find the package name for this device
+      const device = devices ? devices.find(d => d.deviceInfo.serialNumber === serial) : null;
+      const packageName = device?.deviceInfo?.safePathPackage || '';
+      if (!packageName) {
+        results[serial] = { serial, success: false, message: 'No package to uninstall' };
+        continue;
+      }
+      const res = await agentApi.post(`/devices/${serial}/uninstall`, { packageName });
       results[serial] = { serial, success: res.data.success, message: res.data.message };
     } catch (err) {
       results[serial] = { serial, success: false, message: err.message };

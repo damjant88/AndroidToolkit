@@ -193,16 +193,41 @@ public class AgentDeviceController {
 
     /**
      * Uninstall an app from a device.
+     * If packageName is empty, auto-detects the installed SafePath package.
      */
     @PostMapping("/{serial}/uninstall")
     public Map<String, Object> uninstall(@PathVariable String serial, @RequestBody Map<String, String> body) {
         String packageName = body.getOrDefault("packageName", "");
         if (packageName.isEmpty()) {
-            return Map.of("success", false, "message", "packageName required");
+            // Auto-detect the package to uninstall
+            packageName = detectPackage(serial);
+        }
+        if (packageName.isEmpty()) {
+            return Map.of("success", false, "message", "No supported package found on device");
         }
         Map<String, Object> result = runSimpleCommand(serial, "uninstall", "adb", "-s", serial, "uninstall", packageName);
         triggerDeviceRefresh();
         return result;
+    }
+
+    private String detectPackage(String serial) {
+        try {
+            String output = runCmd("adb", "-s", serial, "shell", "pm", "list", "packages");
+            List<String> supported = List.of(
+                    "com.smithmicro.tmobile.familymode.test", "com.smithmicro.att.securefamily",
+                    "com.att.securefamilycompanion", "com.wavemarket.waplauncher",
+                    "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.light",
+                    "com.smithmicro.safepath.family.speakeasy", "com.smithmicro.cci.test",
+                    "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound",
+                    "com.tmobile.familycontrols", "com.smithmicro.orangespain.test",
+                    "com.orange.es.TuYo", "com.smithmicro.safepath.dish.test",
+                    "com.smithmicro.safepath.dish.kid.test", "com.smithmicro.safepath.family.child");
+            for (String line : output.split("\n")) {
+                String pkg = line.replace("package:", "").trim();
+                if (supported.contains(pkg)) return pkg;
+            }
+        } catch (Exception e) { /* ignore */ }
+        return "";
     }
 
     /**
