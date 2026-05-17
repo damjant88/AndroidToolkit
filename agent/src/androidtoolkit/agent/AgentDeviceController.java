@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.*;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -213,7 +214,7 @@ public class AgentDeviceController {
     private String detectPackage(String serial) {
         try {
             String output = runCmd("adb", "-s", serial, "shell", "pm", "list", "packages");
-            List<String> supported = List.of(
+            String[] supported = {
                     "com.smithmicro.tmobile.familymode.test", "com.smithmicro.att.securefamily",
                     "com.att.securefamilycompanion", "com.wavemarket.waplauncher",
                     "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.light",
@@ -222,9 +223,10 @@ public class AgentDeviceController {
                     "com.tmobile.familycontrols", "com.smithmicro.orangespain.test",
                     "com.orange.es.TuYo", "com.smithmicro.safepath.dish.test",
                     "com.smithmicro.safepath.dish.kid.test", "com.smithmicro.safepath.family.child");
+            java.util.Set<String> supportedSet = java.util.Set.copyOf(supported);
             for (String line : output.split("\n")) {
                 String pkg = line.replace("package:", "").trim();
-                if (supported.contains(pkg)) return pkg;
+                if (supportedSet.contains(pkg)) return pkg;
             }
         } catch (Exception e) { /* ignore */ }
         return "";
