@@ -41,17 +41,16 @@ public class AgentLogcatService {
 
     /**
      * Starts logcat monitoring for a device. Parses lines in real-time.
+     * Runs without PID filter to catch all app log lines (PID can change on restart).
      */
     public void startMonitoring(String serial, String pid) {
         if (activeProcesses.containsKey(serial)) return;
 
         Thread thread = Thread.ofVirtual().name("logcat-monitor-" + serial).start(() -> {
             try {
-                String[] cmd = pid != null && !pid.isEmpty()
-                        ? new String[]{"adb", "-s", serial, "logcat", "--pid=" + pid}
-                        : new String[]{"adb", "-s", serial, "logcat"};
-
-                ProcessBuilder pb = new ProcessBuilder(cmd);
+                // Don't filter by PID — the app PID can change and OkHttp logs
+                // may come from different threads/processes
+                ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "logcat");
                 pb.redirectErrorStream(true);
                 Process process = pb.start();
                 activeProcesses.put(serial, process);

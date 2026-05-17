@@ -283,13 +283,21 @@ public class DeviceDiscoveryScheduler {
 
         try {
             List<DeviceInfo> refreshed = new ArrayList<>();
+            Map<String, String> serialToPid = new HashMap<>();
             for (String serial : deviceCache.keySet()) {
                 DeviceInfo cached = deviceCache.get(serial);
                 DeviceInfo updated = enrichDeviceFast(serial, cached.getModel());
                 deviceCache.put(serial, updated);
                 refreshed.add(updated);
+                if (updated.isAppInstalled()) {
+                    serialToPid.put(serial, updated.getPid());
+                }
             }
             sendDeviceList(refreshed);
+            // Ensure logcat monitoring is running for all devices with apps
+            if (!serialToPid.isEmpty()) {
+                logcatService.onDevicesChanged(serialToPid);
+            }
         } catch (Exception e) {
             log.debug("Refresh failed: {}", e.getMessage());
         }
