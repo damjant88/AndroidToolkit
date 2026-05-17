@@ -4,7 +4,14 @@ const api = axios.create({
   baseURL: '/api',
 });
 
-// Attach JWT token to all requests
+// Agent API — direct connection for device operations (screenshots, scrcpy, etc.)
+// In SaaS mode, the agent runs locally and handles all adb operations directly.
+const AGENT_URL = localStorage.getItem('agentUrl') || 'http://localhost:8082';
+const agentApi = axios.create({
+  baseURL: AGENT_URL + '/api/agent',
+});
+
+// Attach JWT token to backend requests
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('accessToken');
   if (token) {
@@ -18,23 +25,25 @@ export async function getDevices() {
   return response.data;
 }
 
+// --- Device operations go directly to the agent ---
+
 export async function rebootDevice(serial) {
-  const response = await api.post(`/devices/${serial}/reboot`);
+  const response = await agentApi.post(`/devices/${serial}/reboot`);
   return response.data;
 }
 
 export async function uninstallApp(serial, packageName) {
-  const response = await api.post(`/devices/${serial}/uninstall`, { packageName });
+  const response = await agentApi.post(`/devices/${serial}/uninstall`, { packageName });
   return response.data;
 }
 
 export async function enableFirebaseDebug(serial, packageName) {
-  const response = await api.post(`/devices/${serial}/firebase-debug`, { packageName });
+  const response = await agentApi.post(`/devices/${serial}/firebase-debug`, { packageName });
   return response.data;
 }
 
 export async function toggleWifiDebug(serial, ipAddress, wifiDebugSession, hasWifiIp) {
-  const response = await api.post(`/devices/${serial}/wifi-debug`, {
+  const response = await agentApi.post(`/devices/${serial}/wifi-debug`, {
     ipAddress,
     wifiDebugSession,
     hasWifiIp,
@@ -43,36 +52,39 @@ export async function toggleWifiDebug(serial, ipAddress, wifiDebugSession, hasWi
 }
 
 export async function pullLogs(serial) {
-  const response = await api.post(`/devices/${serial}/pull-logs`);
+  const response = await agentApi.post(`/devices/${serial}/pull-logs`);
   return response.data;
 }
 
-
 export async function startScreenMirror(serial) {
-  const response = await api.post(`/devices/${serial}/screen-mirror`);
+  const response = await agentApi.post(`/devices/${serial}/screen-mirror`);
   return response.data;
 }
 
 export async function startRecording(serial) {
-  const response = await api.post(`/devices/${serial}/start-recording`);
+  const response = await agentApi.post(`/devices/${serial}/start-recording`);
   return response.data;
 }
 
 export async function stopRecording(serial, pid) {
-  const response = await api.post(`/devices/${serial}/stop-recording`, { pid });
+  const response = await agentApi.post(`/devices/${serial}/stop-recording`, { pid });
   return response.data;
 }
 
+export async function takeScreenshot(serial, deviceName) {
+  // Returns the image URL directly from the agent
+  const response = await agentApi.post(`/devices/${serial}/screenshot`, null, {
+    responseType: 'blob'
+  });
+  return { imageBlob: response.data, deviceName };
+}
+
+// --- Backend operations (data, files, jobs) ---
 
 export async function openFolder(folderPath) {
   const response = await api.post('/files/open-folder', null, {
     params: { path: folderPath.replace(/\\/g, '/') }
   });
-  return response.data;
-}
-
-export async function takeScreenshot(serial, deviceName) {
-  const response = await api.post(`/devices/${serial}/screenshot`, { deviceName });
   return response.data;
 }
 
@@ -126,11 +138,11 @@ export async function getRecentJobs() {
 }
 
 export async function setMockLocation(serial, lat, lng, start = true) {
-  const response = await api.post(`/devices/${serial}/mock-location`, { lat, lng, start });
+  const response = await agentApi.post(`/devices/${serial}/mock-location`, { lat, lng, start });
   return response.data;
 }
 
 export async function getDeviceLocation(serial) {
-  const response = await api.get(`/devices/${serial}/location`);
+  const response = await agentApi.get(`/devices/${serial}/location`);
   return response.data;
 }

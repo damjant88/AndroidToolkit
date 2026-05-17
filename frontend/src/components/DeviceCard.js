@@ -66,9 +66,10 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
     setLoading(true);
     setMessage('Capturing screenshot...');
     try {
-      await takeScreenshot(serial, device.deviceName);
-      const url = `/api/files/screenshot/${device.deviceName}?t=${Date.now()}`;
-      const viewerUrl = `/?view=screenshot&url=${encodeURIComponent(url)}&device=${encodeURIComponent(device.deviceName)}`;
+      const result = await takeScreenshot(serial, device.deviceName);
+      // Create a blob URL from the image data returned directly by the agent
+      const blobUrl = URL.createObjectURL(result.imageBlob);
+      const viewerUrl = `/?view=screenshot&url=${encodeURIComponent(blobUrl)}&device=${encodeURIComponent(device.deviceName)}`;
       const w = 420;
       const h = 800;
       const left = window.screenX + Math.round((window.outerWidth - w) / 2);
@@ -103,10 +104,6 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
   }
 
   async function handleScreenMirror() {
-    if (!isLocal) {
-      setMessage('⚠️ Screen mirror is only available locally');
-      return;
-    }
     setLoading(true);
     setMessage('');
     try {
@@ -196,14 +193,14 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           <span className="action-group-label">Screen</span>
           <div className="action-group-buttons">
             <button disabled={loading} onClick={handleScreenshot}>Screenshot</button>
-            <button disabled={loading || !isLocal} onClick={handleScreenMirror}>Screen Mirror</button>
-            <button disabled={loading || !isLocal} onClick={handleRecording} className={recording ? 'recording-active' : ''}>{recording ? '⏹ Stop Record' : '⏺ Start Record'}</button>
+            <button disabled={loading} onClick={handleScreenMirror}>Screen Mirror</button>
+            <button disabled={loading} onClick={handleRecording} className={recording ? 'recording-active' : ''}>{recording ? '⏹ Stop Record' : '⏺ Start Record'}</button>
           </div>
         </div>
         <div className="action-group">
           <span className="action-group-label">Device</span>
           <div className="action-group-buttons">
-            <button disabled={loading || !isLocal || tier === 'BASIC'} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
+            <button disabled={loading || tier === 'BASIC'} onClick={() => handleAction(() => toggleWifiDebug(serial, info.ipAddress, info.wifiDebugSession, !!info.wifiIp))}>{info.wifiDebugSession ? 'Disable WiFi' : 'WiFi Debug'}</button>
             <button disabled={loading} onClick={() => handleAction(() => rebootDevice(serial), 'Are you sure you want to reboot?')}>Reboot</button>
             <button disabled={loading} onClick={() => setShowMap(true)} className={mocking ? 'recording-active' : ''}>{mocking ? '📍 Mocking...' : 'Mock Location'}</button>
           </div>
