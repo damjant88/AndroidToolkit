@@ -131,7 +131,11 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       selectedDevices.forEach(d => { serialToName[d.deviceInfo.serialNumber] = d.deviceName; });
       const result = await startInstallJob(selectedPath, serials);
       addToHistory(selectedName, selectedPath);
-      await pollJobUntilDone(result.jobId, serialToName);
+
+      // Display results directly (agent returns complete results, no polling needed)
+      const results = Object.values(result.deviceResults || {});
+      const lines = results.map(r => (r.success ? '✅' : '❌') + ' ' + (serialToName[r.serial] || r.serial) + ': ' + r.message);
+      setMessage(lines.join('\n') || '✅ Install complete');
       if (onRefresh) onRefresh();
     } catch (err) {
       setMessage('❌ ' + (err.response?.data?.message || err.message));
@@ -151,7 +155,9 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       const serialToName = {};
       installedDevices.forEach(d => { serialToName[d.deviceInfo.serialNumber] = d.deviceName; });
       const result = await startUninstallJob(serials);
-      await pollJobUntilDone(result.jobId, serialToName);
+      const results = Object.values(result.deviceResults || {});
+      const lines = results.map(r => (r.success ? '✅' : '❌') + ' ' + (serialToName[r.serial] || r.serial) + ': ' + r.message);
+      setMessage(lines.join('\n') || '✅ Uninstall complete');
       if (onRefresh) onRefresh();
     } catch (err) {
       setMessage('❌ ' + (err.response?.data?.message || err.message));
