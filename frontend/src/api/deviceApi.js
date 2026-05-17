@@ -89,17 +89,17 @@ export async function openFolder(folderPath) {
 }
 
 export async function getPermissions(serial, packageName) {
-  const response = await api.get(`/devices/${serial}/permissions?packageName=${encodeURIComponent(packageName)}`);
+  const response = await agentApi.get(`/devices/${serial}/permissions?packageName=${encodeURIComponent(packageName)}`);
   return response.data;
 }
 
 export async function enablePermissions(serial, packageName, permissionIds) {
-  const response = await api.post(`/devices/${serial}/permissions/enable`, { packageName, permissionIds });
+  const response = await agentApi.post(`/devices/${serial}/permissions/enable`, { packageName, permissionIds });
   return response.data;
 }
 
 export async function disablePermissions(serial, packageName, permissionIds) {
-  const response = await api.post(`/devices/${serial}/permissions/disable`, { packageName, permissionIds });
+  const response = await agentApi.post(`/devices/${serial}/permissions/disable`, { packageName, permissionIds });
   return response.data;
 }
 
