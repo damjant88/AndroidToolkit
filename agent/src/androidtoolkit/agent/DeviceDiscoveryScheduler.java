@@ -207,7 +207,7 @@ public class DeviceDiscoveryScheduler {
                 "echo \"MODEL=$(getprop ro.product.model)\";" +
                 "echo \"WIFI=$(ip addr show wlan0 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)\";" +
                 "echo \"MOBILE=$(ip addr show rmnet_data0 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)\";" +
-                "pm list packages | grep -E 'safepath|familymode|securefamily|safeandfound'");
+                "pm list packages | grep -E 'safepath|familymode|securefamily|safeandfound|wavemarket|waplauncher|safefound|familycontrols|orangespain|TuYo|cci\\.test'");
 
         String manufacturer = "";
         String osVersion = "";
@@ -289,11 +289,45 @@ public class DeviceDiscoveryScheduler {
 
     private String findSafePathPackage(String serial) {
         String packages = runAdbShell(serial, "pm list packages");
+        // Match against the same package list as PackageClassifier in the core module
+        List<String> supportedPackages = List.of(
+                "com.smithmicro.tmobile.familymode.test",
+                "com.smithmicro.att.securefamily",
+                "com.att.securefamilycompanion",
+                "com.wavemarket.waplauncher",
+                "com.smithmicro.safepath.family",
+                "com.smithmicro.safepath.family.light",
+                "com.smithmicro.safepath.family.speakeasy",
+                "com.smithmicro.cci.test",
+                "com.smithmicro.sprint.safeandfound.test",
+                "com.sprint.safefound",
+                "com.tmobile.familycontrols",
+                "com.smithmicro.orangespain.test",
+                "com.orange.es.TuYo",
+                "com.smithmicro.safepath.dish.test",
+                "com.smithmicro.safepath.dish.kid.test",
+                "com.smithmicro.safepath.family.child"
+        );
+        List<String> packageHints = List.of(
+                "safepath.family", "securefamily", "wavemarket",
+                "safeandfound", "safefound", "familycontrols",
+                "orangespain", "TuYo", "safepath.dish", "familymode"
+        );
+
+        List<String> installed = new ArrayList<>();
         for (String line : packages.split("\n")) {
             String pkg = line.replace("package:", "").trim();
-            if (pkg.contains("safepath") || pkg.contains("familymode") ||
-                pkg.contains("securefamily") || pkg.contains("safeandfound")) {
-                return pkg;
+            if (!pkg.isEmpty()) installed.add(pkg);
+        }
+
+        // First: exact match against supported packages
+        for (String pkg : installed) {
+            if (supportedPackages.contains(pkg)) return pkg;
+        }
+        // Second: hint-based match
+        for (String pkg : installed) {
+            for (String hint : packageHints) {
+                if (pkg.contains(hint)) return pkg;
             }
         }
         return "";
