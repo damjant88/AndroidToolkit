@@ -46,12 +46,12 @@ const PROJECTS = [
 ];
 
 function ProjectQuickAccess({ devices }) {
-  const [selectedProject, setSelectedProject] = useState(PROJECTS[0]); // SafePath default
+  const [selectedProject, setSelectedProject] = useState(null);
   const [autoSelected, setAutoSelected] = useState(false);
 
-  // Auto-select project based on first device's installed package (overrides default)
+  // Auto-select project based on connected device's installed package
   useEffect(() => {
-    if (autoSelected || !devices || devices.length === 0) return;
+    if (!devices || devices.length === 0) return;
 
     for (const device of devices) {
       const pkg = device.deviceInfo?.safePathPackage;
@@ -64,7 +64,7 @@ function ProjectQuickAccess({ devices }) {
         }
       }
     }
-  }, [devices, autoSelected]);
+  }, [devices]);
 
   return (
     <div className="project-quick-access-wrapper">

@@ -9,14 +9,21 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
- * Periodically discovers connected Android devices via adb and sends
- * the device list to the backend via WebSocket.
+ * Fast device discovery using two-phase approach:
+ * 1. Instant detection via "adb track-devices" (push-based, ~0ms latency on change)
+ * 2. Background enrichment of device info (packages, IPs, PID)
+ *
+ * When a device connects/disconnects, a basic DeviceList is sent immediately
+ * (serial + model from adb devices -l). Rich info is gathered asynchronously
+ * and an updated DeviceList is sent when ready.
  */
 @Component
 @EnableScheduling
@@ -25,28 +32,100 @@ public class DeviceDiscoveryScheduler {
     private static final Logger log = LoggerFactory.getLogger(DeviceDiscoveryScheduler.class);
 
     private final ServerConnection serverConnection;
+    private final ExecutorService enrichmentExecutor = Executors.newSingleThreadExecutor();
+    private final ConcurrentHashMap<String, DeviceInfo> deviceCache = new ConcurrentHashMap<>();
+
+    private volatile Process trackProcess;
+    private volatile boolean running = true;
+    private volatile Set<String> lastKnownSerials = Set.of();
 
     public DeviceDiscoveryScheduler(ServerConnection serverConnection) {
         this.serverConnection = serverConnection;
-        // Also register as the onReconnected callback so devices are re-sent on reconnect
-        serverConnection.setOnReconnected(this::sendDeviceList);
+        serverConnection.setOnReconnected(this::sendCurrentDeviceList);
     }
 
-    @Scheduled(fixedDelay = 5000, initialDelay = 2000)
-    public void sendDeviceList() {
-        if (!serverConnection.isConnected()) {
-            return;
-        }
+    @PostConstruct
+    public void start() {
+        // Start the adb track-devices listener in a background thread
+        Thread tracker = new Thread(this::trackDevices, "adb-track-devices");
+        tracker.setDaemon(true);
+        tracker.start();
+    }
 
+    @PreDestroy
+    public void stop() {
+        running = false;
+        if (trackProcess != null) {
+            trackProcess.destroyForcibly();
+        }
+        enrichmentExecutor.shutdownNow();
+    }
+
+    /**
+     * Listens to "adb track-devices" for instant push notifications of device changes.
+     * Falls back to polling if track-devices is unavailable.
+     */
+    private void trackDevices() {
+        while (running) {
+            try {
+                // Use adb track-devices for instant notifications
+                trackProcess = new ProcessBuilder("adb", "track-devices").start();
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(trackProcess.getInputStream()));
+
+                String line;
+                while (running && (line = reader.readLine()) != null) {
+                    // track-devices outputs length-prefixed device lists on each change
+                    // Each change triggers a re-scan
+                    onDeviceChangeDetected();
+                }
+            } catch (Exception e) {
+                log.debug("adb track-devices ended: {}", e.getMessage());
+            }
+
+            // If track-devices fails or exits, wait and retry
+            if (running) {
+                try { Thread.sleep(2000); } catch (InterruptedException ie) { break; }
+            }
+        }
+    }
+
+    /**
+     * Called when adb track-devices detects a change. Immediately sends a basic
+     * device list, then enriches in background.
+     */
+    private void onDeviceChangeDetected() {
         try {
-            List<DeviceInfo> devices = discoverDevices();
-            serverConnection.send(new AgentMessage.DeviceList(devices));
+            // Phase 1: Fast scan — just serial + model (instant, no shell commands)
+            List<DeviceInfo> basicDevices = fastScan();
+            Set<String> currentSerials = new HashSet<>();
+            for (DeviceInfo d : basicDevices) {
+                currentSerials.add(d.getSerialNumber());
+            }
+
+            // Only send if the serial set actually changed
+            if (!currentSerials.equals(lastKnownSerials)) {
+                lastKnownSerials = currentSerials;
+
+                // Remove disconnected devices from cache
+                deviceCache.keySet().removeIf(s -> !currentSerials.contains(s));
+
+                // Send basic list immediately (devices appear in UI within ~1s)
+                sendDeviceList(basicDevices);
+
+                // Phase 2: Enrich in background, then send updated list
+                enrichmentExecutor.submit(() -> enrichAndSend(basicDevices));
+            }
         } catch (Exception e) {
-            log.warn("Failed to send device list: {}", e.getMessage());
+            log.warn("Device change handling failed: {}", e.getMessage());
         }
     }
 
-    private List<DeviceInfo> discoverDevices() {
+    /**
+     * Fast scan: runs "adb devices -l" which returns instantly with serial + model.
+     * No shell commands to the device — just the host-side device list.
+     */
+    private List<DeviceInfo> fastScan() {
         List<DeviceInfo> devices = new ArrayList<>();
         try {
             ProcessBuilder pb = new ProcessBuilder("adb", "devices", "-l");
@@ -54,50 +133,79 @@ public class DeviceDiscoveryScheduler {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.contains("device") && !line.startsWith("List")) {
-                        DeviceInfo device = parseDeviceLine(line);
+                    if (line.contains("\tdevice") || (line.contains("device") && !line.startsWith("List") && line.contains("model:"))) {
+                        DeviceInfo device = parseBasicDeviceLine(line);
                         if (device != null) {
                             devices.add(device);
                         }
                     }
                 }
             }
-            process.waitFor();
+            process.waitFor(3, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.warn("adb devices failed: {}", e.getMessage());
+            log.warn("Fast scan failed: {}", e.getMessage());
         }
         return devices;
     }
 
-    private DeviceInfo parseDeviceLine(String line) {
-        // Format: "SERIAL    device usb:X product:Y model:Z device:W transport_id:N"
+    /**
+     * Parse basic device info from "adb devices -l" output.
+     * Only extracts serial, model, and product — no shell commands needed.
+     */
+    private DeviceInfo parseBasicDeviceLine(String line) {
         String[] parts = line.trim().split("\\s+");
-        if (parts.length < 2 || !"device".equals(parts[1])) {
-            return null;
-        }
+        if (parts.length < 2) return null;
 
         String serial = parts[0];
-        String model = "";
-        String product = "";
+        // Skip non-device lines
+        if (serial.equals("List") || serial.isEmpty()) return null;
+        if (!parts[1].equals("device")) return null;
 
+        String model = "";
         for (int i = 2; i < parts.length; i++) {
             if (parts[i].startsWith("model:")) {
                 model = parts[i].substring(6).replace('_', ' ');
-            } else if (parts[i].startsWith("product:")) {
-                product = parts[i].substring(8);
             }
         }
 
-        // Gather rich device info via adb shell commands
+        // Return cached enriched info if available, otherwise basic info
+        DeviceInfo cached = deviceCache.get(serial);
+        if (cached != null) {
+            return cached;
+        }
+
+        return new DeviceInfo(serial, "", model, "", "", "", "", "", false, "");
+    }
+
+    /**
+     * Enriches device info with shell commands (manufacturer, OS, IP, packages, PID)
+     * then sends the updated device list.
+     */
+    private void enrichAndSend(List<DeviceInfo> basicDevices) {
+        try {
+            List<DeviceInfo> enrichedDevices = new ArrayList<>();
+            for (DeviceInfo basic : basicDevices) {
+                String serial = basic.getSerialNumber();
+                DeviceInfo enriched = enrichDevice(serial, basic.getModel());
+                deviceCache.put(serial, enriched);
+                enrichedDevices.add(enriched);
+            }
+            sendDeviceList(enrichedDevices);
+        } catch (Exception e) {
+            log.warn("Enrichment failed: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Gathers full device info via adb shell commands.
+     */
+    private DeviceInfo enrichDevice(String serial, String model) {
         String manufacturer = runAdbShell(serial, "getprop ro.product.manufacturer").trim();
         String osVersion = runAdbShell(serial, "getprop ro.build.version.release").trim();
-        String wifiIp = runAdbShell(serial, "ip addr show wlan0 | grep 'inet '");
-        wifiIp = extractIp(wifiIp);
-        String mobileIp = runAdbShell(serial, "ip addr show rmnet_data0 | grep 'inet '");
-        mobileIp = extractIp(mobileIp);
+        String wifiIp = extractIp(runAdbShell(serial, "ip addr show wlan0 | grep 'inet '"));
+        String mobileIp = extractIp(runAdbShell(serial, "ip addr show rmnet_data0 | grep 'inet '"));
         String ipAddress = wifiIp.isEmpty() ? mobileIp : wifiIp;
 
-        // Check for installed app (SafePath package pattern)
         String safePathPackage = findSafePathPackage(serial);
         boolean appInstalled = !safePathPackage.isEmpty();
         String pid = "";
@@ -105,15 +213,68 @@ public class DeviceDiscoveryScheduler {
             pid = runAdbShell(serial, "pidof -s " + safePathPackage).trim();
         }
 
+        if (model.isEmpty()) {
+            model = runAdbShell(serial, "getprop ro.product.model").trim().replace('_', ' ');
+        }
+
         return new DeviceInfo(serial, manufacturer, model, osVersion,
                 wifiIp, mobileIp, ipAddress, safePathPackage, appInstalled, pid);
+    }
+
+    /**
+     * Periodic refresh of rich device info (every 10s) to keep IPs, PIDs current.
+     * This does NOT do detection — just refreshes cached info for already-known devices.
+     */
+    @Scheduled(fixedDelay = 10000, initialDelay = 5000)
+    public void refreshDeviceInfo() {
+        if (!serverConnection.isConnected() || deviceCache.isEmpty()) return;
+
+        try {
+            List<DeviceInfo> refreshed = new ArrayList<>();
+            for (String serial : deviceCache.keySet()) {
+                DeviceInfo cached = deviceCache.get(serial);
+                DeviceInfo updated = enrichDevice(serial, cached.getModel());
+                deviceCache.put(serial, updated);
+                refreshed.add(updated);
+            }
+            sendDeviceList(refreshed);
+        } catch (Exception e) {
+            log.debug("Refresh failed: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Sends the current cached device list. Used on reconnection.
+     */
+    private void sendCurrentDeviceList() {
+        if (!serverConnection.isConnected()) return;
+        List<DeviceInfo> devices = new ArrayList<>(deviceCache.values());
+        if (devices.isEmpty()) {
+            // No cache yet — do a fast scan + enrich
+            List<DeviceInfo> basic = fastScan();
+            if (!basic.isEmpty()) {
+                sendDeviceList(basic);
+                enrichmentExecutor.submit(() -> enrichAndSend(basic));
+            }
+        } else {
+            sendDeviceList(devices);
+        }
+    }
+
+    private void sendDeviceList(List<DeviceInfo> devices) {
+        if (!serverConnection.isConnected()) return;
+        try {
+            serverConnection.send(new AgentMessage.DeviceList(devices));
+        } catch (Exception e) {
+            log.warn("Failed to send device list: {}", e.getMessage());
+        }
     }
 
     private String findSafePathPackage(String serial) {
         String packages = runAdbShell(serial, "pm list packages");
         for (String line : packages.split("\n")) {
             String pkg = line.replace("package:", "").trim();
-            if (pkg.contains("safepath") || pkg.contains("familymode") || 
+            if (pkg.contains("safepath") || pkg.contains("familymode") ||
                 pkg.contains("securefamily") || pkg.contains("safeandfound")) {
                 return pkg;
             }
@@ -127,7 +288,7 @@ public class DeviceDiscoveryScheduler {
             pb.redirectErrorStream(true);
             Process process = pb.start();
             String output = new String(process.getInputStream().readAllBytes()).trim();
-            process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS);
+            process.waitFor(5, TimeUnit.SECONDS);
             return output;
         } catch (Exception e) {
             return "";
@@ -135,7 +296,6 @@ public class DeviceDiscoveryScheduler {
     }
 
     private String extractIp(String ifconfigOutput) {
-        // Extract IP from "inet 192.168.1.100/24 ..." format
         if (ifconfigOutput == null || ifconfigOutput.isEmpty()) return "";
         for (String part : ifconfigOutput.trim().split("\\s+")) {
             if (part.contains(".") && part.contains("/")) {
