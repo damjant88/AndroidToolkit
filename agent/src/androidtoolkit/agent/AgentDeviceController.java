@@ -241,6 +241,24 @@ public class AgentDeviceController {
         }
     }
 
+    /**
+     * Open a folder in the system file explorer.
+     */
+    @PostMapping("/open-folder")
+    public Map<String, Object> openFolder(@RequestParam("path") String folderPath) {
+        try {
+            File folder = new File(folderPath).getAbsoluteFile();
+            if (!folder.exists()) folder = folder.getParentFile();
+            if (folder == null || !folder.exists()) {
+                return Map.of("success", false, "message", "Folder not found: " + folderPath);
+            }
+            new ProcessBuilder("explorer.exe", folder.getAbsolutePath()).start();
+            return Map.of("success", true, "message", "Opened: " + folder.getAbsolutePath());
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "Failed: " + e.getMessage());
+        }
+    }
+
     private Map<String, Object> runSimpleCommand(String serial, String action, String... cmd) {
         try {
             ProcessBuilder pb = new ProcessBuilder(cmd);

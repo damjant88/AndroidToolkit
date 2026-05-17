@@ -82,7 +82,7 @@ export async function takeScreenshot(serial, deviceName) {
 // --- Backend operations (data, files, jobs) ---
 
 export async function openFolder(folderPath) {
-  const response = await api.post('/files/open-folder', null, {
+  const response = await agentApi.post('/devices/open-folder', null, {
     params: { path: folderPath.replace(/\\/g, '/') }
   });
   return response.data;
