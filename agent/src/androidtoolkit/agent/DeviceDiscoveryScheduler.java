@@ -80,30 +80,40 @@ public class DeviceDiscoveryScheduler {
     }
 
     /**
-     * Called when adb track-devices detects a change. Immediately sends a basic
-     * device list, then enriches in background.
+     * Called when adb detects a device change. Runs fast enrichment (single shell call)
+     * and sends the complete device list immediately.
      */
     private void onDeviceChangeDetected() {
         try {
-            // Phase 1: Fast scan — just serial + model (instant, no shell commands)
+            // Fast scan — just serial + model (instant, no shell commands)
             List<DeviceInfo> basicDevices = fastScan();
             Set<String> currentSerials = new HashSet<>();
             for (DeviceInfo d : basicDevices) {
                 currentSerials.add(d.getSerialNumber());
             }
 
-            // Only send if the serial set actually changed
+            // Only process if the serial set actually changed
             if (!currentSerials.equals(lastKnownSerials)) {
                 lastKnownSerials = currentSerials;
 
                 // Remove disconnected devices from cache
                 deviceCache.keySet().removeIf(s -> !currentSerials.contains(s));
 
-                // Send basic list immediately (devices appear in UI within ~1s)
-                sendDeviceList(basicDevices);
-
-                // Phase 2: Enrich in background, then send updated list
-                enrichmentExecutor.submit(() -> enrichAndSend(basicDevices));
+                if (currentSerials.isEmpty()) {
+                    // All devices disconnected — send empty list immediately
+                    sendDeviceList(List.of());
+                } else {
+                    // Enrich all devices with single shell call each (~1s total)
+                    // and send complete info in one shot
+                    List<DeviceInfo> enrichedDevices = new ArrayList<>();
+                    for (DeviceInfo basic : basicDevices) {
+                        String serial = basic.getSerialNumber();
+                        DeviceInfo enriched = enrichDeviceFast(serial, basic.getModel());
+                        deviceCache.put(serial, enriched);
+                        enrichedDevices.add(enriched);
+                    }
+                    sendDeviceList(enrichedDevices);
+                }
             }
         } catch (Exception e) {
             log.warn("Device change handling failed: {}", e.getMessage());
