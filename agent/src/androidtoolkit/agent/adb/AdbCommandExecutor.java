@@ -122,16 +122,21 @@ public class AdbCommandExecutor {
 
     private void captureScreenshot(AgentCommand.CaptureScreenshot cmd) {
         try {
-            String remotePath = "/sdcard/screenshot_" + System.currentTimeMillis() + ".png";
-            ProcessBuilder screencap = new ProcessBuilder("adb", "-s", cmd.serial(), "shell", "screencap", "-p", remotePath);
-            screencap.start().waitFor();
+            // Capture screenshot directly to stdout as PNG bytes (no temp file needed)
+            ProcessBuilder screencap = new ProcessBuilder("adb", "-s", cmd.serial(), "exec-out", "screencap", "-p");
+            Process process = screencap.start();
+            byte[] imageBytes = process.getInputStream().readAllBytes();
+            process.waitFor();
 
-            String localPath = "screenshots/" + cmd.serial() + "_" + System.currentTimeMillis() + ".png";
-            ProcessBuilder pull = new ProcessBuilder("adb", "-s", cmd.serial(), "pull", remotePath, localPath);
-            int exitCode = pull.start().waitFor();
-
-            serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(),
-                    exitCode == 0, exitCode == 0 ? localPath : "Failed"));
+            if (imageBytes.length > 0) {
+                // Send as base64 so the backend can serve it directly
+                String base64 = java.util.Base64.getEncoder().encodeToString(imageBytes);
+                serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(),
+                        true, "data:image/png;base64," + base64));
+            } else {
+                serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(),
+                        false, "Screenshot capture returned empty data"));
+            }
         } catch (Exception e) {
             serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(), false, e.getMessage()));
         }
