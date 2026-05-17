@@ -122,17 +122,22 @@ public class AdbCommandExecutor {
 
     private void captureScreenshot(AgentCommand.CaptureScreenshot cmd) {
         try {
-            // Capture screenshot directly to stdout as PNG bytes (no temp file needed)
+            // Capture screenshot directly to stdout as PNG, then compress as JPEG for transfer
             ProcessBuilder screencap = new ProcessBuilder("adb", "-s", cmd.serial(), "exec-out", "screencap", "-p");
             Process process = screencap.start();
-            byte[] imageBytes = process.getInputStream().readAllBytes();
+            byte[] pngBytes = process.getInputStream().readAllBytes();
             process.waitFor();
 
-            if (imageBytes.length > 0) {
-                // Send as base64 so the backend can serve it directly
-                String base64 = java.util.Base64.getEncoder().encodeToString(imageBytes);
+            if (pngBytes.length > 0) {
+                // Convert PNG to JPEG at 70% quality to reduce size (~5MB PNG → ~300KB JPEG)
+                java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(pngBytes));
+                java.io.ByteArrayOutputStream jpegOut = new java.io.ByteArrayOutputStream();
+                javax.imageio.ImageIO.write(image, "jpg", jpegOut);
+                byte[] jpegBytes = jpegOut.toByteArray();
+
+                String base64 = java.util.Base64.getEncoder().encodeToString(jpegBytes);
                 serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(),
-                        true, "data:image/png;base64," + base64));
+                        true, "data:image/jpeg;base64," + base64));
             } else {
                 serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(),
                         false, "Screenshot capture returned empty data"));

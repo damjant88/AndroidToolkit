@@ -64,11 +64,12 @@ public class AgentDeviceProvider implements DeviceProvider {
         OperationResult result = commandRelay.execute(tenantId, serial,
                 new AgentCommand.CaptureScreenshot(serial));
 
-        // Agent sends base64 PNG data — decode and save to storage
+        // Agent sends base64 image data — decode and save to storage
         String detail = result.detail();
-        if (detail != null && detail.startsWith("data:image/png;base64,")) {
+        if (detail != null && (detail.startsWith("data:image/png;base64,") || detail.startsWith("data:image/jpeg;base64,"))) {
             try {
-                String base64Data = detail.substring("data:image/png;base64,".length());
+                int commaIdx = detail.indexOf(',');
+                String base64Data = detail.substring(commaIdx + 1);
                 byte[] imageBytes = Base64.getDecoder().decode(base64Data);
 
                 // Find device name from connection manager
