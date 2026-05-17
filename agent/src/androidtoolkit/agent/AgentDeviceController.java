@@ -25,6 +25,7 @@ public class AgentDeviceController {
     private static final Logger log = LoggerFactory.getLogger(AgentDeviceController.class);
     private final ConcurrentHashMap<String, Process> activeRecordings = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Process> activeMirrors = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Map<String, String>> recordingMeta = new ConcurrentHashMap<>();
 
     /**
      * Capture a screenshot and return it directly as PNG bytes.
@@ -74,26 +75,39 @@ public class AgentDeviceController {
 
     /**
      * Start screen recording for a device.
+     * This starts BOTH scrcpy (screen mirror with display) AND adb screenrecord on the device.
+     * Also captures the app PID for log filtering when recording stops.
      */
     @PostMapping("/{serial}/start-recording")
-    public Map<String, Object> startRecording(@PathVariable String serial) {
+    public Map<String, Object> startRecording(@PathVariable String serial,
+                                              @RequestBody(required = false) Map<String, String> body) {
         if (activeRecordings.containsKey(serial)) {
             return Map.of("success", false, "message", "Recording already in progress");
         }
         try {
-            String fileName = "recording_" + serial + "_" + System.currentTimeMillis() + ".mp4";
-            String outputPath = "recordings/" + fileName;
-            new File("recordings").mkdirs();
+            String fileName = "screen_record_" + System.currentTimeMillis() + ".mp4";
 
-            // Use scrcpy for recording (better quality than adb screenrecord)
-            ProcessBuilder pb = new ProcessBuilder("scrcpy", "-s", serial, "--no-audio",
-                    "--no-display", "--record", outputPath);
-            pb.redirectErrorStream(true);
-            Process process = pb.start();
-            activeRecordings.put(serial, process);
+            // Get the app PID for log filtering later
+            String pid = runCmd("adb", "-s", serial, "shell", "pidof", "-s",
+                    body != null ? body.getOrDefault("packageName", "") : "");
 
-            return Map.of("success", true, "message", "Recording started: " + fileName,
-                    "fileName", fileName);
+            // Start scrcpy for live screen mirror (with display)
+            ProcessBuilder scrcpyPb = new ProcessBuilder("scrcpy", "-s", serial, "--no-audio");
+            scrcpyPb.redirectErrorStream(true);
+            Process scrcpyProcess = scrcpyPb.start();
+            activeMirrors.put(serial, scrcpyProcess);
+
+            // Start adb screenrecord on the device (records to /sdcard/)
+            ProcessBuilder recordPb = new ProcessBuilder("adb", "-s", serial, "shell",
+                    "screenrecord", "--bit-rate", "4000000", "/sdcard/" + fileName);
+            recordPb.redirectErrorStream(true);
+            Process recordProcess = recordPb.start();
+            activeRecordings.put(serial, recordProcess);
+
+            // Store metadata for stop
+            recordingMeta.put(serial, Map.of("fileName", fileName, "pid", pid.trim()));
+
+            return Map.of("success", true, "message", "Recording started: " + fileName);
         } catch (Exception e) {
             return Map.of("success", false, "message", "Recording failed: " + e.getMessage());
         }
@@ -101,15 +115,53 @@ public class AgentDeviceController {
 
     /**
      * Stop screen recording for a device.
+     * Stops screenrecord, pulls the video from device, captures logcat, saves both.
      */
     @PostMapping("/{serial}/stop-recording")
     public Map<String, Object> stopRecording(@PathVariable String serial) {
-        Process process = activeRecordings.remove(serial);
-        if (process == null) {
+        Process recordProcess = activeRecordings.remove(serial);
+        Process mirrorProcess = activeMirrors.remove(serial);
+        Map<String, String> meta = recordingMeta.remove(serial);
+
+        if (recordProcess == null) {
             return Map.of("success", false, "message", "No active recording for " + serial);
         }
-        process.destroyForcibly();
-        return Map.of("success", true, "message", "Recording stopped");
+
+        try {
+            // Stop screenrecord gracefully via SIGINT
+            runCmd("adb", "-s", serial, "shell", "pkill", "-INT", "screenrecord");
+            recordProcess.waitFor(10, TimeUnit.SECONDS);
+            if (recordProcess.isAlive()) recordProcess.destroyForcibly();
+
+            // Stop scrcpy
+            if (mirrorProcess != null) mirrorProcess.destroyForcibly();
+
+            String fileName = meta != null ? meta.getOrDefault("fileName", "recording.mp4") : "recording.mp4";
+            String pid = meta != null ? meta.getOrDefault("pid", "") : "";
+
+            // Create output directory
+            String dateStr = java.time.LocalDate.now().toString();
+            String outputDir = "recordings/" + serial + "/" + dateStr;
+            new File(outputDir).mkdirs();
+
+            // Pull video from device
+            runCmd("adb", "-s", serial, "pull", "/sdcard/" + fileName, outputDir + "/" + fileName);
+            runCmd("adb", "-s", serial, "shell", "rm", "/sdcard/" + fileName);
+
+            // Capture logcat (filtered by PID if available)
+            String logFile = outputDir + "/" + fileName + ".log";
+            if (!pid.isEmpty()) {
+                runCmdAndSave("adb -s " + serial + " logcat -d --pid=" + pid, logFile);
+            } else {
+                runCmdAndSave("adb -s " + serial + " logcat -d", logFile);
+            }
+
+            String absPath = new File(outputDir).getAbsolutePath();
+            return Map.of("success", true, "message", "Recording saved",
+                    "recordingLocation", absPath, "recordingFileName", fileName);
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "Stop recording failed: " + e.getMessage());
+        }
     }
 
     /**
@@ -210,5 +262,33 @@ public class AgentDeviceController {
         String output = new String(process.getInputStream().readAllBytes()).trim();
         process.waitFor(10, TimeUnit.SECONDS);
         return output;
+    }
+
+    private void runCmdAndSave(String command, String outputFile) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("bash", "-c", command + " > \"" + outputFile + "\"");
+            // On Windows, use cmd /c instead
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                pb = new ProcessBuilder("cmd", "/c", command + " > \"" + outputFile + "\"");
+            }
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            process.waitFor(30, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            // Fallback: run command and write output manually
+            try {
+                String[] parts = command.split("\\s+");
+                ProcessBuilder fallback = new ProcessBuilder(parts);
+                fallback.redirectErrorStream(true);
+                Process process = fallback.start();
+                byte[] output = process.getInputStream().readAllBytes();
+                process.waitFor(30, TimeUnit.SECONDS);
+                try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+                    fos.write(output);
+                }
+            } catch (Exception ex) {
+                log.warn("Failed to save command output to {}: {}", outputFile, ex.getMessage());
+            }
+        }
     }
 }
