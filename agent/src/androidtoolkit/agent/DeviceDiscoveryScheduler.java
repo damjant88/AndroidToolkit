@@ -46,10 +46,16 @@ public class DeviceDiscoveryScheduler {
 
     @PostConstruct
     public void start() {
-        // Start the adb track-devices listener in a background thread
+        // Start the device tracking thread
         Thread tracker = new Thread(this::trackDevices, "adb-track-devices");
         tracker.setDaemon(true);
         tracker.start();
+
+        // Also do an immediate scan after a short delay (connection may not be ready at @PostConstruct time)
+        enrichmentExecutor.submit(() -> {
+            try { Thread.sleep(3000); } catch (InterruptedException e) { return; }
+            onDeviceChangeDetected();
+        });
     }
 
     @PreDestroy
@@ -62,29 +68,18 @@ public class DeviceDiscoveryScheduler {
     }
 
     /**
-     * Listens to "adb track-devices" for instant push notifications of device changes.
-     * Falls back to polling if track-devices is unavailable.
+     * Listens for device changes using fast 1-second polling of "adb devices".
+     * This is nearly instant since adb devices just queries the local adb server.
      */
     private void trackDevices() {
         while (running) {
             try {
-                // Use adb track-devices for instant notifications
-                trackProcess = new ProcessBuilder("adb", "track-devices").start();
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(trackProcess.getInputStream()));
-
-                String line;
-                while (running && (line = reader.readLine()) != null) {
-                    // track-devices outputs length-prefixed device lists on each change
-                    // Each change triggers a re-scan
-                    onDeviceChangeDetected();
-                }
+                onDeviceChangeDetected();
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
             } catch (Exception e) {
-                log.debug("adb track-devices ended: {}", e.getMessage());
-            }
-
-            // If track-devices fails or exits, wait and retry
-            if (running) {
+                log.debug("Device tracking error: {}", e.getMessage());
                 try { Thread.sleep(2000); } catch (InterruptedException ie) { break; }
             }
         }

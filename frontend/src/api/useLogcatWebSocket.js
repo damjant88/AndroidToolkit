@@ -36,7 +36,7 @@ export function useLogcatWebSocket(serial, appInstalled) {
     if (!serial) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+      webSocketFactory: () => new SockJS('/ws'),
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe(`/topic/logcat/${serial}`, (message) => {
