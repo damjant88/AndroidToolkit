@@ -71,6 +71,9 @@ public class ServerConnection extends TextWebSocketHandler {
             log.info("Connecting to server: {} (token length: {})", serverUrl, authToken.length());
             var client = new StandardWebSocketClient();
             this.session = client.execute(this, url).get(10, TimeUnit.SECONDS);
+            // Allow large messages (screenshots as base64 can be 5-10MB)
+            this.session.setTextMessageSizeLimit(15 * 1024 * 1024);
+            this.session.setBinaryMessageSizeLimit(15 * 1024 * 1024);
             consecutiveFailures = 0;
             log.info("Connected to server successfully");
             flushPendingMessages();
