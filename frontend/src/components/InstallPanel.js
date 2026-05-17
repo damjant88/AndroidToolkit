@@ -37,8 +37,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       return;
     }
     setSelectedName(file.name);
-    setSelectedPath(file.name);
-    setMessage(`Sending ${file.name} to agent for install...`);
+    setMessage(`Sending ${file.name} to agent...`);
     setUploading(true);
     try {
       // Send APK directly to agent — it saves locally and installs via adb
@@ -48,9 +47,13 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000
       });
-      setSelectedPath(result.data.path);
-      addToHistory(file.name, result.data.path);
-      setMessage(`✅ Ready to install: ${file.name}`);
+      if (result.data.success) {
+        setSelectedPath(result.data.path);
+        addToHistory(file.name, result.data.path);
+        setMessage(`✅ Ready to install: ${file.name}`);
+      } else {
+        setMessage('❌ ' + result.data.message);
+      }
     } catch (err) {
       setMessage('❌ Upload failed: ' + (err.response?.data?.message || err.message));
     } finally {

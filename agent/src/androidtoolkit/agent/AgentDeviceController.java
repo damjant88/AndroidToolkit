@@ -268,10 +268,15 @@ public class AgentDeviceController {
         if (apkPath.isEmpty()) {
             return Map.of("success", false, "message", "apkPath required");
         }
-        if (!new File(apkPath).exists()) {
-            return Map.of("success", false, "message", "APK not found: " + apkPath);
+        // If path is not absolute, look in the apks/ directory
+        File apkFile = new File(apkPath);
+        if (!apkFile.isAbsolute() || !apkFile.exists()) {
+            apkFile = new File("apks", apkPath);
         }
-        return runSimpleCommand(serial, "install", "adb", "-s", serial, "install", "-r", apkPath);
+        if (!apkFile.exists()) {
+            return Map.of("success", false, "message", "APK not found: " + apkPath + " (also checked apks/" + apkPath + ")");
+        }
+        return runSimpleCommand(serial, "install", "adb", "-s", serial, "install", "-r", apkFile.getAbsolutePath());
     }
 
     /**
