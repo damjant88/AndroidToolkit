@@ -242,6 +242,39 @@ public class AgentDeviceController {
     }
 
     /**
+     * Receive an APK file and save it locally for installation.
+     * The APK is NOT uploaded to the backend — it stays on the agent machine.
+     */
+    @PostMapping("/upload-apk")
+    public Map<String, Object> uploadApk(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+        try {
+            String apksDir = "apks";
+            new File(apksDir).mkdirs();
+            String filePath = apksDir + "/" + file.getOriginalFilename();
+            file.transferTo(new File(filePath).getAbsoluteFile());
+            return Map.of("success", true, "path", new File(filePath).getAbsolutePath(),
+                    "fileName", file.getOriginalFilename());
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "Failed to save APK: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Install an APK on a device from a local path on the agent machine.
+     */
+    @PostMapping("/{serial}/install")
+    public Map<String, Object> installApk(@PathVariable String serial, @RequestBody Map<String, String> body) {
+        String apkPath = body.getOrDefault("apkPath", "");
+        if (apkPath.isEmpty()) {
+            return Map.of("success", false, "message", "apkPath required");
+        }
+        if (!new File(apkPath).exists()) {
+            return Map.of("success", false, "message", "APK not found: " + apkPath);
+        }
+        return runSimpleCommand(serial, "install", "adb", "-s", serial, "install", "-r", apkPath);
+    }
+
+    /**
      * Open a folder in the system file explorer.
      */
     @PostMapping("/open-folder")

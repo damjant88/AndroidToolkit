@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { uploadBuild, startInstallJob, startUninstallJob, getJob } from '../api/deviceApi';
+import { startInstallJob, startUninstallJob, getJob } from '../api/deviceApi';
+import axios from 'axios';
 
 const MAX_HISTORY = 5;
+const AGENT_URL = localStorage.getItem('agentUrl') || 'http://localhost:8082';
 
 function InstallPanel({ devices, selectedDevices, onRefresh }) {
   const [selectedPath, setSelectedPath] = useState('');
@@ -35,14 +37,20 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       return;
     }
     setSelectedName(file.name);
-    setMessage(`Uploading ${file.name}...`);
+    setSelectedPath(file.name);
+    setMessage(`Sending ${file.name} to agent for install...`);
     setUploading(true);
     try {
-      const result = await uploadBuild(file);
-      setSelectedPath(result.path);
-      setSelectedName(result.fileName);
-      addToHistory(result.fileName, result.path);
-      setMessage(`✅ Ready to install: ${result.fileName}`);
+      // Send APK directly to agent — it saves locally and installs via adb
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await axios.post(`${AGENT_URL}/api/agent/devices/upload-apk`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 120000
+      });
+      setSelectedPath(result.data.path);
+      addToHistory(file.name, result.data.path);
+      setMessage(`✅ Ready to install: ${file.name}`);
     } catch (err) {
       setMessage('❌ Upload failed: ' + (err.response?.data?.message || err.message));
     } finally {

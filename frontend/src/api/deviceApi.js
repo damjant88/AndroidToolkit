@@ -118,16 +118,50 @@ export async function uploadBuild(file) {
 }
 
 export async function startInstallJob(apkPath, serials) {
-  const response = await api.post('/jobs/install', { apkPath, serials });
-  return response.data;
+  // Install directly on each device via the agent
+  const results = {};
+  for (const serial of serials) {
+    try {
+      const res = await agentApi.post(`/devices/${serial}/install`, { apkPath });
+      results[serial] = { serial, success: res.data.success, message: res.data.message };
+    } catch (err) {
+      results[serial] = { serial, success: false, message: err.message };
+    }
+  }
+  // Return in job-like format for compatibility
+  return {
+    jobId: 'direct-' + Date.now(),
+    status: 'COMPLETED',
+    totalCount: serials.length,
+    completedCount: serials.length,
+    deviceResults: results
+  };
 }
 
 export async function startUninstallJob(serials) {
-  const response = await api.post('/jobs/uninstall', { serials });
-  return response.data;
+  const results = {};
+  for (const serial of serials) {
+    try {
+      const res = await agentApi.post(`/devices/${serial}/uninstall`, { packageName: '' });
+      results[serial] = { serial, success: res.data.success, message: res.data.message };
+    } catch (err) {
+      results[serial] = { serial, success: false, message: err.message };
+    }
+  }
+  return {
+    jobId: 'direct-' + Date.now(),
+    status: 'COMPLETED',
+    totalCount: serials.length,
+    completedCount: serials.length,
+    deviceResults: results
+  };
 }
 
 export async function getJob(jobId) {
+  // For direct agent jobs, the result is already complete
+  if (jobId.startsWith('direct-')) {
+    return { status: 'COMPLETED' };
+  }
   const response = await api.get(`/jobs/${jobId}`);
   return response.data;
 }
