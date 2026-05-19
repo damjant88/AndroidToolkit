@@ -5,8 +5,16 @@ import axios from 'axios';
 const MAX_HISTORY = 5;
 
 function InstallPanel({ devices, selectedDevices, onRefresh }) {
-  const [selectedPath, setSelectedPath] = useState('');
-  const [selectedName, setSelectedName] = useState('');
+  const [selectedPath, setSelectedPath] = useState(() => {
+    const saved = localStorage.getItem('buildHistory');
+    const history = saved ? JSON.parse(saved) : [];
+    return history.length > 0 ? history[0].path : '';
+  });
+  const [selectedName, setSelectedName] = useState(() => {
+    const saved = localStorage.getItem('buildHistory');
+    const history = saved ? JSON.parse(saved) : [];
+    return history.length > 0 ? history[0].fileName : '';
+  });
   const [message, setMessage] = useState('');
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
