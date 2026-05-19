@@ -20,58 +20,60 @@ function AdminProjectsPanel() {
   const [projects, setProjects] = useState([]);
   const [name, setName] = useState('');
   const [remoteApkLocation, setRemoteApkLocation] = useState('');
-  const [localApkFolder, setLocalApkFolder] = useState('');
-  const [localLogFolder, setLocalLogFolder] = useState('');
   const [error, setError] = useState('');
-  const [editingId, setEditingId] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editRemoteApkLocation, setEditRemoteApkLocation] = useState('');
-  const [editLocalApkFolder, setEditLocalApkFolder] = useState('');
-  const [editLocalLogFolder, setEditLocalLogFolder] = useState('');
   const [expandedProject, setExpandedProject] = useState(null);
-  const [backendAvailable, setBackendAvailable] = useState(true);
+  const [inlineRemote, setInlineRemote] = useState({});
 
   const fetchProjects = useCallback(async () => {
     try {
       const res = await projectApi.list();
       setProjects(res.data);
-      setBackendAvailable(true);
-    } catch {
-      setBackendAvailable(false);
-    }
+    } catch {} // eslint-disable-line no-empty
   }, []);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
 
   async function handleCreate(e) {
     e.preventDefault();
-    if (!name.trim() || !remoteApkLocation.trim() || !localApkFolder.trim() || !localLogFolder.trim()) return;
+    if (!name.trim() || !remoteApkLocation.trim()) return;
     setError('');
     try {
-      await projectApi.create({ name: name.trim(), remoteApkLocation: remoteApkLocation.trim(), localApkFolder: localApkFolder.trim(), localLogFolder: localLogFolder.trim() });
-      setName(''); setRemoteApkLocation(''); setLocalApkFolder(''); setLocalLogFolder('');
+      await projectApi.create({ name: name.trim(), remoteApkLocation: remoteApkLocation.trim(), localApkFolder: 'default', localLogFolder: 'default' });
+      setName(''); setRemoteApkLocation('');
       fetchProjects();
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
     }
   }
 
-  function handleEditClick(project) {
-    setEditingId(project.id);
-    setEditName(project.name);
-    setEditRemoteApkLocation(project.remoteApkLocation);
-    setEditLocalApkFolder(project.localApkFolder);
-    setEditLocalLogFolder(project.localLogFolder);
-    setError('');
+  function handleInlineRemoteChange(project, value) {
+    setInlineRemote(prev => ({ ...prev, [project.id]: value }));
   }
 
-  async function handleUpdate(e) {
-    e.preventDefault();
-    if (!editName.trim() || !editRemoteApkLocation.trim() || !editLocalApkFolder.trim() || !editLocalLogFolder.trim()) return;
-    setError('');
+  async function handleInlineRemoteSave(project) {
+    const newValue = inlineRemote[project.id];
+    if (newValue === undefined || newValue === project.remoteApkLocation) return;
+    if (!newValue.trim()) return;
     try {
-      await projectApi.update(editingId, { name: editName.trim(), remoteApkLocation: editRemoteApkLocation.trim(), localApkFolder: editLocalApkFolder.trim(), localLogFolder: editLocalLogFolder.trim() });
-      setEditingId(null);
+      // Check if project exists in DB (by ID from fetched list, or by name)
+      const existing = projects.find(p => p.id === project.id || p.name === project.name);
+      if (existing) {
+        // Update existing project
+        await projectApi.update(existing.id, {
+          name: existing.name,
+          remoteApkLocation: newValue.trim(),
+          localApkFolder: existing.localApkFolder || 'default',
+          localLogFolder: existing.localLogFolder || 'default'
+        });
+      } else {
+        // Project doesn't exist in DB — create it
+        await projectApi.create({
+          name: project.name,
+          remoteApkLocation: newValue.trim(),
+          localApkFolder: 'default',
+          localLogFolder: 'default'
+        });
+      }
       fetchProjects();
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
@@ -92,12 +94,12 @@ function AdminProjectsPanel() {
   const allProjects = projects.length > 0
     ? projects.map(p => ({ ...p, ...getMeta(p.name) }))
     : Object.entries(PROJECT_META).map(([pName, meta]) => ({
-        id: pName, name: pName, remoteApkLocation: '', localApkFolder: '', localLogFolder: '', ...meta
+        id: pName, name: pName, remoteApkLocation: '', ...meta
       }));
 
   return (
     <div className="admin-projects-panel">
-      <h4>Projects</h4>
+      <h4>Projects (Admin)</h4>
 
       {/* Project cards with icons */}
       <div className="project-cards-grid">
@@ -119,17 +121,19 @@ function AdminProjectsPanel() {
                   <ul>{p.packages.map(pkg => <li key={pkg}><code>{pkg}</code></li>)}</ul>
                 </div>
                 <div className="project-card-section">
-                  <strong>📡 Remote APK:</strong> <span>{p.remoteApkLocation || <em className="not-configured">Not configured</em>}</span>
+                  <strong>📡 Remote APK Location:</strong>
+                  <input
+                    type="text"
+                    className="project-local-input"
+                    placeholder="e.g. \\\\server\\builds\\SafePath"
+                    value={inlineRemote[p.id] !== undefined ? inlineRemote[p.id] : (p.remoteApkLocation || '')}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => handleInlineRemoteChange(p, e.target.value)}
+                  />
+                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineRemoteSave(p); }}>Save</button>
                 </div>
-                <div className="project-card-section">
-                  <strong>📁 Local APK:</strong> <span>{p.localApkFolder || <em className="not-configured">Not configured</em>}</span>
-                </div>
-                <div className="project-card-section">
-                  <strong>📋 Local Logs:</strong> <span>{p.localLogFolder || <em className="not-configured">Not configured</em>}</span>
-                </div>
-                {backendAvailable && projects.length > 0 && (
+                {projects.length > 0 && (
                   <div className="project-card-actions">
-                    <button onClick={(e) => { e.stopPropagation(); handleEditClick(p); }}>Edit</button>
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(p); }}>Delete</button>
                   </div>
                 )}
@@ -139,29 +143,12 @@ function AdminProjectsPanel() {
         ))}
       </div>
 
-      {/* Edit form (inline) */}
-      {editingId && (
-        <div className="project-edit-form">
-          <h5>Edit Project</h5>
-          <form onSubmit={handleUpdate} className="project-form">
-            <input type="text" placeholder="Name" value={editName} onChange={e => setEditName(e.target.value)} />
-            <input type="text" placeholder="Remote APK location" value={editRemoteApkLocation} onChange={e => setEditRemoteApkLocation(e.target.value)} />
-            <input type="text" placeholder="Local APK folder" value={editLocalApkFolder} onChange={e => setEditLocalApkFolder(e.target.value)} />
-            <input type="text" placeholder="Local Log Folder" value={editLocalLogFolder} onChange={e => setEditLocalLogFolder(e.target.value)} />
-            <button type="submit">Save</button>
-            <button type="button" onClick={() => setEditingId(null)}>Cancel</button>
-          </form>
-        </div>
-      )}
-
       {/* Create form */}
       <details className="project-create-section" open={projects.length === 0}>
         <summary>+ Add New Project</summary>
         <form onSubmit={handleCreate} className="project-form">
           <input type="text" placeholder="Project name" value={name} onChange={e => setName(e.target.value)} />
-          <input type="text" placeholder="Remote APK location" value={remoteApkLocation} onChange={e => setRemoteApkLocation(e.target.value)} />
-          <input type="text" placeholder="Local APK folder" value={localApkFolder} onChange={e => setLocalApkFolder(e.target.value)} />
-          <input type="text" placeholder="Local Log Folder" value={localLogFolder} onChange={e => setLocalLogFolder(e.target.value)} />
+          <input type="text" placeholder="Remote APK Location" value={remoteApkLocation} onChange={e => setRemoteApkLocation(e.target.value)} />
           <button type="submit">Create</button>
         </form>
       </details>

@@ -2,54 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { projectApi } from '../api/projectApi';
 
 const PROJECTS = [
-  {
-    name: 'SafePath',
-    icon: 'product.png',
-    packages: ['com.smithmicro.safepath.family', 'com.smithmicro.safepath.family.child'],
-    color: '#4CAF50'
-  },
-  {
-    name: 'Secure Family',
-    icon: 'att.png',
-    packages: ['com.smithmicro.att.securefamily', 'com.wavemarket.waplauncher', 'com.att.securefamilycompanion'],
-    color: '#2196F3'
-  },
-  {
-    name: 'Safe&Found',
-    icon: 'sprint.png',
-    packages: ['com.smithmicro.sprint.safeandfound.test', 'com.sprint.safefound'],
-    color: '#FF9800'
-  },
-  {
-    name: 'Family Mode',
-    icon: 'tmo.png',
-    packages: ['com.smithmicro.tmobile.familymode.test', 'com.tmobile.familycontrols'],
-    color: '#E91E63'
-  },
-  {
-    name: 'CCI',
-    icon: 'Senior.png',
-    packages: ['com.smithmicro.cci.test', 'com.smithmicro.safepath.family.light', 'com.smithmicro.safepath.family.speakeasy'],
-    color: '#9C27B0'
-  },
-  {
-    name: 'Orange',
-    icon: 'toyo.png',
-    packages: ['com.smithmicro.orangespain.test', 'com.orange.es.TuYo'],
-    color: '#FF5722'
-  },
-  {
-    name: 'Dish',
-    icon: 'dish.png',
-    packages: ['com.smithmicro.safepath.dish.test', 'com.smithmicro.safepath.dish.kid.test'],
-    color: '#607D8B'
-  }
+  { name: 'SafePath', icon: 'product.png', packages: ['com.smithmicro.safepath.family', 'com.smithmicro.safepath.family.child'], color: '#4CAF50' },
+  { name: 'Secure Family', icon: 'att.png', packages: ['com.smithmicro.att.securefamily', 'com.wavemarket.waplauncher', 'com.att.securefamilycompanion'], color: '#2196F3' },
+  { name: 'Safe&Found', icon: 'sprint.png', packages: ['com.smithmicro.sprint.safeandfound.test', 'com.sprint.safefound'], color: '#FF9800' },
+  { name: 'Family Mode', icon: 'tmo.png', packages: ['com.smithmicro.tmobile.familymode.test', 'com.tmobile.familycontrols'], color: '#E91E63' },
+  { name: 'CCI', icon: 'Senior.png', packages: ['com.smithmicro.cci.test', 'com.smithmicro.safepath.family.light', 'com.smithmicro.safepath.family.speakeasy'], color: '#9C27B0' },
+  { name: 'Orange', icon: 'toyo.png', packages: ['com.smithmicro.orangespain.test', 'com.orange.es.TuYo'], color: '#FF5722' },
+  { name: 'Dish', icon: 'dish.png', packages: ['com.smithmicro.safepath.dish.test', 'com.smithmicro.safepath.dish.kid.test'], color: '#607D8B' },
 ];
+
+// Load/save user-specific local paths from localStorage
+function getLocalPaths() {
+  const saved = localStorage.getItem('projectLocalPaths');
+  return saved ? JSON.parse(saved) : {};
+}
+function saveLocalPaths(paths) {
+  localStorage.setItem('projectLocalPaths', JSON.stringify(paths));
+}
 
 function ProjectQuickAccess({ devices }) {
   const [selectedProject, setSelectedProject] = useState(null);
-  const [autoSelected, setAutoSelected] = useState(false);
   const [backendProjects, setBackendProjects] = useState({});
+  const [localPaths, setLocalPaths] = useState(getLocalPaths);
 
   // Fetch admin-defined project data from backend
   useEffect(() => {
@@ -63,19 +37,20 @@ function ProjectQuickAccess({ devices }) {
   // Auto-select project based on connected device's installed package
   useEffect(() => {
     if (!devices || devices.length === 0) return;
-
     for (const device of devices) {
       const pkg = device.deviceInfo?.safePathPackage;
       if (pkg && device.deviceInfo?.appInstalled) {
-        const matchedProject = PROJECTS.find(p => p.packages.includes(pkg));
-        if (matchedProject) {
-          setSelectedProject(matchedProject);
-          setAutoSelected(true);
-          return;
-        }
+        const matched = PROJECTS.find(p => p.packages.includes(pkg));
+        if (matched) { setSelectedProject(matched); return; }
       }
     }
   }, [devices]);
+
+  function handleLocalPathChange(projectName, field, value) {
+    const updated = { ...localPaths, [projectName]: { ...localPaths[projectName], [field]: value } };
+    setLocalPaths(updated);
+    saveLocalPaths(updated);
+  }
 
   return (
     <div className="project-quick-access-wrapper">
@@ -112,15 +87,29 @@ function ProjectQuickAccess({ devices }) {
             </div>
             <div className="project-detail-section">
               <h4>📡 Remote APK Location</h4>
-              <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured</em>}</p>
+              <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured by admin</em>}</p>
             </div>
             <div className="project-detail-section">
               <h4>📁 Local APK Folder</h4>
-              <p>{backendProjects[selectedProject.name]?.localApkFolder || <em className="not-configured">Not configured</em>}</p>
+              <input
+                type="text"
+                className="project-local-input"
+                placeholder="e.g. C:\Builds\SafePath"
+                value={localPaths[selectedProject.name]?.localApkFolder || ''}
+                onChange={e => handleLocalPathChange(selectedProject.name, 'localApkFolder', e.target.value)}
+                onClick={e => e.stopPropagation()}
+              />
             </div>
             <div className="project-detail-section">
               <h4>📋 Local Log Folder</h4>
-              <p>{backendProjects[selectedProject.name]?.localLogFolder || <em className="not-configured">Not configured</em>}</p>
+              <input
+                type="text"
+                className="project-local-input"
+                placeholder="e.g. C:\Logs\SafePath"
+                value={localPaths[selectedProject.name]?.localLogFolder || ''}
+                onChange={e => handleLocalPathChange(selectedProject.name, 'localLogFolder', e.target.value)}
+                onClick={e => e.stopPropagation()}
+              />
             </div>
             <div className="project-detail-section">
               <h4>📊 Stats</h4>
