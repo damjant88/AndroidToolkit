@@ -39,11 +39,26 @@ public class DeviceDiscoveryScheduler {
     private volatile Process trackProcess;
     private volatile boolean running = true;
     private volatile Set<String> lastKnownSerials = Set.of();
+    private volatile boolean suppressUpdates = false;
 
     public DeviceDiscoveryScheduler(ServerConnection serverConnection, AgentLogcatService logcatService) {
         this.serverConnection = serverConnection;
         this.logcatService = logcatService;
         serverConnection.setOnReconnected(this::sendCurrentDeviceList);
+    }
+
+    /**
+     * Suppresses device list updates for the specified duration.
+     * Used during WiFi debug toggle to prevent the USB device from flickering.
+     */
+    public void suppressUpdates(long durationMs) {
+        suppressUpdates = true;
+        new Thread(() -> {
+            try { Thread.sleep(durationMs); } catch (InterruptedException ignored) {}
+            suppressUpdates = false;
+            // Re-scan and send after suppression ends
+            sendCurrentDeviceList();
+        }).start();
     }
 
     @PostConstruct
@@ -106,8 +121,8 @@ public class DeviceDiscoveryScheduler {
                 
                 if (!removedSerials.isEmpty() && !currentSerials.isEmpty()) {
                     // Devices were removed but some remain — debounce to handle WiFi debug flicker
-                    // Wait 3 seconds and re-scan to see if the device comes back
-                    try { Thread.sleep(3000); } catch (InterruptedException e) { return; }
+                    // Wait 5 seconds and re-scan to see if the device comes back
+                    try { Thread.sleep(5000); } catch (InterruptedException e) { return; }
                     basicDevices = fastScan();
                     currentSerials = new HashSet<>();
                     for (DeviceInfo d : basicDevices) {
@@ -115,6 +130,21 @@ public class DeviceDiscoveryScheduler {
                     }
                     // If nothing actually changed after debounce, skip
                     if (currentSerials.equals(lastKnownSerials)) return;
+                    // If removed devices came back (possibly with new WiFi serial), merge them
+                    // Keep cached devices that were removed but might be reconnecting
+                    for (String removed : removedSerials) {
+                        if (!currentSerials.contains(removed) && deviceCache.containsKey(removed)) {
+                            // Device still missing after debounce — check if it's a USB device
+                            // that might be reconnecting via WiFi (same IP)
+                            DeviceInfo cached = deviceCache.get(removed);
+                            if (cached != null && !removed.contains(":")) {
+                                // USB device disappeared — keep it in cache for 10 more seconds
+                                // It will be cleaned up on the next scan if still gone
+                                currentSerials.add(removed);
+                                basicDevices.add(cached);
+                            }
+                        }
+                    }
                 }
 
                 lastKnownSerials = currentSerials;
@@ -323,6 +353,7 @@ public class DeviceDiscoveryScheduler {
 
     private void sendDeviceList(List<DeviceInfo> devices) {
         if (!serverConnection.isConnected()) return;
+        if (suppressUpdates) return; // Don't send during WiFi debug toggle
         try {
             serverConnection.send(new AgentMessage.DeviceList(devices));
         } catch (Exception e) {

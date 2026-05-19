@@ -56,14 +56,19 @@ public class AgentDeviceController {
     @PostMapping(value = "/{serial}/screenshot", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> captureScreenshot(@PathVariable String serial) {
         try {
-            // Capture PNG from device directly to stdout
-            ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "exec-out", "screencap", "-p");
-            Process process = pb.start();
-            byte[] pngBytes = process.getInputStream().readAllBytes();
-            process.waitFor(15, TimeUnit.SECONDS);
+            // Retry up to 3 times with 500ms delay if screencap returns empty
+            byte[] pngBytes = null;
+            for (int attempt = 0; attempt < 3; attempt++) {
+                ProcessBuilder pb = new ProcessBuilder("adb", "-s", serial, "exec-out", "screencap", "-p");
+                Process process = pb.start();
+                pngBytes = process.getInputStream().readAllBytes();
+                process.waitFor(15, TimeUnit.SECONDS);
+                if (pngBytes.length > 0) break;
+                Thread.sleep(500);
+            }
 
-            if (pngBytes.length == 0) {
-                return ResponseEntity.status(500).build();
+            if (pngBytes == null || pngBytes.length == 0) {
+                return ResponseEntity.status(500).body(null);
             }
 
             return ResponseEntity.ok()
@@ -71,7 +76,7 @@ public class AgentDeviceController {
                     .body(pngBytes);
         } catch (Exception e) {
             log.error("Screenshot failed for {}: {}", serial, e.getMessage());
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(500).body(null);
         }
     }
 
@@ -297,13 +302,19 @@ public class AgentDeviceController {
 
         try {
             if (wifiDebugSession) {
-                // Disconnect
-                runCmd("adb", "disconnect", ipAddress + ":5555");
+                // Disconnect — fast, no need to suppress
+                ProcessBuilder pb = new ProcessBuilder("adb", "disconnect", ipAddress + ":5555");
+                pb.redirectErrorStream(true);
+                Process process = pb.start();
+                process.getInputStream().readAllBytes();
+                process.waitFor(3, TimeUnit.SECONDS);
+                if (process.isAlive()) process.destroyForcibly();
                 return Map.of("success", true, "message", "Disconnected", "wifiDebugSession", false);
             } else if (!ipAddress.isEmpty()) {
-                // Connect
+                // Connect — suppress device list updates during toggle
+                deviceDiscoveryScheduler.suppressUpdates(10000);
                 runCmd("adb", "-s", serial, "tcpip", "5555");
-                Thread.sleep(1000);
+                Thread.sleep(2000);
                 String result = runCmd("adb", "connect", ipAddress + ":5555");
                 boolean connected = result.contains("connected");
                 return Map.of("success", connected, "message", result,

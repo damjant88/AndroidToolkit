@@ -20,11 +20,13 @@ import java.util.concurrent.Executors;
 public class AdbCommandExecutor {
 
     private final ServerConnection serverConnection;
+    private final androidtoolkit.agent.DeviceDiscoveryScheduler deviceDiscovery;
     private final ExecutorService executor = Executors.newCachedThreadPool();
     private final Map<String, Process> activeLogcatProcesses = new ConcurrentHashMap<>();
 
-    public AdbCommandExecutor(ServerConnection serverConnection) {
+    public AdbCommandExecutor(ServerConnection serverConnection, androidtoolkit.agent.DeviceDiscoveryScheduler deviceDiscovery) {
         this.serverConnection = serverConnection;
+        this.deviceDiscovery = deviceDiscovery;
     }
 
     @PostConstruct
@@ -169,8 +171,10 @@ public class AdbCommandExecutor {
                 serverConnection.send(new AgentMessage.OperationResult(rid, true,
                         "DISCONNECTED:" + cmd.ipAddress()));
             } else if (cmd.hasWifiIp()) {
+                // Suppress device list updates during WiFi toggle (prevents UI flicker)
+                deviceDiscovery.suppressUpdates(10000);
                 runAdb(cmd.serial(), "tcpip", "5555");
-                Thread.sleep(1000);
+                Thread.sleep(2000);
                 String result = runAdbDirect("connect", cmd.ipAddress() + ":5555");
                 boolean success = result.contains("connected");
                 serverConnection.send(new AgentMessage.OperationResult(rid, success,
