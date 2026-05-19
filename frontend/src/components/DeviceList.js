@@ -29,6 +29,12 @@ function DeviceList() {
   }, [deviceUpdate]);
 
   function applyDeviceUpdate(fetched) {
+    // Don't clear the device list if we receive an empty update after initial load
+    // This prevents UI flicker during WebSocket reconnection
+    if (fetched.length === 0 && initialLoadDone.current && devices.length > 0) {
+      return;
+    }
+
     const fetchedMap = new Map(fetched.map(d => [d.serial, d]));
     const currentSerials = new Set(fetched.map(d => d.serial));
 
