@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { projectApi } from '../api/projectApi';
 
+const FALLBACK_PROJECTS = [
+  { id: 'sp', name: 'SafePath', remoteApkLocation: '', localApkFolder: '', localLogFolder: '' },
+  { id: 'sf', name: 'Secure Family', remoteApkLocation: '', localApkFolder: '', localLogFolder: '' },
+  { id: 'saf', name: 'Safe&Found', remoteApkLocation: '', localApkFolder: '', localLogFolder: '' },
+  { id: 'fm', name: 'Family Mode', remoteApkLocation: '', localApkFolder: '', localLogFolder: '' },
+  { id: 'cci', name: 'CCI', remoteApkLocation: '', localApkFolder: '', localLogFolder: '' },
+  { id: 'or', name: 'Orange', remoteApkLocation: '', localApkFolder: '', localLogFolder: '' },
+  { id: 'dish', name: 'Dish', remoteApkLocation: '', localApkFolder: '', localLogFolder: '' },
+];
+
 function UserProjectsPanel() {
   const [projects, setProjects] = useState([]);
   const [localPaths, setLocalPaths] = useState({});
@@ -11,6 +21,11 @@ function UserProjectsPanel() {
     try {
       const res = await projectApi.list();
       const projectList = res.data;
+      if (projectList.length === 0) {
+        // No projects in DB — show fallback
+        setProjects(FALLBACK_PROJECTS);
+        return;
+      }
       const resolved = await Promise.all(
         projectList.map(p => projectApi.getResolved(p.id).then(r => r.data))
       );
@@ -24,7 +39,9 @@ function UserProjectsPanel() {
       setLocalPaths(paths);
       setLogPaths(logs);
     } catch {
-      setMessage('Failed to load projects');
+      // API failed — show fallback projects
+      setProjects(FALLBACK_PROJECTS);
+      setMessage('Showing default projects (backend unavailable)');
     }
   }, []);
 
