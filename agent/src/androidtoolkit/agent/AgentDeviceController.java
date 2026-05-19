@@ -404,6 +404,62 @@ public class AgentDeviceController {
     }
 
     /**
+     * Get the device's last known GPS location.
+     */
+    @GetMapping("/{serial}/location")
+    public Map<String, Object> getLocation(@PathVariable String serial) {
+        try {
+            String output = runCmd("adb", "-s", serial, "shell", "dumpsys", "location");
+            double lat = 0, lng = 0;
+            boolean found = false;
+            for (String line : output.split("\n")) {
+                if (line.contains("last location=") && line.contains("Location[")) {
+                    try {
+                        int idx = line.indexOf("Location[");
+                        String sub = line.substring(idx);
+                        int start = sub.indexOf(' ') + 1;
+                        int comma = sub.indexOf(',', start);
+                        int end = sub.indexOf(' ', comma);
+                        if (end == -1) end = sub.indexOf(']', comma);
+                        lat = Double.parseDouble(sub.substring(start, comma));
+                        lng = Double.parseDouble(sub.substring(comma + 1, end));
+                        found = true;
+                        break;
+                    } catch (Exception ignored) {}
+                }
+            }
+            return Map.of("success", found, "lat", lat, "lng", lng);
+        } catch (Exception e) {
+            return Map.of("success", false, "lat", 0.0, "lng", 0.0, "message", e.getMessage());
+        }
+    }
+
+    /**
+     * Set or stop mock GPS location on a device.
+     */
+    @PostMapping("/{serial}/mock-location")
+    public Map<String, Object> mockLocation(@PathVariable String serial, @RequestBody Map<String, Object> body) {
+        double lat = ((Number) body.getOrDefault("lat", 0.0)).doubleValue();
+        double lng = ((Number) body.getOrDefault("lng", 0.0)).doubleValue();
+        boolean start = (boolean) body.getOrDefault("start", true);
+
+        try {
+            if (!start) {
+                runCmd("adb", "-s", serial, "shell", "cmd", "location", "providers", "remove-test-provider", "gps");
+                return Map.of("success", true, "message", "Mock location stopped");
+            }
+            runCmd("adb", "-s", serial, "shell", "appops", "set", "com.android.shell", "android:mock_location", "allow");
+            runCmd("adb", "-s", serial, "shell", "cmd", "location", "providers", "add-test-provider", "gps");
+            runCmd("adb", "-s", serial, "shell", "cmd", "location", "providers", "set-test-provider-enabled", "gps", "true");
+            String locCmd = String.format("cmd location providers set-test-provider-location gps --location %f,%f --accuracy 1.0", lat, lng);
+            runCmd("adb", "-s", serial, "shell", locCmd);
+            return Map.of("success", true, "message", String.format("Mocking: %.6f,%.6f", lat, lng));
+        } catch (Exception e) {
+            return Map.of("success", false, "message", e.getMessage());
+        }
+    }
+
+    /**
      * Open a folder in the system file explorer.
      */
     @PostMapping("/open-folder")
