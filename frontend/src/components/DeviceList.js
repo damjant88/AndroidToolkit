@@ -19,6 +19,7 @@ function DeviceList() {
   const [showBugTemplate, setShowBugTemplate] = useState(false);
   const initialLoadDone = useRef(false);
   const knownOrder = useRef([]); // stable serial order
+  const hasDevices = useRef(false);
 
   const { deviceUpdate, connected } = useDeviceWebSocket();
 
@@ -26,12 +27,12 @@ function DeviceList() {
     if (deviceUpdate && deviceUpdate.devices) {
       applyDeviceUpdate(deviceUpdate.devices);
     }
-  }, [deviceUpdate]);
+  }, [deviceUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function applyDeviceUpdate(fetched) {
     // Don't clear the device list if we receive an empty update after initial load
     // This prevents UI flicker during WebSocket reconnection
-    if (fetched.length === 0 && initialLoadDone.current && devices.length > 0) {
+    if (fetched.length === 0 && initialLoadDone.current && hasDevices.current) {
       return;
     }
 
@@ -48,6 +49,7 @@ function DeviceList() {
     // Build device list in stable order
     const ordered = finalOrder.map(s => fetchedMap.get(s)).filter(Boolean);
     setDevices(ordered);
+    hasDevices.current = ordered.length > 0;
 
     if (!initialLoadDone.current) {
       initialLoadDone.current = true;
