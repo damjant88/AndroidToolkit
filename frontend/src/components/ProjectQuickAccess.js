@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { projectApi } from '../api/projectApi';
 
 const PROJECTS = [
   {
@@ -48,6 +49,16 @@ const PROJECTS = [
 function ProjectQuickAccess({ devices }) {
   const [selectedProject, setSelectedProject] = useState(null);
   const [autoSelected, setAutoSelected] = useState(false);
+  const [backendProjects, setBackendProjects] = useState({});
+
+  // Fetch admin-defined project data from backend
+  useEffect(() => {
+    projectApi.list().then(res => {
+      const map = {};
+      (res.data || []).forEach(p => { map[p.name] = p; });
+      setBackendProjects(map);
+    }).catch(() => {});
+  }, []);
 
   // Auto-select project based on connected device's installed package
   useEffect(() => {
@@ -100,8 +111,16 @@ function ProjectQuickAccess({ devices }) {
               </ul>
             </div>
             <div className="project-detail-section">
-              <h4>📁 APK Paths</h4>
-              <p className="placeholder-text">Configure remote APK location and local folder in Manage Projects</p>
+              <h4>📡 Remote APK Location</h4>
+              <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured</em>}</p>
+            </div>
+            <div className="project-detail-section">
+              <h4>📁 Local APK Folder</h4>
+              <p>{backendProjects[selectedProject.name]?.localApkFolder || <em className="not-configured">Not configured</em>}</p>
+            </div>
+            <div className="project-detail-section">
+              <h4>📋 Local Log Folder</h4>
+              <p>{backendProjects[selectedProject.name]?.localLogFolder || <em className="not-configured">Not configured</em>}</p>
             </div>
             <div className="project-detail-section">
               <h4>📊 Stats</h4>
