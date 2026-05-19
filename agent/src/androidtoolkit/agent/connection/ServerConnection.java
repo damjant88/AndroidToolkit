@@ -41,6 +41,7 @@ public class ServerConnection extends TextWebSocketHandler {
 
     private WebSocketSession session;
     private Consumer<AgentCommand> commandHandler;
+    private java.util.function.BiConsumer<AgentCommand, String> commandHandlerWithRequestId;
     private Runnable onReconnected;
     private int consecutiveFailures = 0;
     private static final long INITIAL_DELAY_MS = 1000;
@@ -49,6 +50,13 @@ public class ServerConnection extends TextWebSocketHandler {
 
     public void setCommandHandler(Consumer<AgentCommand> handler) {
         this.commandHandler = handler;
+    }
+
+    /**
+     * Sets a command handler that also receives the requestId from the command envelope.
+     */
+    public void setCommandHandlerWithRequestId(java.util.function.BiConsumer<AgentCommand, String> handler) {
+        this.commandHandlerWithRequestId = handler;
     }
 
     /**
@@ -107,7 +115,16 @@ public class ServerConnection extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
-        if (commandHandler != null) {
+        if (commandHandlerWithRequestId != null) {
+            try {
+                com.fasterxml.jackson.databind.JsonNode node = objectMapper.readTree(message.getPayload());
+                String requestId = node.has("requestId") ? node.get("requestId").asText(null) : null;
+                AgentCommand command = objectMapper.treeToValue(node, AgentCommand.class);
+                commandHandlerWithRequestId.accept(command, requestId);
+            } catch (Exception e) {
+                // Log parsing error
+            }
+        } else if (commandHandler != null) {
             try {
                 AgentCommand command = objectMapper.readValue(message.getPayload(), AgentCommand.class);
                 commandHandler.accept(command);

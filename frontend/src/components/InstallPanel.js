@@ -3,7 +3,6 @@ import { startInstallJob, startUninstallJob, getJob } from '../api/deviceApi';
 import axios from 'axios';
 
 const MAX_HISTORY = 5;
-const AGENT_URL = localStorage.getItem('agentUrl') || 'http://localhost:8082';
 
 function InstallPanel({ devices, selectedDevices, onRefresh }) {
   const [selectedPath, setSelectedPath] = useState('');
@@ -43,7 +42,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       // Send APK directly to agent — it saves locally and installs via adb
       const formData = new FormData();
       formData.append('file', file);
-      const result = await axios.post(`${AGENT_URL}/api/agent/devices/upload-apk`, formData, {
+      const result = await axios.post('http://localhost:8081/api/agent/devices/upload-apk', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000
       });

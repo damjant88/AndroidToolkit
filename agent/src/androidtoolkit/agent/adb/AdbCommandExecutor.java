@@ -29,26 +29,26 @@ public class AdbCommandExecutor {
 
     @PostConstruct
     public void init() {
-        serverConnection.setCommandHandler(this::handleCommand);
+        serverConnection.setCommandHandlerWithRequestId(this::handleCommand);
     }
 
-    public void handleCommand(AgentCommand command) {
+    public void handleCommand(AgentCommand command, String requestId) {
         switch (command) {
             case AgentCommand.StartLogcat cmd -> startLogcat(cmd);
             case AgentCommand.StopLogcat cmd -> stopLogcat(cmd);
-            case AgentCommand.PullLogs cmd -> executor.submit(() -> pullLogs(cmd));
-            case AgentCommand.InstallApk cmd -> executor.submit(() -> installApk(cmd));
-            case AgentCommand.UninstallApp cmd -> executor.submit(() -> uninstallApp(cmd));
-            case AgentCommand.CaptureScreenshot cmd -> executor.submit(() -> captureScreenshot(cmd));
-            case AgentCommand.Reboot cmd -> executor.submit(() -> rebootDevice(cmd));
-            case AgentCommand.ToggleWifiDebug cmd -> executor.submit(() -> toggleWifiDebug(cmd));
-            case AgentCommand.EnableFirebaseDebug cmd -> executor.submit(() -> enableFirebaseDebug(cmd));
-            case AgentCommand.GetLocation cmd -> executor.submit(() -> getLocation(cmd));
-            case AgentCommand.SetMockLocation cmd -> executor.submit(() -> setMockLocation(cmd));
-            case AgentCommand.ManagePermission cmd -> executor.submit(() -> managePermission(cmd));
-            case AgentCommand.ManageAccessibility cmd -> executor.submit(() -> manageAccessibility(cmd));
-            case AgentCommand.StartScreenMirror cmd -> executor.submit(() -> startScreenMirror(cmd));
-            case AgentCommand.GetPackageDump cmd -> executor.submit(() -> getPackageDump(cmd));
+            case AgentCommand.PullLogs cmd -> executor.submit(() -> pullLogs(cmd, requestId));
+            case AgentCommand.InstallApk cmd -> executor.submit(() -> installApk(cmd, requestId));
+            case AgentCommand.UninstallApp cmd -> executor.submit(() -> uninstallApp(cmd, requestId));
+            case AgentCommand.CaptureScreenshot cmd -> executor.submit(() -> captureScreenshot(cmd, requestId));
+            case AgentCommand.Reboot cmd -> executor.submit(() -> rebootDevice(cmd, requestId));
+            case AgentCommand.ToggleWifiDebug cmd -> executor.submit(() -> toggleWifiDebug(cmd, requestId));
+            case AgentCommand.EnableFirebaseDebug cmd -> executor.submit(() -> enableFirebaseDebug(cmd, requestId));
+            case AgentCommand.GetLocation cmd -> executor.submit(() -> getLocation(cmd, requestId));
+            case AgentCommand.SetMockLocation cmd -> executor.submit(() -> setMockLocation(cmd, requestId));
+            case AgentCommand.ManagePermission cmd -> executor.submit(() -> managePermission(cmd, requestId));
+            case AgentCommand.ManageAccessibility cmd -> executor.submit(() -> manageAccessibility(cmd, requestId));
+            case AgentCommand.StartScreenMirror cmd -> executor.submit(() -> startScreenMirror(cmd, requestId));
+            case AgentCommand.GetPackageDump cmd -> executor.submit(() -> getPackageDump(cmd, requestId));
         }
     }
 
@@ -80,7 +80,8 @@ public class AdbCommandExecutor {
         }
     }
 
-    private void pullLogs(AgentCommand.PullLogs cmd) {
+    private void pullLogs(AgentCommand.PullLogs cmd, String requestId) {
+        String rid = requestId != null ? requestId : "pull-" + cmd.serial();
         try {
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "pull", "/sdcard/logs", cmd.targetPath());
             Process process = pb.start();
@@ -88,115 +89,115 @@ public class AdbCommandExecutor {
             if (exitCode == 0) {
                 serverConnection.send(new AgentMessage.LogArchiveReady(cmd.serial(), cmd.targetPath()));
             } else {
-                serverConnection.send(new AgentMessage.OperationResult("pull-" + cmd.serial(), false, "Exit code: " + exitCode));
+                serverConnection.send(new AgentMessage.OperationResult(rid, false, "Exit code: " + exitCode));
             }
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("pull-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void installApk(AgentCommand.InstallApk cmd) {
+    private void installApk(AgentCommand.InstallApk cmd, String requestId) {
+        String rid = requestId != null ? requestId : "install-" + cmd.serial();
         try {
-            // Download APK from URL first, then install
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "install", "-r", cmd.apkUrl());
             Process process = pb.start();
             int exitCode = process.waitFor();
-            serverConnection.send(new AgentMessage.OperationResult("install-" + cmd.serial(),
+            serverConnection.send(new AgentMessage.OperationResult(rid,
                     exitCode == 0, exitCode == 0 ? "Installed" : "Exit code: " + exitCode));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("install-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void uninstallApp(AgentCommand.UninstallApp cmd) {
+    private void uninstallApp(AgentCommand.UninstallApp cmd, String requestId) {
+        String rid = requestId != null ? requestId : "uninstall-" + cmd.serial();
         try {
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "uninstall", cmd.packageName());
             Process process = pb.start();
             int exitCode = process.waitFor();
-            serverConnection.send(new AgentMessage.OperationResult("uninstall-" + cmd.serial(),
+            serverConnection.send(new AgentMessage.OperationResult(rid,
                     exitCode == 0, exitCode == 0 ? "Uninstalled" : "Exit code: " + exitCode));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("uninstall-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void captureScreenshot(AgentCommand.CaptureScreenshot cmd) {
+    private void captureScreenshot(AgentCommand.CaptureScreenshot cmd, String requestId) {
+        String rid = requestId != null ? requestId : "screenshot-" + cmd.serial();
         try {
-            // Capture screenshot directly to stdout as PNG, then compress as JPEG for transfer
             ProcessBuilder screencap = new ProcessBuilder("adb", "-s", cmd.serial(), "exec-out", "screencap", "-p");
             Process process = screencap.start();
             byte[] pngBytes = process.getInputStream().readAllBytes();
             process.waitFor();
 
             if (pngBytes.length > 0) {
-                // Convert PNG to JPEG at 70% quality to reduce size (~5MB PNG → ~300KB JPEG)
                 java.awt.image.BufferedImage image = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(pngBytes));
                 java.io.ByteArrayOutputStream jpegOut = new java.io.ByteArrayOutputStream();
                 javax.imageio.ImageIO.write(image, "jpg", jpegOut);
                 byte[] jpegBytes = jpegOut.toByteArray();
 
                 String base64 = java.util.Base64.getEncoder().encodeToString(jpegBytes);
-                serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(),
+                serverConnection.send(new AgentMessage.OperationResult(rid,
                         true, "data:image/jpeg;base64," + base64));
             } else {
-                serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(),
+                serverConnection.send(new AgentMessage.OperationResult(rid,
                         false, "Screenshot capture returned empty data"));
             }
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("screenshot-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void rebootDevice(AgentCommand.Reboot cmd) {
+    private void rebootDevice(AgentCommand.Reboot cmd, String requestId) {
+        String rid = requestId != null ? requestId : "reboot-" + cmd.serial();
         try {
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "reboot");
             Process process = pb.start();
             int exitCode = process.waitFor();
-            serverConnection.send(new AgentMessage.OperationResult("reboot-" + cmd.serial(),
+            serverConnection.send(new AgentMessage.OperationResult(rid,
                     exitCode == 0, exitCode == 0 ? "Rebooted" : "Exit code: " + exitCode));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("reboot-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void toggleWifiDebug(AgentCommand.ToggleWifiDebug cmd) {
+    private void toggleWifiDebug(AgentCommand.ToggleWifiDebug cmd, String requestId) {
+        String rid = requestId != null ? requestId : "wifi-debug-" + cmd.serial();
         try {
-            String requestId = "wifi-debug-" + cmd.serial();
             if (cmd.wifiDebugSession()) {
-                // Stop wifi debugging
                 runAdb(cmd.serial(), "disconnect", cmd.ipAddress() + ":5555");
-                serverConnection.send(new AgentMessage.OperationResult(requestId, true,
+                serverConnection.send(new AgentMessage.OperationResult(rid, true,
                         "DISCONNECTED:" + cmd.ipAddress()));
             } else if (cmd.hasWifiIp()) {
-                // Start wifi debugging
                 runAdb(cmd.serial(), "tcpip", "5555");
                 Thread.sleep(1000);
                 String result = runAdbDirect("connect", cmd.ipAddress() + ":5555");
                 boolean success = result.contains("connected");
-                serverConnection.send(new AgentMessage.OperationResult(requestId, success,
+                serverConnection.send(new AgentMessage.OperationResult(rid, success,
                         success ? "CONNECTED:" + cmd.ipAddress() : "FAILED:" + result));
             } else {
-                serverConnection.send(new AgentMessage.OperationResult(requestId, false,
-                        "NO_WIFI_IP"));
+                serverConnection.send(new AgentMessage.OperationResult(rid, false, "NO_WIFI_IP"));
             }
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("wifi-debug-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void enableFirebaseDebug(AgentCommand.EnableFirebaseDebug cmd) {
+    private void enableFirebaseDebug(AgentCommand.EnableFirebaseDebug cmd, String requestId) {
+        String rid = requestId != null ? requestId : "firebase-" + cmd.serial();
         try {
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "shell",
                     "setprop", "debug.firebase.analytics.app", cmd.packageName());
             int exitCode = pb.start().waitFor();
-            serverConnection.send(new AgentMessage.OperationResult("firebase-" + cmd.serial(),
+            serverConnection.send(new AgentMessage.OperationResult(rid,
                     exitCode == 0, exitCode == 0 ? "Firebase debug enabled for " + cmd.packageName() : "Exit code: " + exitCode));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("firebase-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void getLocation(AgentCommand.GetLocation cmd) {
+    private void getLocation(AgentCommand.GetLocation cmd, String requestId) {
+        String rid = requestId != null ? requestId : "location-" + cmd.serial();
         try {
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "shell", "dumpsys", "location");
             pb.redirectErrorStream(true);
@@ -223,18 +224,18 @@ public class AdbCommandExecutor {
                 }
             }
             String detail = found ? String.format("%.6f,%.6f", lat, lng) : "NOT_FOUND";
-            serverConnection.send(new AgentMessage.OperationResult("location-" + cmd.serial(), found, detail));
+            serverConnection.send(new AgentMessage.OperationResult(rid, found, detail));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("location-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void setMockLocation(AgentCommand.SetMockLocation cmd) {
+    private void setMockLocation(AgentCommand.SetMockLocation cmd, String requestId) {
+        String rid = requestId != null ? requestId : "mock-location-" + cmd.serial();
         try {
-            String requestId = "mock-location-" + cmd.serial();
             if (!cmd.start()) {
                 runAdb(cmd.serial(), "shell", "cmd location providers remove-test-provider gps");
-                serverConnection.send(new AgentMessage.OperationResult(requestId, true, "Mock location stopped"));
+                serverConnection.send(new AgentMessage.OperationResult(rid, true, "Mock location stopped"));
                 return;
             }
             runAdb(cmd.serial(), "shell", "appops set com.android.shell android:mock_location allow");
@@ -244,16 +245,16 @@ public class AdbCommandExecutor {
                     "cmd location providers set-test-provider-location gps --location %f,%f --accuracy 1.0",
                     cmd.lat(), cmd.lng());
             runAdb(cmd.serial(), "shell", locCmd);
-            serverConnection.send(new AgentMessage.OperationResult(requestId, true,
+            serverConnection.send(new AgentMessage.OperationResult(rid, true,
                     String.format("Mocking: %.6f,%.6f", cmd.lat(), cmd.lng())));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("mock-location-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void managePermission(AgentCommand.ManagePermission cmd) {
+    private void managePermission(AgentCommand.ManagePermission cmd, String requestId) {
+        String rid = requestId != null ? requestId : "permission-" + cmd.serial();
         try {
-            String requestId = "permission-" + cmd.serial();
             String shellCmd = switch (cmd.action()) {
                 case "grant" -> "pm grant " + cmd.packageName() + " " + cmd.permission();
                 case "revoke" -> "pm revoke " + cmd.packageName() + " " + cmd.permission();
@@ -265,18 +266,17 @@ public class AdbCommandExecutor {
             };
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "shell", shellCmd);
             int exitCode = pb.start().waitFor();
-            serverConnection.send(new AgentMessage.OperationResult(requestId, exitCode == 0,
+            serverConnection.send(new AgentMessage.OperationResult(rid, exitCode == 0,
                     exitCode == 0 ? cmd.action() + " completed" : "Exit code: " + exitCode));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("permission-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void manageAccessibility(AgentCommand.ManageAccessibility cmd) {
+    private void manageAccessibility(AgentCommand.ManageAccessibility cmd, String requestId) {
+        String rid = requestId != null ? requestId : "accessibility-" + cmd.serial();
         try {
-            String requestId = "accessibility-" + cmd.serial();
             String service = cmd.packageName() + "/" + cmd.serviceClassName();
-            // Get current enabled services
             ProcessBuilder getPb = new ProcessBuilder("adb", "-s", cmd.serial(), "shell",
                     "settings", "get", "secure", "enabled_accessibility_services");
             getPb.redirectErrorStream(true);
@@ -294,26 +294,27 @@ public class AdbCommandExecutor {
             ProcessBuilder setPb = new ProcessBuilder("adb", "-s", cmd.serial(), "shell",
                     "settings", "put", "secure", "enabled_accessibility_services", newValue);
             int exitCode = setPb.start().waitFor();
-            serverConnection.send(new AgentMessage.OperationResult(requestId, exitCode == 0,
+            serverConnection.send(new AgentMessage.OperationResult(rid, exitCode == 0,
                     (cmd.enable() ? "Enabled" : "Disabled") + " " + cmd.serviceClassName()));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("accessibility-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 
-    private void startScreenMirror(AgentCommand.StartScreenMirror cmd) {
+    private void startScreenMirror(AgentCommand.StartScreenMirror cmd, String requestId) {
+        String rid = requestId != null ? requestId : "screen-mirror-" + cmd.serial();
         try {
-            // Use scrcpy if available, otherwise report not supported
             ProcessBuilder pb = new ProcessBuilder("scrcpy", "-s", cmd.serial(), "--no-audio");
             pb.start();
-            serverConnection.send(new AgentMessage.OperationResult("screen-mirror-" + cmd.serial(), true, "Screen mirror started"));
+            serverConnection.send(new AgentMessage.OperationResult(rid, true, "Screen mirror started"));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("screen-mirror-" + cmd.serial(), false,
+            serverConnection.send(new AgentMessage.OperationResult(rid, false,
                     "Screen mirror failed (scrcpy required): " + e.getMessage()));
         }
     }
 
-    private void getPackageDump(AgentCommand.GetPackageDump cmd) {
+    private void getPackageDump(AgentCommand.GetPackageDump cmd, String requestId) {
+        String rid = requestId != null ? requestId : "package-dump-" + cmd.serial();
         try {
             ProcessBuilder pb = new ProcessBuilder("adb", "-s", cmd.serial(), "shell",
                     "dumpsys", "package", cmd.packageName());
@@ -321,13 +322,12 @@ public class AdbCommandExecutor {
             Process process = pb.start();
             String output = new String(process.getInputStream().readAllBytes());
             process.waitFor();
-            // Truncate if too long (max 64KB for WebSocket message)
             if (output.length() > 65000) {
                 output = output.substring(0, 65000) + "\n... [truncated]";
             }
-            serverConnection.send(new AgentMessage.OperationResult("package-dump-" + cmd.serial(), true, output));
+            serverConnection.send(new AgentMessage.OperationResult(rid, true, output));
         } catch (Exception e) {
-            serverConnection.send(new AgentMessage.OperationResult("package-dump-" + cmd.serial(), false, e.getMessage()));
+            serverConnection.send(new AgentMessage.OperationResult(rid, false, e.getMessage()));
         }
     }
 

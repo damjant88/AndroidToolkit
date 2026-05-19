@@ -4,11 +4,9 @@ const api = axios.create({
   baseURL: '/api',
 });
 
-// Agent API — direct connection for device operations (screenshots, scrcpy, etc.)
-// In SaaS mode, the agent runs locally and handles all adb operations directly.
-const AGENT_URL = localStorage.getItem('agentUrl') || 'http://localhost:8082';
+// Agent API — direct connection for local device operations (fast, no relay)
 const agentApi = axios.create({
-  baseURL: AGENT_URL + '/api/agent',
+  baseURL: 'http://localhost:8081/api/agent',
 });
 
 // Attach JWT token to backend requests
@@ -20,30 +18,40 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+// Logout on 401 (token expired)
+api.interceptors.response.use(r => r, error => {
+  if (error.response && error.response.status === 401) {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('username');
+    window.location.href = '/';
+  }
+  return Promise.reject(error);
+});
+
 export async function getDevices() {
   const response = await api.get('/devices');
   return response.data;
 }
 
-// --- Device operations go directly to the agent ---
+// --- Device operations go directly to the local agent (fast path) ---
 
 export async function rebootDevice(serial) {
-  const response = await agentApi.post(`/devices/${serial}/reboot`);
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/reboot`);
   return response.data;
 }
 
 export async function uninstallApp(serial, packageName) {
-  const response = await agentApi.post(`/devices/${serial}/uninstall`, { packageName });
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/uninstall`, { packageName });
   return response.data;
 }
 
 export async function enableFirebaseDebug(serial, packageName) {
-  const response = await agentApi.post(`/devices/${serial}/firebase-debug`, { packageName });
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/firebase-debug`, { packageName });
   return response.data;
 }
 
 export async function toggleWifiDebug(serial, ipAddress, wifiDebugSession, hasWifiIp) {
-  const response = await agentApi.post(`/devices/${serial}/wifi-debug`, {
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/wifi-debug`, {
     ipAddress,
     wifiDebugSession,
     hasWifiIp,
@@ -52,34 +60,31 @@ export async function toggleWifiDebug(serial, ipAddress, wifiDebugSession, hasWi
 }
 
 export async function pullLogs(serial) {
-  const response = await agentApi.post(`/devices/${serial}/pull-logs`);
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/pull-logs`);
   return response.data;
 }
 
 export async function startScreenMirror(serial) {
-  const response = await agentApi.post(`/devices/${serial}/screen-mirror`);
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/screen-mirror`);
   return response.data;
 }
 
 export async function startRecording(serial) {
-  const response = await agentApi.post(`/devices/${serial}/start-recording`);
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/start-recording`);
   return response.data;
 }
 
 export async function stopRecording(serial, pid) {
-  const response = await agentApi.post(`/devices/${serial}/stop-recording`, { pid });
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/stop-recording`, { pid });
   return response.data;
 }
 
 export async function takeScreenshot(serial, deviceName) {
-  // Returns the image URL directly from the agent
-  const response = await agentApi.post(`/devices/${serial}/screenshot`, null, {
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/screenshot`, null, {
     responseType: 'blob'
   });
   return { imageBlob: response.data, deviceName };
 }
-
-// --- Backend operations (data, files, jobs) ---
 
 export async function openFolder(folderPath) {
   const response = await agentApi.post('/devices/open-folder', null, {
@@ -89,46 +94,45 @@ export async function openFolder(folderPath) {
 }
 
 export async function getPermissions(serial, packageName) {
-  const response = await agentApi.get(`/devices/${serial}/permissions?packageName=${encodeURIComponent(packageName)}`);
+  const response = await agentApi.get(`/devices/${encodeURIComponent(serial)}/permissions?packageName=${encodeURIComponent(packageName)}`);
   return response.data;
 }
 
 export async function enablePermissions(serial, packageName, permissionIds) {
-  const response = await agentApi.post(`/devices/${serial}/permissions/enable`, { packageName, permissionIds });
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/permissions/enable`, { packageName, permissionIds });
   return response.data;
 }
 
 export async function disablePermissions(serial, packageName, permissionIds) {
-  const response = await agentApi.post(`/devices/${serial}/permissions/disable`, { packageName, permissionIds });
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/permissions/disable`, { packageName, permissionIds });
   return response.data;
 }
 
 export async function installBuild(serial, apkPath) {
-  const response = await api.post(`/builds/install/${serial}?path=${encodeURIComponent(apkPath)}`);
+  const response = await api.post(`/builds/install/${encodeURIComponent(serial)}?path=${encodeURIComponent(apkPath)}`);
   return response.data;
 }
 
 export async function uploadBuild(file) {
   const formData = new FormData();
   formData.append('file', file);
-  const response = await api.post('/builds/upload', formData, {
+  const response = await agentApi.post('/devices/upload-apk', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 120000
   });
   return response.data;
 }
 
 export async function startInstallJob(apkPath, serials) {
-  // Install directly on each device via the agent
   const results = {};
   for (const serial of serials) {
     try {
-      const res = await agentApi.post(`/devices/${serial}/install`, { apkPath });
+      const res = await agentApi.post(`/devices/${encodeURIComponent(serial)}/install`, { apkPath });
       results[serial] = { serial, success: res.data.success, message: res.data.message };
     } catch (err) {
       results[serial] = { serial, success: false, message: err.message };
     }
   }
-  // Return in job-like format for compatibility
   return {
     jobId: 'direct-' + Date.now(),
     status: 'COMPLETED',
@@ -142,14 +146,13 @@ export async function startUninstallJob(serials, devices) {
   const results = {};
   for (const serial of serials) {
     try {
-      // Find the package name for this device
       const device = devices ? devices.find(d => d.deviceInfo.serialNumber === serial) : null;
       const packageName = device?.deviceInfo?.safePathPackage || '';
       if (!packageName) {
         results[serial] = { serial, success: false, message: 'No package to uninstall' };
         continue;
       }
-      const res = await agentApi.post(`/devices/${serial}/uninstall`, { packageName });
+      const res = await agentApi.post(`/devices/${encodeURIComponent(serial)}/uninstall`, { packageName });
       results[serial] = { serial, success: res.data.success, message: res.data.message };
     } catch (err) {
       results[serial] = { serial, success: false, message: err.message };
@@ -165,7 +168,6 @@ export async function startUninstallJob(serials, devices) {
 }
 
 export async function getJob(jobId) {
-  // For direct agent jobs, the result is already complete
   if (jobId.startsWith('direct-')) {
     return { status: 'COMPLETED' };
   }
@@ -179,11 +181,11 @@ export async function getRecentJobs() {
 }
 
 export async function setMockLocation(serial, lat, lng, start = true) {
-  const response = await agentApi.post(`/devices/${serial}/mock-location`, { lat, lng, start });
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/mock-location`, { lat, lng, start });
   return response.data;
 }
 
 export async function getDeviceLocation(serial) {
-  const response = await agentApi.get(`/devices/${serial}/location`);
+  const response = await agentApi.get(`/devices/${encodeURIComponent(serial)}/location`);
   return response.data;
 }

@@ -75,7 +75,7 @@ public class CommandRelay {
         pendingCommands.put(requestId, pending);
 
         try {
-            connectionManager.sendToAgent(agentId, command);
+            connectionManager.sendToAgent(agentId, command, requestId);
             return future.join();
         } catch (CompletionException e) {
             if (e.getCause() instanceof TimeoutException) {

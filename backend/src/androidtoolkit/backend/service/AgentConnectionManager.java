@@ -213,10 +213,27 @@ public class AgentConnectionManager {
      * Sends a command to a specific agent via its WebSocket session.
      */
     public void sendToAgent(String agentId, AgentCommand command) {
+        sendToAgent(agentId, command, null);
+    }
+
+    /**
+     * Sends a command to a specific agent with an optional requestId.
+     * When requestId is provided, it's included in the JSON envelope so the agent
+     * can echo it back in the OperationResult for correlation.
+     */
+    public void sendToAgent(String agentId, AgentCommand command, String requestId) {
         AgentSession agentSession = agents.get(agentId);
         if (agentSession != null && agentSession.session().isOpen()) {
             try {
-                String json = objectMapper.writeValueAsString(command);
+                String json;
+                if (requestId != null) {
+                    // Wrap command with requestId in the JSON envelope
+                    var node = objectMapper.valueToTree(command);
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) node).put("requestId", requestId);
+                    json = objectMapper.writeValueAsString(node);
+                } else {
+                    json = objectMapper.writeValueAsString(command);
+                }
                 agentSession.session().sendMessage(new TextMessage(json));
             } catch (IOException e) {
                 throw new RuntimeException("Failed to send command to agent: " + agentId, e);

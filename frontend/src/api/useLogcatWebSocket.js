@@ -19,13 +19,12 @@ export function useLogcatWebSocket(serial, appInstalled) {
     }
   }, [appInstalled]);
 
-  // Fetch initial state via REST from agent, then poll for updates
+  // Fetch initial state via REST from local agent, then poll for updates
   useEffect(() => {
     if (!serial || !appInstalled) return;
-    const AGENT_URL = localStorage.getItem('agentUrl') || 'http://localhost:8082';
     
     const fetchData = () => {
-      axios.get(`${AGENT_URL}/api/agent/devices/${encodeURIComponent(serial)}/logcat-data`)
+      axios.get(`http://localhost:8081/api/agent/devices/${encodeURIComponent(serial)}/logcat-data`)
         .then(res => {
           if (res.data && (res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken)) {
             setLogcatData(res.data);

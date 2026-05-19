@@ -8,7 +8,14 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-api.interceptors.response.use(r => r, error => Promise.reject(error));
+api.interceptors.response.use(r => r, error => {
+  if (error.response && error.response.status === 401) {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('username');
+    window.location.href = '/';
+  }
+  return Promise.reject(error);
+});
 
 export const crashApi = {
   // Crash history
