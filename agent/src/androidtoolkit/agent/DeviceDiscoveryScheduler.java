@@ -130,21 +130,6 @@ public class DeviceDiscoveryScheduler {
                     }
                     // If nothing actually changed after debounce, skip
                     if (currentSerials.equals(lastKnownSerials)) return;
-                    // If removed devices came back (possibly with new WiFi serial), merge them
-                    // Keep cached devices that were removed but might be reconnecting
-                    for (String removed : removedSerials) {
-                        if (!currentSerials.contains(removed) && deviceCache.containsKey(removed)) {
-                            // Device still missing after debounce — check if it's a USB device
-                            // that might be reconnecting via WiFi (same IP)
-                            DeviceInfo cached = deviceCache.get(removed);
-                            if (cached != null && !removed.contains(":")) {
-                                // USB device disappeared — keep it in cache for 10 more seconds
-                                // It will be cleaned up on the next scan if still gone
-                                currentSerials.add(removed);
-                                basicDevices.add(cached);
-                            }
-                        }
-                    }
                 }
 
                 lastKnownSerials = currentSerials;
