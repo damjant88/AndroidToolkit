@@ -3,7 +3,7 @@ import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
   pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder, setMockLocation, getDeviceLocation
 } from '../api/deviceApi';
-import { getIconForPackage, getLabelForPackage } from '../api/packageIcons';
+import { getIconForPackage, getLabelForPackage, getProjectForPackage } from '../api/packageIcons';
 import { useLogcatWebSocket } from '../api/useLogcatWebSocket';
 import MockLocationMap from './MockLocationMap';
 import EventTracker from './EventTracker';
@@ -87,10 +87,15 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
     setLoading(true);
     setMessage('Pulling logs...');
     try {
-      const result = await pullLogs(serial);
+      // Get user's configured log folder for this device's project
+      const savedPaths = JSON.parse(localStorage.getItem('projectLocalPaths') || '{}');
+      const projectName = getProjectForPackage(info.safePathPackage);
+      const logFolder = projectName ? (savedPaths[projectName]?.localLogFolder || '') : '';
+
+      const result = await pullLogs(serial, logFolder);
       setMessage('✅ Logs saved');
       if (isLocal) {
-        const folder = result.exportedLogsFolder || result.selectedFolder;
+        const folder = result.exportedLogsFolder || result.selectedFolder || logFolder;
         if (folder) {
           const openResult = await openFolder(folder);
           if (!openResult.success) setMessage('✅ Logs saved\n⚠️ ' + openResult.message);

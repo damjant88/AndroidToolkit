@@ -252,13 +252,17 @@ public class AgentDeviceController {
      * Pull logs from a device — captures logcat, app logs, and opens the folder.
      */
     @PostMapping("/{serial}/pull-logs")
-    public Map<String, Object> pullLogs(@PathVariable String serial) {
+    public Map<String, Object> pullLogs(@PathVariable String serial, @RequestBody(required = false) Map<String, String> body) {
         try {
+            String logFolder = (body != null) ? body.getOrDefault("logFolder", "") : "";
             String packageName = detectPackage(serial);
             String deviceModel = runCmd("adb", "-s", serial, "shell", "getprop", "ro.product.model").trim().replace(' ', '_');
             String date = java.time.LocalDate.now().toString();
             String safeSerial = serial.replace(":", "-").replace(".", "_");
-            String outputDir = "logs/" + deviceModel + "_" + safeSerial + "/" + date;
+
+            // Use user-configured log folder if provided, otherwise default
+            String baseDir = (logFolder != null && !logFolder.isBlank()) ? logFolder : "logs";
+            String outputDir = baseDir + "/" + deviceModel + "_" + safeSerial + "/" + date;
             new File(outputDir).mkdirs();
 
             // 1. Capture logcat (full device log)

@@ -24,6 +24,7 @@ function ProjectQuickAccess({ devices }) {
   const [selectedProject, setSelectedProject] = useState(null);
   const [backendProjects, setBackendProjects] = useState({});
   const [localPaths, setLocalPaths] = useState(getLocalPaths);
+  const [savedMessage, setSavedMessage] = useState(false);
 
   // Fetch admin-defined project data from backend
   useEffect(() => {
@@ -49,7 +50,12 @@ function ProjectQuickAccess({ devices }) {
   function handleLocalPathChange(projectName, field, value) {
     const updated = { ...localPaths, [projectName]: { ...localPaths[projectName], [field]: value } };
     setLocalPaths(updated);
-    saveLocalPaths(updated);
+  }
+
+  function handleSaveLocalPaths(projectName) {
+    saveLocalPaths(localPaths);
+    setSavedMessage(true);
+    setTimeout(() => setSavedMessage(false), 2000);
   }
 
   return (
@@ -91,25 +97,32 @@ function ProjectQuickAccess({ devices }) {
             </div>
             <div className="project-detail-section">
               <h4>📁 Local APK Folder</h4>
-              <input
-                type="text"
-                className="project-local-input"
-                placeholder="e.g. C:\Builds\SafePath"
-                value={localPaths[selectedProject.name]?.localApkFolder || ''}
-                onChange={e => handleLocalPathChange(selectedProject.name, 'localApkFolder', e.target.value)}
-                onClick={e => e.stopPropagation()}
-              />
+              <div className="project-local-row">
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. C:\Builds\SafePath"
+                  value={localPaths[selectedProject.name]?.localApkFolder || ''}
+                  onChange={e => handleLocalPathChange(selectedProject.name, 'localApkFolder', e.target.value)}
+                  onClick={e => e.stopPropagation()}
+                />
+                <button className="project-save-btn" onClick={e => { e.stopPropagation(); handleSaveLocalPaths(selectedProject.name); }}>Save</button>
+              </div>
             </div>
             <div className="project-detail-section">
               <h4>📋 Local Log Folder</h4>
-              <input
-                type="text"
-                className="project-local-input"
-                placeholder="e.g. C:\Logs\SafePath"
-                value={localPaths[selectedProject.name]?.localLogFolder || ''}
-                onChange={e => handleLocalPathChange(selectedProject.name, 'localLogFolder', e.target.value)}
-                onClick={e => e.stopPropagation()}
-              />
+              <div className="project-local-row">
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. C:\Logs\SafePath"
+                  value={localPaths[selectedProject.name]?.localLogFolder || ''}
+                  onChange={e => handleLocalPathChange(selectedProject.name, 'localLogFolder', e.target.value)}
+                  onClick={e => e.stopPropagation()}
+                />
+                <button className="project-save-btn" onClick={e => { e.stopPropagation(); handleSaveLocalPaths(selectedProject.name); }}>Save</button>
+              </div>
+              {savedMessage && <span className="project-saved-msg">✓ Saved</span>}
             </div>
             <div className="project-detail-section">
               <h4>📊 Stats</h4>

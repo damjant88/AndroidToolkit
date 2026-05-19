@@ -48,3 +48,27 @@ export function getLabelForPackage(packageName) {
   if (!packageName) return 'Not Installed';
   return PACKAGE_LABEL_MAP[packageName] || 'Installed';
 }
+
+const PACKAGE_PROJECT_MAP = {
+  'com.smithmicro.safepath.family': 'SafePath',
+  'com.smithmicro.safepath.family.child': 'SafePath',
+  'com.smithmicro.att.securefamily': 'Secure Family',
+  'com.wavemarket.waplauncher': 'Secure Family',
+  'com.att.securefamilycompanion': 'Secure Family',
+  'com.smithmicro.sprint.safeandfound.test': 'Safe&Found',
+  'com.sprint.safefound': 'Safe&Found',
+  'com.smithmicro.tmobile.familymode.test': 'Family Mode',
+  'com.tmobile.familycontrols': 'Family Mode',
+  'com.smithmicro.cci.test': 'CCI',
+  'com.smithmicro.safepath.family.light': 'CCI',
+  'com.smithmicro.safepath.family.speakeasy': 'CCI',
+  'com.smithmicro.orangespain.test': 'Orange',
+  'com.orange.es.TuYo': 'Orange',
+  'com.smithmicro.safepath.dish.test': 'Dish',
+  'com.smithmicro.safepath.dish.kid.test': 'Dish',
+};
+
+export function getProjectForPackage(packageName) {
+  if (!packageName) return null;
+  return PACKAGE_PROJECT_MAP[packageName] || null;
+}

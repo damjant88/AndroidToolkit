@@ -59,8 +59,8 @@ export async function toggleWifiDebug(serial, ipAddress, wifiDebugSession, hasWi
   return response.data;
 }
 
-export async function pullLogs(serial) {
-  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/pull-logs`);
+export async function pullLogs(serial, logFolder) {
+  const response = await agentApi.post(`/devices/${encodeURIComponent(serial)}/pull-logs`, { logFolder: logFolder || '' });
   return response.data;
 }
 
