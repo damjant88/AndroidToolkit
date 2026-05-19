@@ -5,7 +5,6 @@ import ScreenshotViewer from './components/ScreenshotViewer';
 import LoginPage from './components/LoginPage';
 import AllowedUsersPanel from './components/AllowedUsersPanel';
 import AdminProjectsPanel from './components/AdminProjectsPanel';
-import UserProjectsPanel from './components/UserProjectsPanel';
 import MyDevicesPanel from './components/MyDevicesPanel';
 import AccessRequestPopup from './components/AccessRequestPopup';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -18,7 +17,6 @@ function AppContent() {
   const [accessRequest, setAccessRequest] = useState(null);
   const [showAllowedUsers, setShowAllowedUsers] = useState(false);
   const [showAdminProjects, setShowAdminProjects] = useState(false);
-  const [showProjects, setShowProjects] = useState(false);
   const [showMyDevices, setShowMyDevices] = useState(false);
 
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -70,12 +68,7 @@ function AppContent() {
           )}
           {user?.role === 'ADMIN' && (
             <button className="toolbar-small-btn" onClick={() => setShowAdminProjects(!showAdminProjects)}>
-              {showAdminProjects ? 'Hide Manage Projects' : 'Manage Projects'}
-            </button>
-          )}
-          {user?.role === 'ADMIN' && (
-            <button className="toolbar-small-btn" onClick={() => setShowProjects(!showProjects)}>
-              {showProjects ? 'Hide Projects' : 'Projects'}
+              {showAdminProjects ? 'Hide Projects' : 'Projects'}
             </button>
           )}
           <span className="user-info">{user?.username} ({user?.role === 'ADMIN' ? user.role : user?.tier})</span>
@@ -84,7 +77,6 @@ function AppContent() {
       </header>
       {showAllowedUsers && <AllowedUsersPanel />}
       {showAdminProjects && user?.role === 'ADMIN' && <AdminProjectsPanel />}
-      {showProjects && <UserProjectsPanel />}
       {showMyDevices && <MyDevicesPanel />}
       <main>
         <DeviceList />
