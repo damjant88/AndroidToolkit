@@ -107,7 +107,7 @@ function DeviceList() {
     setPermissionsTarget(null);
   }
 
-  if (loading && devices.length === 0) {
+  if (loading && devices.length === 0 && !initialLoadDone.current) {
     return (
       <div>
         <div className="top-panels-row">
@@ -118,7 +118,6 @@ function DeviceList() {
       </div>
     );
   }
-  if (error) return <p className="status error">{error}</p>;
 
   const visibleDevices = devices.slice(0, maxDevices);
   const selectedDevices = visibleDevices.filter(d => selectedSerials.has(d.serial));
@@ -129,6 +128,7 @@ function DeviceList() {
 
   return (
     <div>
+      {error && <p className="status error">{error}</p>}
       <div className="top-panels-row">
         <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
         <ProjectQuickAccess devices={visibleDevices} />
