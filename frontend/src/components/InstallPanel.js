@@ -33,7 +33,7 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
 
   function addToHistory(fileName, path) {
     const entry = { fileName, path, timestamp: Date.now() };
-    const filtered = buildHistory.filter(h => h.path !== path);
+    const filtered = buildHistory.filter(h => h.path !== path && h.fileName !== fileName);
     const updated = [entry, ...filtered].slice(0, MAX_HISTORY);
     saveHistory(updated);
   }
@@ -121,7 +121,9 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
   const hasInstalledDevices = devices.some(d => d.deviceInfo.appInstalled);
 
   async function handleInstallAll() {
-    if (!selectedPath) {
+    // Always use the most recent build from history if selectedPath is empty
+    const pathToInstall = selectedPath || (buildHistory.length > 0 ? buildHistory[0].path : '');
+    if (!pathToInstall) {
       setMessage('Select an APK first');
       return;
     }
@@ -139,8 +141,8 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       const serials = selectedDevices.map(d => d.deviceInfo.serialNumber);
       const serialToName = {};
       selectedDevices.forEach(d => { serialToName[d.deviceInfo.serialNumber] = d.deviceName; });
-      const result = await startInstallJob(selectedPath, serials);
-      addToHistory(selectedName, selectedPath);
+      const result = await startInstallJob(pathToInstall, serials);
+      addToHistory(selectedName || buildHistory[0]?.fileName || 'unknown.apk', pathToInstall);
 
       // Display results directly (agent returns complete results, no polling needed)
       const results = Object.values(result.deviceResults || {});
