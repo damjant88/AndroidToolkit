@@ -16,6 +16,7 @@ public class Icons extends JPanel {
     public ImageIcon logo_sprint;
     public ImageIcon logo_orange;
     public ImageIcon logo_dish;
+    public ImageIcon logo_spc;
     public ImageIcon display_icon;
 
     public Icons() {
@@ -30,6 +31,7 @@ public class Icons extends JPanel {
         logo_senior = scaleImageIcon("Senior.png", 45, 45);
         logo_sprint = scaleImageIcon("sprint.png", 45, 45);
         logo_orange = scaleImageIcon("toyo.png", 45, 45);
+        logo_spc = scaleImageIcon("spc.png", 45, 45);
         notInstalled = scaleImageIcon("Android.png", 45, 45);
     }
 

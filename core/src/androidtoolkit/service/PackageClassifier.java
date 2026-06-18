@@ -6,6 +6,7 @@ import java.util.List;
 public class PackageClassifier {
 
     private static final List<String> PACKAGE_HINTS = List.of(
+            "safepath.connect",
             "safepath.family",
             "securefamily",
             "wavemarket",
@@ -34,7 +35,8 @@ public class PackageClassifier {
             "com.orange.es.TuYo",
             "com.smithmicro.safepath.dish.test",
             "com.smithmicro.safepath.dish.kid.test",
-            "com.smithmicro.safepath.family.child"
+            "com.smithmicro.safepath.family.child",
+            "com.smithmicro.safepath.connect"
     );
 
     public String detectSafePathPackage(List<String> installedPackages) {

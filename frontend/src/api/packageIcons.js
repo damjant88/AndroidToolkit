@@ -18,6 +18,7 @@ const PACKAGE_ICON_MAP = {
   'com.sprint.safefound': 'sprint.png',
   'com.smithmicro.orangespain.test': 'toyo.png',
   'com.orange.es.TuYo': 'toyo.png',
+  'com.smithmicro.safepath.connect': 'spc.png',
 };
 
 const PACKAGE_LABEL_MAP = {
@@ -37,6 +38,7 @@ const PACKAGE_LABEL_MAP = {
   'com.sprint.safefound': 'Safe&Found',
   'com.smithmicro.orangespain.test': 'TuYo',
   'com.orange.es.TuYo': 'TuYo',
+  'com.smithmicro.safepath.connect': 'SP Connect',
 };
 
 export function getIconForPackage(packageName) {
@@ -66,6 +68,7 @@ const PACKAGE_PROJECT_MAP = {
   'com.orange.es.TuYo': 'Orange',
   'com.smithmicro.safepath.dish.test': 'Dish',
   'com.smithmicro.safepath.dish.kid.test': 'Dish',
+  'com.smithmicro.safepath.connect': 'SPC',
 };
 
 export function getProjectForPackage(packageName) {

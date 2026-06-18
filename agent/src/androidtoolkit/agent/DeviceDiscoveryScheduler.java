@@ -365,10 +365,11 @@ public class DeviceDiscoveryScheduler {
                 "com.orange.es.TuYo",
                 "com.smithmicro.safepath.dish.test",
                 "com.smithmicro.safepath.dish.kid.test",
-                "com.smithmicro.safepath.family.child"
+                "com.smithmicro.safepath.family.child",
+                "com.smithmicro.safepath.connect"
         );
         List<String> packageHints = List.of(
-                "safepath.family", "securefamily", "wavemarket",
+                "safepath.connect", "safepath.family", "securefamily", "wavemarket",
                 "safeandfound", "safefound", "familycontrols",
                 "orangespain", "TuYo", "safepath.dish", "familymode"
         );

@@ -346,6 +346,7 @@ public class LogCollectionService {
     private String resolveFlavorName(String packageName) {
         if (packageName == null || packageName.isEmpty()) return "Unknown";
         return switch (packageName) {
+            case "com.smithmicro.safepath.connect" -> "SPC";
             case "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child" -> "SPFamily";
             case "com.smithmicro.safepath.family.light", "com.smithmicro.safepath.family.speakeasy" -> "SPFamily-Light";
             case "com.smithmicro.cci.test" -> "SpeakEasy";

@@ -9,6 +9,7 @@ const PROJECTS = [
   { name: 'CCI', icon: 'Senior.png', packages: ['com.smithmicro.cci.test', 'com.smithmicro.safepath.family.light', 'com.smithmicro.safepath.family.speakeasy'], color: '#9C27B0' },
   { name: 'Orange', icon: 'toyo.png', packages: ['com.smithmicro.orangespain.test', 'com.orange.es.TuYo'], color: '#FF5722' },
   { name: 'Dish', icon: 'dish.png', packages: ['com.smithmicro.safepath.dish.test', 'com.smithmicro.safepath.dish.kid.test'], color: '#607D8B' },
+  { name: 'SPC', icon: 'spc.png', packages: ['com.smithmicro.safepath.connect'], color: '#00BCD4' },
 ];
 
 // Load/save user-specific local paths from localStorage

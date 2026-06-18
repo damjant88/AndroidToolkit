@@ -34,7 +34,9 @@ public class DataInitializer {
             Map.of("name", "Orange", "packages", List.of(
                     "com.smithmicro.orangespain.test", "com.orange.es.TuYo")),
             Map.of("name", "Dish", "packages", List.of(
-                    "com.smithmicro.safepath.dish.test", "com.smithmicro.safepath.dish.kid.test"))
+                    "com.smithmicro.safepath.dish.test", "com.smithmicro.safepath.dish.kid.test")),
+            Map.of("name", "SPC", "packages", List.of(
+                    "com.smithmicro.safepath.connect"))
     );
 
     @Bean

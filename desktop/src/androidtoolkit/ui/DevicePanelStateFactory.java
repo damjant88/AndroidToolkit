@@ -24,6 +24,7 @@ public class DevicePanelStateFactory {
             "com.smithmicro.safepath.family.speakeasy",
             "com.smithmicro.cci.test"
     );
+    private static final Set<String> CONNECT_PACKAGES = Set.of("com.smithmicro.safepath.connect");
     private static final Set<String> ATT_IAP_PACKAGES = Set.of("com.smithmicro.att.securefamily");
     private static final Set<String> ATT_EAP_PACKAGES = Set.of("com.wavemarket.waplauncher");
     private static final Set<String> ATT_COMPANION_PACKAGES = Set.of("com.att.securefamilycompanion");
@@ -51,6 +52,9 @@ public class DevicePanelStateFactory {
         }
         if (SENIOR_PACKAGES.contains(packageName)) {
             return installedState(icons.logo_senior, "SPFamily", wifiButtonText);
+        }
+        if (CONNECT_PACKAGES.contains(packageName)) {
+            return installedState(icons.logo_spc, "SP Connect", wifiButtonText);
         }
         if (ATT_IAP_PACKAGES.contains(packageName)) {
             return installedState(icons.logo_att, "SF IAP", wifiButtonText);

@@ -11,6 +11,7 @@ import io.jsonwebtoken.Claims;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -40,6 +41,9 @@ public class AgentWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<String, String> sessionToAgent = new ConcurrentHashMap<>();
 
+    @Value("${deployment.mode:standalone}")
+    private String deploymentMode;
+
     /**
      * Optional dependency — only present in SaaS mode (deployment.mode=saas).
      * Used to complete pending command futures when OperationResult arrives from an agent.
@@ -64,6 +68,14 @@ public class AgentWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        // In standalone mode, allow agent connections without authentication
+        if ("standalone".equalsIgnoreCase(deploymentMode)) {
+            String agentId = session.getId();
+            connectionManager.registerAgent(agentId, 0L, 0L, session);
+            sessionToAgent.put(session.getId(), agentId);
+            return;
+        }
+
         String token = extractToken(session);
         if (token == null || !jwtService.isValid(token)) {
             session.close(CloseStatus.POLICY_VIOLATION);
@@ -109,6 +121,10 @@ public class AgentWebSocketHandler extends TextWebSocketHandler {
      * the updated tenant device list if the set changed.
      */
     private void handleDeviceList(String agentId, com.fasterxml.jackson.databind.JsonNode node) {
+        // In standalone mode, DeviceMonitorService already handles local device polling.
+        // Skip agent broadcast to avoid overriding local detection results.
+        if ("standalone".equalsIgnoreCase(deploymentMode)) return;
+
         List<DeviceInfo> devices = new java.util.ArrayList<>();
         if (node.has("devices")) {
             for (var deviceNode : node.get("devices")) {
