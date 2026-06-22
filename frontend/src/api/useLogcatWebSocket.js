@@ -27,7 +27,19 @@ export function useLogcatWebSocket(serial, appInstalled) {
       axios.get(`http://localhost:8081/api/agent/devices/${encodeURIComponent(serial)}/logcat-data`)
         .then(res => {
           if (res.data && (res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken)) {
-            setLogcatData(res.data);
+            setLogcatData(prev => {
+              if (!prev) return res.data;
+              // Merge: only overwrite fields that have values (don't clear populated fields with empty)
+              return {
+                ...prev,
+                environment: res.data.environment || prev.environment,
+                clientVersion: res.data.clientVersion || prev.clientVersion,
+                serverProductVersion: res.data.serverProductVersion || prev.serverProductVersion,
+                serverProjectVersion: res.data.serverProjectVersion || prev.serverProjectVersion,
+                accessToken: res.data.accessToken || prev.accessToken,
+                tokenType: res.data.tokenType || prev.tokenType,
+              };
+            });
           }
         })
         .catch(() => {});

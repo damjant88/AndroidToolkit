@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   rebootDevice, uninstallApp, enableFirebaseDebug, toggleWifiDebug,
   pullLogs, takeScreenshot, startScreenMirror, startRecording, stopRecording, openFolder, setMockLocation, getDeviceLocation
@@ -21,6 +21,12 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
 
   const info = device.deviceInfo;
   const serial = info.serialNumber;
+  // Keep the last known package to prevent icon flicker during re-renders
+  const lastPackageRef = useRef(info.safePathPackage);
+  if (info.safePathPackage) {
+    lastPackageRef.current = info.safePathPackage;
+  }
+  const stablePackage = info.safePathPackage || lastPackageRef.current;
   const { logcatData } = useLogcatWebSocket(serial, info.appInstalled);
 
   // Clear message when a new app is installed
@@ -159,8 +165,8 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
         </label>
         {info.appInstalled && logcatData?.tokenType && <h3 className="token-type-header">{logcatData.tokenType === 'godevice' ? (info.safePathPackage === 'com.smithmicro.cci.test' ? 'Senior' : 'Child') : logcatData.tokenType === 'admin' ? 'Adult' : logcatData.tokenType}</h3>}
         <div className="device-icon-group">
-          <img className="device-icon" src={`/icons/${getIconForPackage(info.safePathPackage)}`} alt="app icon" />
-          <span className="device-icon-label">{getLabelForPackage(info.safePathPackage)}</span>
+          <img className="device-icon" src={`/icons/${getIconForPackage(stablePackage)}`} alt="app icon" />
+          <span className="device-icon-label">{getLabelForPackage(stablePackage)}</span>
         </div>
       </div>
 

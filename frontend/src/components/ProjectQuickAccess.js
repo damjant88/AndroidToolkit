@@ -43,10 +43,15 @@ function ProjectQuickAccess({ devices }) {
       const pkg = device.deviceInfo?.safePathPackage;
       if (pkg && device.deviceInfo?.appInstalled) {
         const matched = PROJECTS.find(p => p.packages.includes(pkg));
-        if (matched) { setSelectedProject(matched); return; }
+        if (matched && matched.name !== selectedProject?.name) {
+          setSelectedProject(matched);
+          return;
+        } else if (matched) {
+          return; // Already selected, no change needed
+        }
       }
     }
-  }, [devices]);
+  }, [devices]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleLocalPathChange(projectName, field, value) {
     const updated = { ...localPaths, [projectName]: { ...localPaths[projectName], [field]: value } };
