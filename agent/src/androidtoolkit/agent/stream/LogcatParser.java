@@ -15,7 +15,7 @@ public class LogcatParser {
             Pattern.compile("-->\\s+\\w+\\s+https?://([^/]+)/");
 
     private static final Pattern CLIENT_VERSION_PATTERN =
-            Pattern.compile("User-Agent:\\s+(?:[\\w%]+\\+)+\\w+\\s+(\\S+)");
+            Pattern.compile("User-Agent:\\s+(?:[\\w%.]+\\+)+\\w+\\s+(\\S+)");
 
     private static final Pattern SERVER_PRODUCT_VERSION_PATTERN =
             Pattern.compile("x-safepath-product-version:\\s+(\\S+)");
