@@ -195,6 +195,17 @@ class LogcatParserTest {
             assertEquals(FieldType.CLIENT_VERSION, result.get().type());
             assertEquals("1.0.0", result.get().value());
         }
+
+        @Test
+        @DisplayName("Extracts version from SafePath.Connect+DEBUG user agent")
+        void extractsVersionFromSafePathConnect() {
+            String line = "05-11 19:21:12.371 22549 30243 I OkHttp  : User-Agent: SafePath.Connect+DEBUG 1.0.0+ga9a34dc SafePath 8.4.4-SNAPSHOT+ga9a34dc Android Pixel 6";
+            Optional<ParsedField> result = parser.parseLine(line);
+
+            assertTrue(result.isPresent());
+            assertEquals(FieldType.CLIENT_VERSION, result.get().type());
+            assertEquals("1.0.0+ga9a34dc", result.get().value());
+        }
     }
 
     // ─── Server Product Version Pattern ──────────────────────────────────────────
