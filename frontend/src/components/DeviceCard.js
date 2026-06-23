@@ -166,7 +166,7 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
           <input type="checkbox" checked={selected} onChange={onToggleSelect} />
           <h3>{device.deviceName}</h3>
         </label>
-        {info.appInstalled && logcatData?.tokenType && <h3 className="token-type-header">{logcatData.tokenType === 'godevice' ? (info.safePathPackage === 'com.smithmicro.cci.test' ? 'Senior' : 'Child') : logcatData.tokenType === 'admin' ? 'Adult' : logcatData.tokenType}</h3>}
+        {info.appInstalled && stablePackage && logcatData?.tokenType && <h3 className="token-type-header">{logcatData.tokenType === 'godevice' ? (info.safePathPackage === 'com.smithmicro.cci.test' ? 'Senior' : 'Child') : logcatData.tokenType === 'admin' ? 'Adult' : logcatData.tokenType}</h3>}
         <div className="device-icon-group">
           <img className="device-icon" src={`/icons/${getIconForPackage(stablePackage)}`} alt="app icon" />
           <span className="device-icon-label">{getLabelForPackage(stablePackage)}</span>

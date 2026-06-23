@@ -24,6 +24,7 @@ export function useLogcatWebSocket(serial, appInstalled) {
     if (!serial || !appInstalled) return;
     
     const fetchData = () => {
+      if (!appInstalled) return;
       axios.get(`http://localhost:8081/api/agent/devices/${encodeURIComponent(serial)}/logcat-data`)
         .then(res => {
           if (res.data && (res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken)) {
