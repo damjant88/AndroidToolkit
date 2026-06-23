@@ -26,7 +26,10 @@ function DeviceCard({ device, selected, onToggleSelect, onRefresh, onOpenPermiss
   if (info.safePathPackage) {
     lastPackageRef.current = info.safePathPackage;
   }
-  const stablePackage = info.safePathPackage || lastPackageRef.current;
+  if (!info.appInstalled) {
+    lastPackageRef.current = '';
+  }
+  const stablePackage = info.appInstalled ? (info.safePathPackage || lastPackageRef.current) : '';
   const { logcatData } = useLogcatWebSocket(serial, info.appInstalled);
 
   // Clear message when a new app is installed
