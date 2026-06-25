@@ -212,6 +212,9 @@ public class AgentWebSocketHandler extends TextWebSocketHandler {
             // Unregister the agent (removes devices from registry)
             connectionManager.unregisterAgent(agentId);
 
+            // In standalone mode, DeviceMonitorService handles device broadcasts — skip here
+            if ("standalone".equalsIgnoreCase(deploymentMode)) return;
+
             // Broadcast updated device list for the agent's tenant
             if (tenantId != null) {
                 var discoveryResult = connectionManager.getDevicesForTenant(tenantId);
