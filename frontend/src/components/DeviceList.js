@@ -18,6 +18,7 @@ function DeviceList() {
   const [permissionsTarget, setPermissionsTarget] = useState(null);
   const [showBugTemplate, setShowBugTemplate] = useState(false);
   const initialLoadDone = useRef(false);
+  const devicesRef = useRef([]); // Stable ref for previous device state
   const knownOrder = useRef([]); // stable serial order
   const hasDevices = useRef(false);
 
@@ -46,9 +47,20 @@ function DeviceList() {
     const finalOrder = [...stableSerials, ...newSerials];
     knownOrder.current = finalOrder;
 
-    // Build device list in stable order
-    const ordered = finalOrder.map(s => fetchedMap.get(s)).filter(Boolean);
+    // Build device list in stable order, preserving safePathPackage from previous state
+    // to prevent icon flicker when adb polls occasionally return empty package
+    const ordered = finalOrder.map(s => {
+      const device = fetchedMap.get(s);
+      if (!device) return null;
+      const prevDevice = devicesRef.current.find(d => d.serial === s);
+      if (prevDevice && prevDevice.deviceInfo?.safePathPackage && !device.deviceInfo?.safePathPackage) {
+        // Keep previous package info if new update lost it
+        return { ...device, deviceInfo: { ...device.deviceInfo, safePathPackage: prevDevice.deviceInfo.safePathPackage, appInstalled: prevDevice.deviceInfo.appInstalled } };
+      }
+      return device;
+    }).filter(Boolean);
     setDevices(ordered);
+    devicesRef.current = ordered;
     hasDevices.current = ordered.length > 0;
 
     if (!initialLoadDone.current) {
