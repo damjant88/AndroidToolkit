@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { projectApi } from '../api/projectApi';
 
 const PROJECTS = [
@@ -26,6 +26,7 @@ function ProjectQuickAccess({ devices }) {
   const [backendProjects, setBackendProjects] = useState({});
   const [localPaths, setLocalPaths] = useState(getLocalPaths);
   const [savedMessage, setSavedMessage] = useState(false);
+  const autoSelectedRef = useRef(false);
 
   // Fetch admin-defined project data from backend
   useEffect(() => {
@@ -36,18 +37,18 @@ function ProjectQuickAccess({ devices }) {
     }).catch(() => {});
   }, []);
 
-  // Auto-select project based on connected device's installed package
+  // Auto-select project based on connected device's installed package (once)
   useEffect(() => {
+    if (autoSelectedRef.current) return;
     if (!devices || devices.length === 0) return;
     for (const device of devices) {
       const pkg = device.deviceInfo?.safePathPackage;
       if (pkg && device.deviceInfo?.appInstalled) {
         const matched = PROJECTS.find(p => p.packages.includes(pkg));
-        if (matched && matched.name !== selectedProject?.name) {
+        if (matched) {
           setSelectedProject(matched);
+          autoSelectedRef.current = true;
           return;
-        } else if (matched) {
-          return; // Already selected, no change needed
         }
       }
     }
@@ -141,4 +142,4 @@ function ProjectQuickAccess({ devices }) {
   );
 }
 
-export default ProjectQuickAccess;
+export default React.memo(ProjectQuickAccess);
