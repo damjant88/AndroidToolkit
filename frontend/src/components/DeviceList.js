@@ -53,8 +53,9 @@ function DeviceList() {
       const device = fetchedMap.get(s);
       if (!device) return null;
       const prevDevice = devicesRef.current.find(d => d.serial === s);
-      if (prevDevice && prevDevice.deviceInfo?.safePathPackage && !device.deviceInfo?.safePathPackage) {
-        // Keep previous package info if new update lost it
+      if (prevDevice && prevDevice.deviceInfo?.safePathPackage && !device.deviceInfo?.safePathPackage
+          && device.deviceInfo?.appInstalled !== false) {
+        // Keep previous package info only if app is still reported as installed (adb race condition)
         return { ...device, deviceInfo: { ...device.deviceInfo, safePathPackage: prevDevice.deviceInfo.safePathPackage, appInstalled: prevDevice.deviceInfo.appInstalled } };
       }
       return device;
