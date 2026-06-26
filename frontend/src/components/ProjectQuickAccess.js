@@ -76,7 +76,7 @@ function ProjectQuickAccess({ devices }) {
             onClick={() => setSelectedProject(selectedProject?.name === project.name ? null : project)}
             title={project.name}
           >
-            <img src={`/icons/${project.icon}`} alt={project.name} className="project-quick-icon" />
+            <img src={`/icons/${project.icon}`} alt={project.name} className="project-quick-icon" width="32" height="32" />
             <span className="project-quick-label">{project.name}</span>
           </button>
         ))}
