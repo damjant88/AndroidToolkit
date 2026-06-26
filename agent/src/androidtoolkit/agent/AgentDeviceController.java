@@ -213,7 +213,10 @@ public class AgentDeviceController {
         if (packageName.isEmpty()) {
             return Map.of("success", false, "message", "No supported package found on device");
         }
-        Map<String, Object> result = runSimpleCommand(serial, "uninstall", "adb", "-s", serial, "uninstall", packageName);
+        // Clear app data, disable for user, then uninstall (matches Swing desktop behavior)
+        runSimpleCommand(serial, "clear", "adb", "-s", serial, "shell", "pm", "clear", packageName);
+        runSimpleCommand(serial, "disable", "adb", "-s", serial, "shell", "pm", "disable-user", "--user", "0", packageName);
+        Map<String, Object> result = runSimpleCommand(serial, "uninstall", "adb", "-s", serial, "shell", "pm", "uninstall", packageName);
         triggerDeviceRefresh();
         return result;
     }
