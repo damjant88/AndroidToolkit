@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { projectApi } from '../api/projectApi';
 
 const PROJECTS = [
@@ -26,7 +26,6 @@ function ProjectQuickAccess({ devices }) {
   const [backendProjects, setBackendProjects] = useState({});
   const [localPaths, setLocalPaths] = useState(getLocalPaths);
   const [savedMessage, setSavedMessage] = useState(false);
-  const autoSelectedRef = useRef(false);
 
   // Fetch admin-defined project data from backend
   useEffect(() => {
@@ -37,19 +36,17 @@ function ProjectQuickAccess({ devices }) {
     }).catch(() => {});
   }, []);
 
-  // Auto-select project based on connected device's installed package (once)
+  // Auto-select project based on connected device's installed package
+  // Re-selects when device changes (hot-swap) and there's exactly 1 device
   useEffect(() => {
-    if (autoSelectedRef.current) return;
     if (!devices || devices.length === 0) return;
-    for (const device of devices) {
-      const pkg = device.deviceInfo?.safePathPackage;
-      if (pkg && device.deviceInfo?.appInstalled) {
-        const matched = PROJECTS.find(p => p.packages.includes(pkg));
-        if (matched) {
-          setSelectedProject(matched);
-          autoSelectedRef.current = true;
-          return;
-        }
+    // Only auto-select when there's a single connected device with an app
+    const devicesWithApp = devices.filter(d => d.deviceInfo?.safePathPackage && d.deviceInfo?.appInstalled);
+    if (devicesWithApp.length === 1) {
+      const pkg = devicesWithApp[0].deviceInfo.safePathPackage;
+      const matched = PROJECTS.find(p => p.packages.includes(pkg));
+      if (matched && matched.name !== selectedProject?.name) {
+        setSelectedProject(matched);
       }
     }
   }, [devices]); // eslint-disable-line react-hooks/exhaustive-deps
