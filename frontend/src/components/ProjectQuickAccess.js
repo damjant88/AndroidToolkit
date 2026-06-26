@@ -142,4 +142,4 @@ function ProjectQuickAccess({ devices }) {
   );
 }
 
-export default React.memo(ProjectQuickAccess);
+export default ProjectQuickAccess;
