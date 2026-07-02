@@ -10,6 +10,7 @@ const PROJECT_META = {
   'CCI': { icon: 'Senior.png', packages: ['com.smithmicro.cci.test', 'com.smithmicro.safepath.family.light', 'com.smithmicro.safepath.family.speakeasy'], color: '#9C27B0' },
   'Orange': { icon: 'toyo.png', packages: ['com.smithmicro.orangespain.test', 'com.orange.es.TuYo'], color: '#FF5722' },
   'Dish': { icon: 'dish.png', packages: ['com.smithmicro.safepath.dish.test', 'com.smithmicro.safepath.dish.kid.test'], color: '#607D8B' },
+  'SPC': { icon: 'spc.png', packages: ['com.smithmicro.safepath.connect'], color: '#00BCD4' },
 };
 
 function getMeta(name) {
@@ -111,7 +112,7 @@ function AdminProjectsPanel() {
             onClick={() => setExpandedProject(expandedProject === p.id ? null : p.id)}
           >
             <div className="project-card-header">
-              <img src={`/icons/${p.icon}`} alt={p.name} className="project-card-icon" />
+              <img src={`/icons/${p.icon}`} alt={p.name} className="project-card-icon" width="32" height="32" />
               <span className="project-card-name">{p.name}</span>
             </div>
             {expandedProject === p.id && (

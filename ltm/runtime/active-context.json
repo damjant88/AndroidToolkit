@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-07-02T14:25:43Z",
+  "healthy": true,
+  "active_workstream": null,
+  "recent_files": [],
+  "recent_sessions": [],
+  "open_threads": [],
+  "next_actions": [],
+  "token_budget_status": "pass",
+  "semantic_coverage_status": "pass",
+  "inferred_workstream": {
+    "value": null,
+    "source": "unknown",
+    "confidence": "low"
+  },
+  "staleness_seconds": 0
+}
