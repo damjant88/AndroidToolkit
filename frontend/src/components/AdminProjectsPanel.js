@@ -96,6 +96,7 @@ function AdminProjectsPanel() {
         await projectApi.update(existing.id, {
           name: existing.name,
           remoteApkLocation: newValue.trim(),
+          figmaLink: existing.figmaLink || '',
           localApkFolder: existing.localApkFolder || 'default',
           localLogFolder: existing.localLogFolder || 'default'
         });

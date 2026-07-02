@@ -54,9 +54,9 @@ public class ProjectService {
         }
         Project project = new Project();
         project.setName(request.name().trim());
-        project.setRemoteApkLocation(request.remoteApkLocation().trim());
-        project.setLocalApkFolder(request.localApkFolder().trim());
-        project.setLocalLogFolder(request.localLogFolder().trim());
+        project.setRemoteApkLocation(request.remoteApkLocation() != null ? request.remoteApkLocation().trim() : "");
+        project.setLocalApkFolder(request.localApkFolder() != null ? request.localApkFolder().trim() : "default");
+        project.setLocalLogFolder(request.localLogFolder() != null ? request.localLogFolder().trim() : "default");
         project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
         return toResponse(projectRepository.save(project));
     }
@@ -72,9 +72,9 @@ public class ProjectService {
             }
         });
         project.setName(request.name().trim());
-        project.setRemoteApkLocation(request.remoteApkLocation().trim());
-        project.setLocalApkFolder(request.localApkFolder().trim());
-        project.setLocalLogFolder(request.localLogFolder().trim());
+        project.setRemoteApkLocation(request.remoteApkLocation() != null ? request.remoteApkLocation().trim() : "");
+        project.setLocalApkFolder(request.localApkFolder() != null ? request.localApkFolder().trim() : "default");
+        project.setLocalLogFolder(request.localLogFolder() != null ? request.localLogFolder().trim() : "default");
         project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
         return toResponse(projectRepository.save(project));
     }
@@ -145,18 +145,6 @@ public class ProjectService {
     private void validateRequest(ProjectRequest request) {
         if (request.name() == null || request.name().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Project name is required");
-        }
-        if (request.remoteApkLocation() == null || request.remoteApkLocation().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Remote APK location is required");
-        }
-        if (request.localApkFolder() == null || request.localApkFolder().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local APK folder is required");
-        }
-        if (request.localLogFolder() == null || request.localLogFolder().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local log folder is required");
-        }
-        if (request.localLogFolder().trim().length() > 1024) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Local log folder exceeds the maximum allowed length");
         }
     }
 
