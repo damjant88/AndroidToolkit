@@ -24,6 +24,7 @@ function AdminProjectsPanel() {
   const [error, setError] = useState('');
   const [expandedProject, setExpandedProject] = useState(null);
   const [inlineRemote, setInlineRemote] = useState({});
+  const [inlineFigma, setInlineFigma] = useState({});
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -49,6 +50,38 @@ function AdminProjectsPanel() {
 
   function handleInlineRemoteChange(project, value) {
     setInlineRemote(prev => ({ ...prev, [project.id]: value }));
+  }
+
+  function handleInlineFigmaChange(project, value) {
+    setInlineFigma(prev => ({ ...prev, [project.id]: value }));
+  }
+
+  async function handleInlineFigmaSave(project) {
+    const newValue = inlineFigma[project.id];
+    if (newValue === undefined || newValue === project.figmaLink) return;
+    try {
+      const existing = projects.find(p => p.id === project.id || p.name === project.name);
+      if (existing) {
+        await projectApi.update(existing.id, {
+          name: existing.name,
+          remoteApkLocation: existing.remoteApkLocation || '',
+          figmaLink: newValue.trim(),
+          localApkFolder: existing.localApkFolder || 'default',
+          localLogFolder: existing.localLogFolder || 'default'
+        });
+      } else {
+        await projectApi.create({
+          name: project.name,
+          remoteApkLocation: '',
+          figmaLink: newValue.trim(),
+          localApkFolder: 'default',
+          localLogFolder: 'default'
+        });
+      }
+      fetchProjects();
+    } catch (err) {
+      setError('Error: ' + (err.response?.data?.message || err.message));
+    }
   }
 
   async function handleInlineRemoteSave(project) {
@@ -132,6 +165,19 @@ function AdminProjectsPanel() {
                     onChange={e => handleInlineRemoteChange(p, e.target.value)}
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineRemoteSave(p); }}>Save</button>
+                </div>
+                <div className="project-card-section">
+                  <strong>🎨 Latest Figma Link:</strong>
+                  <input
+                    type="text"
+                    className="project-local-input"
+                    placeholder="e.g. https://www.figma.com/design/..."
+                    value={inlineFigma[p.id] !== undefined ? inlineFigma[p.id] : (p.figmaLink || '')}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => handleInlineFigmaChange(p, e.target.value)}
+                  />
+                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaSave(p); }}>Save</button>
+                  {p.figmaLink && <a href={p.figmaLink} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
                 </div>
                 {projects.length > 0 && (
                   <div className="project-card-actions">

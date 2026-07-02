@@ -36,6 +36,9 @@ public class Project {
     @Column
     private String sharedLogStoragePath;
 
+    @Column(length = 1024)
+    private String figmaLink;
+
     public Project() {}
 
     public Project(String name, String remoteApkLocation, String localApkFolder, String localLogFolder) {
@@ -66,4 +69,7 @@ public class Project {
 
     public String getSharedLogStoragePath() { return sharedLogStoragePath; }
     public void setSharedLogStoragePath(String sharedLogStoragePath) { this.sharedLogStoragePath = sharedLogStoragePath; }
+
+    public String getFigmaLink() { return figmaLink; }
+    public void setFigmaLink(String figmaLink) { this.figmaLink = figmaLink; }
 }

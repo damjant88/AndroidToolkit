@@ -1,3 +1,3 @@
 package androidtoolkit.backend.dto;
 
-public record ProjectRequest(String name, String remoteApkLocation, String localApkFolder, String localLogFolder) {}
+public record ProjectRequest(String name, String remoteApkLocation, String localApkFolder, String localLogFolder, String figmaLink) {}

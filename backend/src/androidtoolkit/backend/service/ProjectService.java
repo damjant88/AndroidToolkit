@@ -57,6 +57,7 @@ public class ProjectService {
         project.setRemoteApkLocation(request.remoteApkLocation().trim());
         project.setLocalApkFolder(request.localApkFolder().trim());
         project.setLocalLogFolder(request.localLogFolder().trim());
+        project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -74,6 +75,7 @@ public class ProjectService {
         project.setRemoteApkLocation(request.remoteApkLocation().trim());
         project.setLocalApkFolder(request.localApkFolder().trim());
         project.setLocalLogFolder(request.localLogFolder().trim());
+        project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -165,6 +167,7 @@ public class ProjectService {
                 project.getRemoteApkLocation(),
                 project.getLocalApkFolder(),
                 project.getLocalLogFolder(),
+                project.getFigmaLink(),
                 project.getCreatedAt()
         );
     }
