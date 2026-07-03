@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { startInstallJob, startUninstallJob, getJob } from '../api/deviceApi';
+import { getProjectForPackage } from '../api/packageIcons';
 import axios from 'axios';
 
 const MAX_HISTORY = 5;
@@ -47,9 +48,30 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
     setMessage(`Sending ${file.name} to agent...`);
     setUploading(true);
     try {
-      // Send APK directly to agent — it saves locally and installs via adb
+      // Determine target folder from project's Local APK Folder setting
+      let targetFolder = '';
+      const savedPaths = localStorage.getItem('projectLocalPaths');
+      if (savedPaths) {
+        const paths = JSON.parse(savedPaths);
+        // Find the active project based on connected device
+        for (const device of devices) {
+          const pkg = device.deviceInfo?.safePathPackage;
+          if (pkg) {
+            const projectName = getProjectForPackage(pkg);
+            if (projectName && paths[projectName]?.localApkFolder) {
+              targetFolder = paths[projectName].localApkFolder;
+              break;
+            }
+          }
+        }
+      }
+
+      // Send APK to agent with optional target folder
       const formData = new FormData();
       formData.append('file', file);
+      if (targetFolder) {
+        formData.append('targetFolder', targetFolder);
+      }
       const result = await axios.post('http://localhost:8081/api/agent/devices/upload-apk', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000

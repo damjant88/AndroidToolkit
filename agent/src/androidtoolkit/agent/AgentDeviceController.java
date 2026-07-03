@@ -338,9 +338,10 @@ public class AgentDeviceController {
      * The APK is NOT uploaded to the backend — it stays on the agent machine.
      */
     @PostMapping("/upload-apk")
-    public Map<String, Object> uploadApk(@RequestParam("file") org.springframework.web.multipart.MultipartFile file) {
+    public Map<String, Object> uploadApk(@RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+                                         @RequestParam(value = "targetFolder", required = false) String targetFolder) {
         try {
-            String apksDir = "apks";
+            String apksDir = (targetFolder != null && !targetFolder.isBlank()) ? targetFolder : "apks";
             new File(apksDir).mkdirs();
             String filePath = apksDir + "/" + file.getOriginalFilename();
             file.transferTo(new File(filePath).getAbsoluteFile());
