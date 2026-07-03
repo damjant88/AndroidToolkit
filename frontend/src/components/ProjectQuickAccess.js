@@ -133,14 +133,14 @@ function ProjectQuickAccess({ devices }) {
             <div className="project-detail-column">
               <h4>🎨 Design</h4>
               <div className="project-detail-field">
-                <label>Android Figma</label>
+                <label>Android Figma (latest)</label>
                 {backendProjects[selectedProject.name]?.figmaLink
                   ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">Open Android Figma ↗</a>
                   : <em className="not-configured">Not configured by admin</em>
                 }
               </div>
               <div className="project-detail-field">
-                <label>iOS Figma</label>
+                <label>iOS Figma (latest)</label>
                 {backendProjects[selectedProject.name]?.figmaLinkIos
                   ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">Open iOS Figma ↗</a>
                   : <em className="not-configured">Not configured by admin</em>
