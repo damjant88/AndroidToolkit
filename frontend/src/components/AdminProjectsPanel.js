@@ -66,17 +66,12 @@ function AdminProjectsPanel() {
           name: existing.name,
           remoteApkLocation: existing.remoteApkLocation || '',
           figmaLink: newValue.trim(),
-          localApkFolder: existing.localApkFolder || 'default',
-          localLogFolder: existing.localLogFolder || 'default'
+          localApkFolder: existing.localApkFolder || '',
+          localLogFolder: existing.localLogFolder || ''
         });
       } else {
-        await projectApi.create({
-          name: project.name,
-          remoteApkLocation: '',
-          figmaLink: newValue.trim(),
-          localApkFolder: 'default',
-          localLogFolder: 'default'
-        });
+        // Project not in DB yet — should not happen since DataInitializer seeds them
+        setError('Error: Project not found in database. Refresh the page.');
       }
       fetchProjects();
     } catch (err) {
@@ -97,17 +92,11 @@ function AdminProjectsPanel() {
           name: existing.name,
           remoteApkLocation: newValue.trim(),
           figmaLink: existing.figmaLink || '',
-          localApkFolder: existing.localApkFolder || 'default',
-          localLogFolder: existing.localLogFolder || 'default'
+          localApkFolder: existing.localApkFolder || '',
+          localLogFolder: existing.localLogFolder || ''
         });
       } else {
-        // Project doesn't exist in DB — create it
-        await projectApi.create({
-          name: project.name,
-          remoteApkLocation: newValue.trim(),
-          localApkFolder: 'default',
-          localLogFolder: 'default'
-        });
+        setError('Error: Project not found in database. Refresh the page.');
       }
       fetchProjects();
     } catch (err) {
