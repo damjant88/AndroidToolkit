@@ -138,7 +138,8 @@ public class ProjectService {
         return new ResolvedProjectResponse(
                 project.getId(), project.getName(), project.getRemoteApkLocation(),
                 resolvedLocalPath, override.isPresent(),
-                resolvedLogFolder, overriddenLogFolder
+                resolvedLogFolder, overriddenLogFolder,
+                project.getFigmaLink()
         );
     }
 
