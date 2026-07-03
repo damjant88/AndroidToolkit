@@ -1,13 +1,11 @@
 package androidtoolkit.backend.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.Filter;
 
 import java.time.Instant;
 
 @Entity
 @Table(name = "projects")
-@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public class Project {
 
     @Id
