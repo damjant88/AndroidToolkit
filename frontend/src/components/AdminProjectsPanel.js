@@ -30,7 +30,9 @@ function AdminProjectsPanel() {
     try {
       const res = await projectApi.list();
       setProjects(res.data);
-    } catch {} // eslint-disable-line no-empty
+    } catch (err) {
+      console.error('Failed to fetch projects:', err);
+    }
   }, []);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
@@ -60,7 +62,8 @@ function AdminProjectsPanel() {
     const newValue = inlineFigma[project.id];
     if (newValue === undefined || newValue === project.figmaLink) return;
     try {
-      const existing = projects.find(p => p.id === project.id || p.name === project.name);
+      // Always find by name since IDs may differ between static metadata and DB
+      const existing = projects.find(p => p.name === project.name);
       if (existing) {
         await projectApi.update(existing.id, {
           name: existing.name,
@@ -69,11 +72,10 @@ function AdminProjectsPanel() {
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || ''
         });
+        fetchProjects();
       } else {
-        // Project not in DB yet — should not happen since DataInitializer seeds them
-        setError('Error: Project not found in database. Refresh the page.');
+        setError('Error: Project "' + project.name + '" not found. Try refreshing the page.');
       }
-      fetchProjects();
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
     }
@@ -85,7 +87,7 @@ function AdminProjectsPanel() {
     if (!newValue.trim()) return;
     try {
       // Check if project exists in DB (by ID from fetched list, or by name)
-      const existing = projects.find(p => p.id === project.id || p.name === project.name);
+      const existing = projects.find(p => p.name === project.name);
       if (existing) {
         // Update existing project
         await projectApi.update(existing.id, {
@@ -95,8 +97,9 @@ function AdminProjectsPanel() {
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || ''
         });
+        fetchProjects();
       } else {
-        setError('Error: Project not found in database. Refresh the page.');
+        setError('Error: Project "' + project.name + '" not found. Try refreshing the page.');
       }
       fetchProjects();
     } catch (err) {
