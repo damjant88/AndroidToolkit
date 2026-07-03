@@ -130,6 +130,7 @@ function AdminProjectsPanel() {
           name: existing.name,
           remoteApkLocation: newValue.trim(),
           figmaLink: existing.figmaLink || '',
+          figmaLinkIos: existing.figmaLinkIos || '',
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || ''
         });
