@@ -87,32 +87,7 @@ function ProjectQuickAccess({ devices }) {
             <button className="project-detail-close" onClick={() => setSelectedProject(null)}>✕</button>
           </div>
           <div className="project-detail-content">
-            <div className="project-detail-section">
-              <h4>📦 Associated Packages</h4>
-              <ul className="project-package-list">
-                {selectedProject.packages.map(pkg => (
-                  <li key={pkg}><code>{pkg}</code></li>
-                ))}
-              </ul>
-            </div>
-            <div className="project-detail-section">
-              <h4>📡 Remote APK Location</h4>
-              <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured by admin</em>}</p>
-            </div>
-            <div className="project-detail-section">
-              <h4>🎨 Latest {selectedProject.name} Android Figma</h4>
-              {backendProjects[selectedProject.name]?.figmaLink
-                ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">{backendProjects[selectedProject.name].figmaLink}</a>
-                : <p><em className="not-configured">Not configured by admin</em></p>
-              }
-            </div>
-            <div className="project-detail-section">
-              <h4>🎨 Latest {selectedProject.name} iOS Figma</h4>
-              {backendProjects[selectedProject.name]?.figmaLinkIos
-                ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">{backendProjects[selectedProject.name].figmaLinkIos}</a>
-                : <p><em className="not-configured">Not configured by admin</em></p>
-              }
-            </div>
+            {/* Group 1: Paths */}
             <div className="project-detail-section">
               <h4>📁 Local APK Folder</h4>
               <div className="project-local-row">
@@ -126,6 +101,10 @@ function ProjectQuickAccess({ devices }) {
                 />
                 <button className="project-save-btn" onClick={e => { e.stopPropagation(); handleSaveLocalPaths(selectedProject.name); }}>Save</button>
               </div>
+            </div>
+            <div className="project-detail-section">
+              <h4>📡 Remote APK Location</h4>
+              <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured by admin</em>}</p>
             </div>
             <div className="project-detail-section">
               <h4>📋 Local Log Folder</h4>
@@ -142,9 +121,35 @@ function ProjectQuickAccess({ devices }) {
               </div>
               {savedMessage && <span className="project-saved-msg">✓ Saved</span>}
             </div>
+
+            {/* Group 2: Figma links */}
+            <div className="project-detail-section project-detail-compact">
+              <h4>🎨 {selectedProject.name} Android Figma</h4>
+              {backendProjects[selectedProject.name]?.figmaLink
+                ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">{backendProjects[selectedProject.name].figmaLink}</a>
+                : <em className="not-configured">Not configured by admin</em>
+              }
+            </div>
+            <div className="project-detail-section project-detail-compact">
+              <h4>🎨 {selectedProject.name} iOS Figma</h4>
+              {backendProjects[selectedProject.name]?.figmaLinkIos
+                ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">{backendProjects[selectedProject.name].figmaLinkIos}</a>
+                : <em className="not-configured">Not configured by admin</em>
+              }
+            </div>
+
+            {/* Group 3: Stats & Packages */}
             <div className="project-detail-section">
               <h4>📊 Stats</h4>
               <p className="placeholder-text">Log collection stats and analysis reports will appear here</p>
+            </div>
+            <div className="project-detail-section">
+              <h4>📦 Associated Packages</h4>
+              <ul className="project-package-list">
+                {selectedProject.packages.map(pkg => (
+                  <li key={pkg}><code>{pkg}</code></li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>
