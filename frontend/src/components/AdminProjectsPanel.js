@@ -25,6 +25,7 @@ function AdminProjectsPanel() {
   const [expandedProject, setExpandedProject] = useState(null);
   const [inlineRemote, setInlineRemote] = useState({});
   const [inlineFigma, setInlineFigma] = useState({});
+  const [inlineFigmaIos, setInlineFigmaIos] = useState({});
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -58,11 +59,14 @@ function AdminProjectsPanel() {
     setInlineFigma(prev => ({ ...prev, [project.id]: value }));
   }
 
+  function handleInlineFigmaIosChange(project, value) {
+    setInlineFigmaIos(prev => ({ ...prev, [project.id]: value }));
+  }
+
   async function handleInlineFigmaSave(project) {
     const newValue = inlineFigma[project.id];
     if (newValue === undefined || newValue === project.figmaLink) return;
     try {
-      // Fetch fresh project list to ensure we have DB IDs
       const res = await projectApi.list();
       const freshProjects = res.data;
       const existing = freshProjects.find(p => p.name === project.name);
@@ -71,6 +75,33 @@ function AdminProjectsPanel() {
           name: existing.name,
           remoteApkLocation: existing.remoteApkLocation || '',
           figmaLink: newValue.trim(),
+          figmaLinkIos: existing.figmaLinkIos || '',
+          localApkFolder: existing.localApkFolder || '',
+          localLogFolder: existing.localLogFolder || ''
+        });
+        fetchProjects();
+        setError('');
+      } else {
+        setError('Error: Project "' + project.name + '" not found in database.');
+      }
+    } catch (err) {
+      setError('Error: ' + (err.response?.data?.message || err.message));
+    }
+  }
+
+  async function handleInlineFigmaIosSave(project) {
+    const newValue = inlineFigmaIos[project.id];
+    if (newValue === undefined || newValue === project.figmaLinkIos) return;
+    try {
+      const res = await projectApi.list();
+      const freshProjects = res.data;
+      const existing = freshProjects.find(p => p.name === project.name);
+      if (existing) {
+        await projectApi.update(existing.id, {
+          name: existing.name,
+          remoteApkLocation: existing.remoteApkLocation || '',
+          figmaLink: existing.figmaLink || '',
+          figmaLinkIos: newValue.trim(),
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || ''
         });
@@ -166,7 +197,7 @@ function AdminProjectsPanel() {
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineRemoteSave(p); }}>Save</button>
                 </div>
                 <div className="project-card-section">
-                  <strong>🎨 Latest Figma Link:</strong>
+                  <strong>🎨 Latest {p.name} Android Figma:</strong>
                   <input
                     type="text"
                     className="project-local-input"
@@ -177,6 +208,19 @@ function AdminProjectsPanel() {
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaSave(p); }}>Save</button>
                   {p.figmaLink && <a href={p.figmaLink} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
+                </div>
+                <div className="project-card-section">
+                  <strong>🎨 Latest {p.name} iOS Figma:</strong>
+                  <input
+                    type="text"
+                    className="project-local-input"
+                    placeholder="e.g. https://www.figma.com/design/..."
+                    value={inlineFigmaIos[p.id] !== undefined ? inlineFigmaIos[p.id] : (p.figmaLinkIos || '')}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => handleInlineFigmaIosChange(p, e.target.value)}
+                  />
+                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaIosSave(p); }}>Save</button>
+                  {p.figmaLinkIos && <a href={p.figmaLinkIos} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
                 </div>
                 {projects.length > 0 && (
                   <div className="project-card-actions">

@@ -126,7 +126,8 @@ function UserProjectsPanel() {
               <div className="project-info">
                 <span className="project-name">{p.name}</span>
                 <span className="project-remote">{p.remoteApkLocation}</span>
-                {p.figmaLink && <a href={p.figmaLink} target="_blank" rel="noopener noreferrer" className="project-figma-link">🎨 Figma ↗</a>}
+                {p.figmaLink && <a href={p.figmaLink} target="_blank" rel="noopener noreferrer" className="project-figma-link">🎨 Android Figma ↗</a>}
+                {p.figmaLinkIos && <a href={p.figmaLinkIos} target="_blank" rel="noopener noreferrer" className="project-figma-link">🎨 iOS Figma ↗</a>}
               </div>
               <div className="project-override">
                 <input

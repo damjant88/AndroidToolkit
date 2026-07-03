@@ -58,6 +58,7 @@ public class ProjectService {
         project.setLocalApkFolder(request.localApkFolder() != null ? request.localApkFolder().trim() : "default");
         project.setLocalLogFolder(request.localLogFolder() != null ? request.localLogFolder().trim() : "default");
         project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
+        project.setFigmaLinkIos(request.figmaLinkIos() != null ? request.figmaLinkIos().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -76,6 +77,7 @@ public class ProjectService {
         project.setLocalApkFolder(request.localApkFolder() != null ? request.localApkFolder().trim() : "default");
         project.setLocalLogFolder(request.localLogFolder() != null ? request.localLogFolder().trim() : "default");
         project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
+        project.setFigmaLinkIos(request.figmaLinkIos() != null ? request.figmaLinkIos().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -139,7 +141,8 @@ public class ProjectService {
                 project.getId(), project.getName(), project.getRemoteApkLocation(),
                 resolvedLocalPath, override.isPresent(),
                 resolvedLogFolder, overriddenLogFolder,
-                project.getFigmaLink()
+                project.getFigmaLink(),
+                project.getFigmaLinkIos()
         );
     }
 
@@ -157,6 +160,7 @@ public class ProjectService {
                 project.getLocalApkFolder(),
                 project.getLocalLogFolder(),
                 project.getFigmaLink(),
+                project.getFigmaLinkIos(),
                 project.getCreatedAt()
         );
     }

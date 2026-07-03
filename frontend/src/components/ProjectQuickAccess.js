@@ -100,9 +100,16 @@ function ProjectQuickAccess({ devices }) {
               <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured by admin</em>}</p>
             </div>
             <div className="project-detail-section">
-              <h4>🎨 Latest Figma Link</h4>
+              <h4>🎨 Latest {selectedProject.name} Android Figma</h4>
               {backendProjects[selectedProject.name]?.figmaLink
                 ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">{backendProjects[selectedProject.name].figmaLink}</a>
+                : <p><em className="not-configured">Not configured by admin</em></p>
+              }
+            </div>
+            <div className="project-detail-section">
+              <h4>🎨 Latest {selectedProject.name} iOS Figma</h4>
+              {backendProjects[selectedProject.name]?.figmaLinkIos
+                ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">{backendProjects[selectedProject.name].figmaLinkIos}</a>
                 : <p><em className="not-configured">Not configured by admin</em></p>
               }
             </div>

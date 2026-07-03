@@ -37,6 +37,9 @@ public class Project {
     @Column(length = 1024)
     private String figmaLink;
 
+    @Column(length = 1024)
+    private String figmaLinkIos;
+
     public Project() {}
 
     public Project(String name, String remoteApkLocation, String localApkFolder, String localLogFolder) {
@@ -70,4 +73,7 @@ public class Project {
 
     public String getFigmaLink() { return figmaLink; }
     public void setFigmaLink(String figmaLink) { this.figmaLink = figmaLink; }
+
+    public String getFigmaLinkIos() { return figmaLinkIos; }
+    public void setFigmaLinkIos(String figmaLinkIos) { this.figmaLinkIos = figmaLinkIos; }
 }
