@@ -436,6 +436,42 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   gap: 16px;
 }
 
+.project-detail-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 1fr;
+  gap: 20px;
+}
+
+.project-detail-column h4 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 6px;
+}
+
+.project-detail-field {
+  margin-bottom: 12px;
+}
+
+.project-detail-field label {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.project-detail-field p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.project-detail-field a {
+  font-size: 13px;
+}
+
 .project-detail-section h4 {
   margin: 0 0 8px 0;
   font-size: 13px;

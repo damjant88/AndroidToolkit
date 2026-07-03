@@ -90,70 +90,79 @@ function ProjectQuickAccess({ devices }) {
             <h3>{selectedProject.name}</h3>
             <button className="project-detail-close" onClick={() => setSelectedProject(null)}>✕</button>
           </div>
-          <div className="project-detail-content">
-            {/* Group 1: Paths */}
-            <div className="project-detail-section">
-              <h4>📁 Local APK Folder</h4>
-              <div className="project-local-row">
-                <input
-                  type="text"
-                  className="project-local-input"
-                  placeholder="e.g. C:\Builds\SafePath"
-                  value={localPaths[selectedProject.name]?.localApkFolder || ''}
-                  onChange={e => handleLocalPathChange(selectedProject.name, 'localApkFolder', e.target.value)}
-                  onClick={e => e.stopPropagation()}
-                />
-                <button className="project-save-btn" onClick={e => { e.stopPropagation(); handleSaveLocalPaths(selectedProject.name); }}>Save</button>
+          <div className="project-detail-content project-detail-grid">
+            {/* Column 1: Builds & Logs */}
+            <div className="project-detail-column">
+              <h4>📁 Builds & Logs</h4>
+              <div className="project-detail-field">
+                <label>Local APK Folder</label>
+                <div className="project-local-row">
+                  <input
+                    type="text"
+                    className="project-local-input"
+                    placeholder="e.g. C:\Builds\SafePath"
+                    value={localPaths[selectedProject.name]?.localApkFolder || ''}
+                    onChange={e => handleLocalPathChange(selectedProject.name, 'localApkFolder', e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                  />
+                  <button className="project-save-btn" onClick={e => { e.stopPropagation(); handleSaveLocalPaths(selectedProject.name); }}>Save</button>
+                </div>
+              </div>
+              <div className="project-detail-field">
+                <label>Remote APK Location</label>
+                <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured by admin</em>}</p>
+              </div>
+              <div className="project-detail-field">
+                <label>Local Log Folder</label>
+                <div className="project-local-row">
+                  <input
+                    type="text"
+                    className="project-local-input"
+                    placeholder="e.g. C:\Logs\SafePath"
+                    value={localPaths[selectedProject.name]?.localLogFolder || ''}
+                    onChange={e => handleLocalPathChange(selectedProject.name, 'localLogFolder', e.target.value)}
+                    onClick={e => e.stopPropagation()}
+                  />
+                  <button className="project-save-btn" onClick={e => { e.stopPropagation(); handleSaveLocalPaths(selectedProject.name); }}>Save</button>
+                </div>
+                {savedMessage && <span className="project-saved-msg">✓ Saved</span>}
               </div>
             </div>
-            <div className="project-detail-section">
-              <h4>📡 Remote APK Location</h4>
-              <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured by admin</em>}</p>
-            </div>
-            <div className="project-detail-section">
-              <h4>📋 Local Log Folder</h4>
-              <div className="project-local-row">
-                <input
-                  type="text"
-                  className="project-local-input"
-                  placeholder="e.g. C:\Logs\SafePath"
-                  value={localPaths[selectedProject.name]?.localLogFolder || ''}
-                  onChange={e => handleLocalPathChange(selectedProject.name, 'localLogFolder', e.target.value)}
-                  onClick={e => e.stopPropagation()}
-                />
-                <button className="project-save-btn" onClick={e => { e.stopPropagation(); handleSaveLocalPaths(selectedProject.name); }}>Save</button>
+
+            {/* Column 2: Design */}
+            <div className="project-detail-column">
+              <h4>🎨 Design</h4>
+              <div className="project-detail-field">
+                <label>Android Figma</label>
+                {backendProjects[selectedProject.name]?.figmaLink
+                  ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">Open Android Figma ↗</a>
+                  : <em className="not-configured">Not configured by admin</em>
+                }
               </div>
-              {savedMessage && <span className="project-saved-msg">✓ Saved</span>}
+              <div className="project-detail-field">
+                <label>iOS Figma</label>
+                {backendProjects[selectedProject.name]?.figmaLinkIos
+                  ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">Open iOS Figma ↗</a>
+                  : <em className="not-configured">Not configured by admin</em>
+                }
+              </div>
             </div>
 
-            {/* Group 2: Figma links */}
-            <div className="project-detail-section project-detail-compact">
-              <h4>🎨 {selectedProject.name} Android Figma</h4>
-              {backendProjects[selectedProject.name]?.figmaLink
-                ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">Open Android Figma ↗</a>
-                : <em className="not-configured">Not configured by admin</em>
-              }
-            </div>
-            <div className="project-detail-section project-detail-compact">
-              <h4>🎨 {selectedProject.name} iOS Figma</h4>
-              {backendProjects[selectedProject.name]?.figmaLinkIos
-                ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">Open iOS Figma ↗</a>
-                : <em className="not-configured">Not configured by admin</em>
-              }
-            </div>
-
-            {/* Group 3: Stats & Packages */}
-            <div className="project-detail-section">
-              <h4>📊 Stats</h4>
-              <p className="placeholder-text">Log collection stats and analysis reports will appear here</p>
-            </div>
-            <div className="project-detail-section">
-              <h4>📦 Associated Packages</h4>
-              <ul className="project-package-list">
-                {selectedProject.packages.map(pkg => (
-                  <li key={pkg}><code>{pkg}</code></li>
-                ))}
-              </ul>
+            {/* Column 3: Project Info */}
+            <div className="project-detail-column">
+              <h4>📦 Project Info</h4>
+              <div className="project-detail-field">
+                <label>Associated Packages</label>
+                <ul className="project-package-list">
+                  {selectedProject.packages.map(pkg => (
+                    <li key={pkg}><code>{pkg}</code></li>
+                  ))}
+                </ul>
+              </div>
+              <div className="project-detail-field">
+                <label>📊 Stats</label>
+                <p className="placeholder-text">Log collection stats will appear here</p>
+              </div>
             </div>
           </div>
         </div>
