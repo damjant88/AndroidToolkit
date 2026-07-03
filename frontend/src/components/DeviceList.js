@@ -32,14 +32,18 @@ function DeviceList() {
   }, [deviceUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function applyDeviceUpdate(fetched, source) {
-    // Only guard against empty WebSocket pushes (can be spurious from reconnection)
-    // REST poll results are always trusted
-    if (fetched.length === 0 && initialLoadDone.current && hasDevices.current && source === 'websocket') {
-      emptyUpdateCount.current += 1;
-      if (emptyUpdateCount.current < 2) {
-        return;
+    // Guard: ignore a single empty WebSocket push (could be from reconnection)
+    // But trust it after 2 consecutive empty pushes, or trust REST immediately
+    if (fetched.length === 0 && initialLoadDone.current && hasDevices.current) {
+      if (source === 'websocket') {
+        emptyUpdateCount.current += 1;
+        if (emptyUpdateCount.current < 2) {
+          return;
+        }
       }
-    } else if (fetched.length > 0) {
+      // REST source or 2nd websocket empty → proceed to clear
+    }
+    if (fetched.length > 0) {
       emptyUpdateCount.current = 0;
     }
 
