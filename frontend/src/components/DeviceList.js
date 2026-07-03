@@ -19,6 +19,7 @@ function DeviceList() {
   const [showBugTemplate, setShowBugTemplate] = useState(false);
   const initialLoadDone = useRef(false);
   const devicesRef = useRef([]); // Stable ref for previous device state
+  const emptyUpdateCount = useRef(0);
   const knownOrder = useRef([]); // stable serial order
   const hasDevices = useRef(false);
 
@@ -31,10 +32,15 @@ function DeviceList() {
   }, [deviceUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function applyDeviceUpdate(fetched) {
-    // Don't clear the device list if we receive an empty update after initial load
-    // This prevents UI flicker during WebSocket reconnection
+    // Don't clear the device list on a single empty update (could be transient)
+    // But allow clearing after 2 consecutive empty updates (real disconnection)
     if (fetched.length === 0 && initialLoadDone.current && hasDevices.current) {
-      return;
+      emptyUpdateCount.current += 1;
+      if (emptyUpdateCount.current < 2) {
+        return;
+      }
+    } else {
+      emptyUpdateCount.current = 0;
     }
 
     const fetchedMap = new Map(fetched.map(d => [d.serial, d]));
