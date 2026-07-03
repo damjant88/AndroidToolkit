@@ -27,19 +27,19 @@ function DeviceList() {
 
   useEffect(() => {
     if (deviceUpdate && deviceUpdate.devices) {
-      applyDeviceUpdate(deviceUpdate.devices);
+      applyDeviceUpdate(deviceUpdate.devices, 'websocket');
     }
   }, [deviceUpdate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function applyDeviceUpdate(fetched) {
-    // Don't clear the device list on a single empty update (could be transient)
-    // But allow clearing after 2 consecutive empty updates (real disconnection)
-    if (fetched.length === 0 && initialLoadDone.current && hasDevices.current) {
+  function applyDeviceUpdate(fetched, source) {
+    // Only guard against empty WebSocket pushes (can be spurious from reconnection)
+    // REST poll results are always trusted
+    if (fetched.length === 0 && initialLoadDone.current && hasDevices.current && source === 'websocket') {
       emptyUpdateCount.current += 1;
       if (emptyUpdateCount.current < 2) {
         return;
       }
-    } else {
+    } else if (fetched.length > 0) {
       emptyUpdateCount.current = 0;
     }
 
@@ -94,7 +94,7 @@ function DeviceList() {
     setError('');
     try {
       const result = await getDevices();
-      applyDeviceUpdate(result.devices || []);
+      applyDeviceUpdate(result.devices || [], 'rest');
     } catch (err) {
       setError('Failed to connect to backend: ' + err.message);
       setLoading(false);
@@ -103,7 +103,7 @@ function DeviceList() {
 
   useEffect(() => {
     fetchDevices();
-    const interval = setInterval(fetchDevices, 30000);
+    const interval = setInterval(fetchDevices, 5000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
