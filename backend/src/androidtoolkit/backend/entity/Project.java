@@ -21,13 +21,13 @@ public class Project {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column
     private String remoteApkLocation;
 
-    @Column(nullable = false)
+    @Column
     private String localApkFolder;
 
-    @Column(nullable = false, length = 1024)
+    @Column(length = 1024)
     private String localLogFolder;
 
     @Column(nullable = false)
