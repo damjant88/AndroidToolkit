@@ -5,7 +5,7 @@ import axios from 'axios';
 
 const MAX_HISTORY = 5;
 
-function InstallPanel({ devices, selectedDevices, onRefresh }) {
+function InstallPanel({ devices, selectedDevices, onRefresh, selectedProjectName }) {
   const [selectedPath, setSelectedPath] = useState(() => {
     const saved = localStorage.getItem('buildHistory');
     const history = saved ? JSON.parse(saved) : [];
@@ -53,14 +53,20 @@ function InstallPanel({ devices, selectedDevices, onRefresh }) {
       const savedPaths = localStorage.getItem('projectLocalPaths');
       if (savedPaths) {
         const paths = JSON.parse(savedPaths);
-        // Find the active project based on connected device
-        for (const device of devices) {
-          const pkg = device.deviceInfo?.safePathPackage;
-          if (pkg) {
-            const projectName = getProjectForPackage(pkg);
-            if (projectName && paths[projectName]?.localApkFolder) {
-              targetFolder = paths[projectName].localApkFolder;
-              break;
+        // Priority 1: Use the currently selected project button
+        if (selectedProjectName && paths[selectedProjectName]?.localApkFolder) {
+          targetFolder = paths[selectedProjectName].localApkFolder;
+        }
+        // Priority 2: Detect from connected device's package
+        if (!targetFolder) {
+          for (const device of devices) {
+            const pkg = device.deviceInfo?.safePathPackage;
+            if (pkg) {
+              const projectName = getProjectForPackage(pkg);
+              if (projectName && paths[projectName]?.localApkFolder) {
+                targetFolder = paths[projectName].localApkFolder;
+                break;
+              }
             }
           }
         }

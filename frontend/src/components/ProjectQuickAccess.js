@@ -21,7 +21,7 @@ function saveLocalPaths(paths) {
   localStorage.setItem('projectLocalPaths', JSON.stringify(paths));
 }
 
-function ProjectQuickAccess({ devices }) {
+function ProjectQuickAccess({ devices, onProjectChange }) {
   const [selectedProject, setSelectedProject] = useState(null);
   const [backendProjects, setBackendProjects] = useState({});
   const [localPaths, setLocalPaths] = useState(getLocalPaths);
@@ -50,6 +50,13 @@ function ProjectQuickAccess({ devices }) {
       }
     }
   }, [devices]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Notify parent of selected project change
+  useEffect(() => {
+    if (onProjectChange) {
+      onProjectChange(selectedProject?.name || null);
+    }
+  }, [selectedProject, onProjectChange]);
 
   function handleLocalPathChange(projectName, field, value) {
     const updated = { ...localPaths, [projectName]: { ...localPaths[projectName], [field]: value } };

@@ -17,6 +17,7 @@ function DeviceList() {
   const [selectedSerials, setSelectedSerials] = useState(new Set());
   const [permissionsTarget, setPermissionsTarget] = useState(null);
   const [showBugTemplate, setShowBugTemplate] = useState(false);
+  const [activeProjectName, setActiveProjectName] = useState(null);
   const initialLoadDone = useRef(false);
   const devicesRef = useRef([]); // Stable ref for previous device state
   const emptyUpdateCount = useRef(0);
@@ -134,8 +135,8 @@ function DeviceList() {
     return (
       <div>
         <div className="top-panels-row">
-          <InstallPanel devices={[]} selectedDevices={[]} onRefresh={fetchDevices} />
-          <ProjectQuickAccess devices={[]} />
+          <InstallPanel devices={[]} selectedDevices={[]} onRefresh={fetchDevices} selectedProjectName={activeProjectName} />
+          <ProjectQuickAccess devices={[]} onProjectChange={setActiveProjectName} />
         </div>
         <p className="status">Loading devices...</p>
       </div>
@@ -153,8 +154,8 @@ function DeviceList() {
     <div>
       {error && <p className="status error">{error}</p>}
       <div className="top-panels-row">
-        <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} />
-        <ProjectQuickAccess devices={visibleDevices} />
+        <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} selectedProjectName={activeProjectName} />
+        <ProjectQuickAccess devices={visibleDevices} onProjectChange={setActiveProjectName} />
       </div>
       {devices.length === 0 ? (
         <p className="status">No devices connected.</p>
