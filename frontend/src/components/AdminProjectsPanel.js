@@ -62,8 +62,10 @@ function AdminProjectsPanel() {
     const newValue = inlineFigma[project.id];
     if (newValue === undefined || newValue === project.figmaLink) return;
     try {
-      // Always find by name since IDs may differ between static metadata and DB
-      const existing = projects.find(p => p.name === project.name);
+      // Fetch fresh project list to ensure we have DB IDs
+      const res = await projectApi.list();
+      const freshProjects = res.data;
+      const existing = freshProjects.find(p => p.name === project.name);
       if (existing) {
         await projectApi.update(existing.id, {
           name: existing.name,
@@ -73,8 +75,9 @@ function AdminProjectsPanel() {
           localLogFolder: existing.localLogFolder || ''
         });
         fetchProjects();
+        setError('');
       } else {
-        setError('Error: Project "' + project.name + '" not found. Try refreshing the page.');
+        setError('Error: Project "' + project.name + '" not found in database.');
       }
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
@@ -86,8 +89,10 @@ function AdminProjectsPanel() {
     if (newValue === undefined || newValue === project.remoteApkLocation) return;
     if (!newValue.trim()) return;
     try {
-      // Check if project exists in DB (by ID from fetched list, or by name)
-      const existing = projects.find(p => p.name === project.name);
+      // Fetch fresh project list to ensure we have DB IDs
+      const res = await projectApi.list();
+      const freshProjects = res.data;
+      const existing = freshProjects.find(p => p.name === project.name);
       if (existing) {
         // Update existing project
         await projectApi.update(existing.id, {
@@ -98,8 +103,9 @@ function AdminProjectsPanel() {
           localLogFolder: existing.localLogFolder || ''
         });
         fetchProjects();
+        setError('');
       } else {
-        setError('Error: Project "' + project.name + '" not found. Try refreshing the page.');
+        setError('Error: Project "' + project.name + '" not found in database.');
       }
       fetchProjects();
     } catch (err) {
