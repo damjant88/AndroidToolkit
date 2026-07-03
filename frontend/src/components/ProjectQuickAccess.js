@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { projectApi } from '../api/projectApi';
 
 const PROJECTS = [
@@ -62,22 +62,26 @@ function ProjectQuickAccess({ devices }) {
     setTimeout(() => setSavedMessage(false), 2000);
   }
 
+  const projectButtons = useMemo(() => (
+    <div className="project-buttons-row">
+      {PROJECTS.map((project) => (
+        <button
+          key={project.name}
+          className={`project-quick-btn ${selectedProject?.name === project.name ? 'active' : ''}`}
+          style={{ '--project-color': project.color }}
+          onClick={() => setSelectedProject(selectedProject?.name === project.name ? null : project)}
+          title={project.name}
+        >
+          <img src={`/icons/${project.icon}`} alt={project.name} className="project-quick-icon" width="32" height="32" />
+          <span className="project-quick-label">{project.name}</span>
+        </button>
+      ))}
+    </div>
+  ), [selectedProject]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="project-quick-access-wrapper">
-      <div className="project-buttons-row">
-        {PROJECTS.map((project) => (
-          <button
-            key={project.name}
-            className={`project-quick-btn ${selectedProject?.name === project.name ? 'active' : ''}`}
-            style={{ '--project-color': project.color }}
-            onClick={() => setSelectedProject(selectedProject?.name === project.name ? null : project)}
-            title={project.name}
-          >
-            <img src={`/icons/${project.icon}`} alt={project.name} className="project-quick-icon" width="32" height="32" />
-            <span className="project-quick-label">{project.name}</span>
-          </button>
-        ))}
-      </div>
+      {projectButtons}
 
       {selectedProject && (
         <div className="project-detail-panel">
