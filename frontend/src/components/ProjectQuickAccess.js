@@ -285,8 +285,11 @@ function RcInfoSection({ projectName }) {
                   <td>{c.version}</td>
                   <td className="rc-artifact-cell">
                     {c.artifactText && c.artifactText.split('\n').map((line, j) => {
-                      const s3Paths = c.s3Paths ? c.s3Paths.split('|') : [];
-                      const s3Match = s3Paths.find(p => line.includes(p) || line.includes(p.substring(p.lastIndexOf('/') + 1)));
+                      const s3Paths = c.s3Paths ? c.s3Paths.split('|').filter(p => p.length > 0) : [];
+                      const s3Match = s3Paths.find(p => {
+                        const filename = p.substring(p.lastIndexOf('/') + 1);
+                        return line.includes(p) || line.includes(filename);
+                      });
 
                       // Format line: convert **text** to bold, remove redundant S3 prefix
                       let displayLine = line
@@ -302,7 +305,7 @@ function RcInfoSection({ projectName }) {
                           <span className="rc-artifact-path">
                             {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part}</strong> : <span key={k}>{part}</span>)}
                           </span>
-                          {s3Match && s3Match.endsWith('.apk') && (
+                          {s3Match && (
                             <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
                               disabled={downloading[s3Match] === true}>
                               {downloading[s3Match] === true ? '⏳' : downloading[s3Match] === '✅' ? '✅' : '⬇'}

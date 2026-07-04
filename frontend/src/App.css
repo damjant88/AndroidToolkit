@@ -598,6 +598,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   align-items: center;
   gap: 4px;
   margin-bottom: 1px;
+  max-width: 100%;
 }
 
 .rc-artifact-spacer {
@@ -608,9 +609,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   font-size: 11px;
   color: #555;
   flex: 1;
-  white-space: nowrap;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rc-download-btn {
@@ -621,8 +623,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   padding: 1px 6px;
   cursor: pointer;
   font-size: 11px;
-  margin-left: 4px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .rc-download-btn:hover {
