@@ -275,7 +275,7 @@ function RcInfoSection({ projectName }) {
           <p className="rc-info-title">{artifacts.title}</p>
           <table className="rc-info-table">
             <thead>
-              <tr><th>Component</th><th>SP Ver</th><th>Version</th><th>Artifact(s)</th><th></th></tr>
+              <tr><th>Component</th><th>SP Ver</th><th>Version</th><th>Artifact(s)</th></tr>
             </thead>
             <tbody>
               {(artifacts.components || []).map((c, i) => (
@@ -283,16 +283,18 @@ function RcInfoSection({ projectName }) {
                   <td><strong>{c.component}</strong></td>
                   <td>{c.spVersion}</td>
                   <td>{c.version}</td>
-                  <td className="rc-artifact-cell">{c.s3Paths ? c.s3Paths.split('|').slice(0, 3).map((p, j) => (
-                    <div key={j} className="rc-artifact-path">{p.substring(p.lastIndexOf('/') + 1)}</div>
-                  )) : <em>—</em>}</td>
-                  <td>
-                    {c.s3Paths && c.s3Paths.includes('.apk') && c.s3Paths.split('|').filter(p => p.includes('.apk')).slice(0, 2).map((p, j) => (
-                      <button key={j} className="rc-download-btn" onClick={() => handleDownload(p)}
-                        disabled={downloading[p] === true}>
-                        {downloading[p] === true ? '⏳' : downloading[p] ? downloading[p] : '⬇'}
-                      </button>
-                    ))}
+                  <td className="rc-artifact-cell">
+                    {c.s3Paths ? c.s3Paths.split('|').map((p, j) => (
+                      <div key={j} className="rc-artifact-row">
+                        <span className="rc-artifact-path">{p.substring(p.lastIndexOf('/') + 1)}</span>
+                        {p.endsWith('.apk') && (
+                          <button className="rc-download-btn" onClick={() => handleDownload(p)}
+                            disabled={downloading[p] === true}>
+                            {downloading[p] === true ? '⏳' : downloading[p] === '✅' ? '✅' : '⬇'}
+                          </button>
+                        )}
+                      </div>
+                    )) : (c.artifactText || <em>—</em>)}
                   </td>
                 </tr>
               ))}

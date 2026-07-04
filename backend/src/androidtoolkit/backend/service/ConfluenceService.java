@@ -169,6 +169,7 @@ public class ConfluenceService {
                 String spVersion = cells.get(1).trim();
                 String version = cells.get(2).trim();
                 String gitRef = cells.get(3).trim();
+                String artifactText = cells.get(4).trim();
 
                 // Extract S3 paths from the raw row HTML
                 List<String> s3Paths = new ArrayList<>();
@@ -183,6 +184,7 @@ public class ConfluenceService {
                 entry.put("version", version);
                 entry.put("gitRef", gitRef.length() > 12 ? gitRef.substring(0, 12) : gitRef);
                 entry.put("s3Paths", String.join("|", s3Paths));
+                entry.put("artifactText", s3Paths.isEmpty() ? artifactText : "");
                 components.add(entry);
             }
         }
