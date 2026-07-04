@@ -294,7 +294,12 @@ function RcInfoSection({ projectName }) {
                           </button>
                         )}
                       </div>
-                    )) : (c.artifactText || <em>—</em>)}
+                    )) : (c.artifactText ? c.artifactText.split(/(Parent|Companion)/).reduce((acc, part, idx, arr) => {
+                      if (part === 'Parent' || part === 'Companion') {
+                        acc.push(<div key={idx} className="rc-artifact-path">{part} {arr[idx + 1] || ''}</div>);
+                      }
+                      return acc;
+                    }, []) : <em>—</em>)}
                   </td>
                 </tr>
               ))}
