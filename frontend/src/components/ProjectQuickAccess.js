@@ -285,8 +285,9 @@ function RcInfoSection({ projectName }) {
                   <td>{c.version}</td>
                   <td className="rc-artifact-cell">
                     {c.artifactText && c.artifactText.split('\n').map((line, j) => {
-                      const s3Match = c.s3Paths && c.s3Paths.split('|').find(p => line.includes(p));
-                      return (
+                      const s3Paths = c.s3Paths ? c.s3Paths.split('|') : [];
+                      const s3Match = s3Paths.find(p => line.includes(p) || line.includes(p.substring(p.lastIndexOf('/') + 1)));
+                      return line.trim() ? (
                         <div key={j} className="rc-artifact-row">
                           <span className="rc-artifact-path">{line}</span>
                           {s3Match && s3Match.endsWith('.apk') && (
@@ -296,7 +297,7 @@ function RcInfoSection({ projectName }) {
                             </button>
                           )}
                         </div>
-                      );
+                      ) : <div key={j} className="rc-artifact-spacer" />;
                     })}
                     {!c.artifactText && !c.s3Paths && <em>—</em>}
                   </td>
