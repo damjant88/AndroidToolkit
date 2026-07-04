@@ -247,24 +247,24 @@ function RcInfoSection({ projectName }) {
         targetFolder = paths[projectName].localApkFolder;
       }
     }
-
-    // Copy the aws s3 cp command to clipboard and open the target folder
-    const fileName = s3Path.substring(s3Path.lastIndexOf('/') + 1);
-    const command = `aws s3 cp ${s3Path} "${targetFolder}/${fileName}"`;
-
+    setDownloading(prev => ({ ...prev, [downloadKey]: true }));
+    setDownloadResult(prev => ({ ...prev, [downloadKey]: null }));
     try {
-      await navigator.clipboard.writeText(command);
-    } catch (e) { /* clipboard might fail in some contexts */ }
-
-    // Open the target folder in file explorer
-    try {
-      await fetch('http://localhost:8081/api/agent/devices/open-folder', {
+      const res = await fetch('http://localhost:8081/api/agent/devices/download-s3', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'path=' + encodeURIComponent(targetFolder)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ s3Path, targetFolder })
       });
-      setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: '📋 Command copied. Folder opened: ' + targetFolder } }));
+      const data = await res.json();
+      if (data.success) {
+        setDownloading(prev => ({ ...prev, [downloadKey]: false }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: '✅ ' + (data.output || data.localPath) } }));
+      } else {
+        setDownloading(prev => ({ ...prev, [downloadKey]: false }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + (data.output || data.message) } }));
+      }
     } catch (err) {
+      setDownloading(prev => ({ ...prev, [downloadKey]: false }));
       setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + err.message } }));
     }
   }
