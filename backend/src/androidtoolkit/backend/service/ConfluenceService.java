@@ -36,10 +36,11 @@ public class ConfluenceService {
      */
     public Map<String, Object> getLatestRcArtifacts(String searchTerm) {
         try {
-            // Search for the page
-            String searchUrl = confluenceUrl + "/rest/api/content?title=" +
-                    java.net.URLEncoder.encode(searchTerm, StandardCharsets.UTF_8) +
-                    "&spaceKey=SP&expand=body.storage";
+            // Use CQL search to find the page
+            String cql = "type=page AND space=SP AND title~\"" + searchTerm + "\"";
+            String searchUrl = confluenceUrl + "/rest/api/content/search?cql=" +
+                    java.net.URLEncoder.encode(cql, StandardCharsets.UTF_8) +
+                    "&limit=1&orderby=created desc&expand=body.storage";
 
             HttpHeaders headers = createHeaders();
             HttpEntity<String> entity = new HttpEntity<>(headers);
