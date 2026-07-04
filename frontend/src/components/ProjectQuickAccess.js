@@ -287,9 +287,21 @@ function RcInfoSection({ projectName }) {
                     {c.artifactText && c.artifactText.split('\n').map((line, j) => {
                       const s3Paths = c.s3Paths ? c.s3Paths.split('|') : [];
                       const s3Match = s3Paths.find(p => line.includes(p) || line.includes(p.substring(p.lastIndexOf('/') + 1)));
+
+                      // Format line: convert **text** to bold, remove redundant S3 prefix
+                      let displayLine = line
+                        .replace(/s3:\/\/safepath-builds\/att\/android\//g, '')
+                        .replace(/\s*-\s*$/, '')
+                        .replace(/^\s*-\s*/, '');
+
+                      // Split by ** markers for bold rendering
+                      const parts = displayLine.split(/\*\*/);
+
                       return line.trim() ? (
                         <div key={j} className="rc-artifact-row">
-                          <span className="rc-artifact-path">{line}</span>
+                          <span className="rc-artifact-path">
+                            {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part}</strong> : <span key={k}>{part}</span>)}
+                          </span>
                           {s3Match && s3Match.endsWith('.apk') && (
                             <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
                               disabled={downloading[s3Match] === true}>
