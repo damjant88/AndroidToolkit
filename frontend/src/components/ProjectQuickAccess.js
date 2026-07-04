@@ -198,8 +198,8 @@ const RC_PARENT_PAGES = {
   'Safe&Found': '40802189',
   'Family Mode': '40796086',
   'CCI': '40795593',
-  'Orange': null,
-  'Dish': null,
+  'Orange': '40785617',
+  'Dish': '40802884',
   'SPC': '87392329',
 };
 
