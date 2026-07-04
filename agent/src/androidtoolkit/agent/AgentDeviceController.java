@@ -468,6 +468,35 @@ public class AgentDeviceController {
     }
 
     /**
+     * Download an APK from S3 using aws s3 cp into the target folder.
+     */
+    @PostMapping("/download-s3")
+    public Map<String, Object> downloadFromS3(@RequestBody Map<String, String> body) {
+        String s3Path = body.getOrDefault("s3Path", "");
+        String targetFolder = body.getOrDefault("targetFolder", "apks");
+        if (s3Path.isEmpty()) {
+            return Map.of("success", false, "message", "s3Path is required");
+        }
+        try {
+            new File(targetFolder).mkdirs();
+            String fileName = s3Path.substring(s3Path.lastIndexOf('/') + 1);
+            String localPath = targetFolder + "/" + fileName;
+            ProcessBuilder pb = new ProcessBuilder("aws", "s3", "cp", s3Path, localPath);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+            String output = new String(process.getInputStream().readAllBytes()).trim();
+            boolean success = process.waitFor(60, TimeUnit.SECONDS) && process.exitValue() == 0;
+            if (!success && process.isAlive()) process.destroyForcibly();
+            return Map.of("success", success,
+                    "message", success ? "Downloaded: " + fileName : output,
+                    "localPath", new File(localPath).getAbsolutePath(),
+                    "fileName", fileName);
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "Download failed: " + e.getMessage());
+        }
+    }
+
+    /**
      * Open a folder in the system file explorer.
      */
     @PostMapping("/open-folder")

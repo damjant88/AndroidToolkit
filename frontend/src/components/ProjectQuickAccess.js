@@ -182,6 +182,116 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
               </div>
             </div>
           </div>
+
+          {/* RC Info from Confluence - expandable */}
+          <RcInfoSection projectName={selectedProject.name} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Confluence search terms per project
+const RC_SEARCH_MAP = {
+  'SafePath': 'Components Artifacts SafePath Family',
+  'Secure Family': 'Components Artifacts AT&T Secure Family',
+  'Safe&Found': 'Components Artifacts Safe&Found',
+  'Family Mode': 'Components Artifacts Family Mode',
+  'CCI': 'Components Artifacts CCI',
+  'Orange': 'Components Artifacts Orange',
+  'Dish': 'Components Artifacts Dish',
+  'SPC': 'Components Artifacts SafePath Connect',
+};
+
+function RcInfoSection({ projectName }) {
+  const [expanded, setExpanded] = useState(false);
+  const [artifacts, setArtifacts] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [downloading, setDownloading] = useState({});
+
+  async function fetchArtifacts() {
+    if (artifacts) { setExpanded(!expanded); return; }
+    const search = RC_SEARCH_MAP[projectName];
+    if (!search) { setError('No Confluence mapping for ' + projectName); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const res = await projectApi.getConfluenceArtifacts(search);
+      if (res.data.error) {
+        setError(res.data.error);
+      } else {
+        setArtifacts(res.data);
+        setExpanded(true);
+      }
+    } catch (err) {
+      setError('Failed to fetch: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDownload(s3Path) {
+    const savedPaths = localStorage.getItem('projectLocalPaths');
+    let targetFolder = 'apks';
+    if (savedPaths) {
+      const paths = JSON.parse(savedPaths);
+      if (paths[projectName]?.localApkFolder) {
+        targetFolder = paths[projectName].localApkFolder;
+      }
+    }
+    setDownloading(prev => ({ ...prev, [s3Path]: true }));
+    try {
+      const res = await fetch('http://localhost:8081/api/agent/devices/download-s3', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ s3Path, targetFolder })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDownloading(prev => ({ ...prev, [s3Path]: '✅' }));
+      } else {
+        setDownloading(prev => ({ ...prev, [s3Path]: '❌ ' + data.message }));
+      }
+    } catch (err) {
+      setDownloading(prev => ({ ...prev, [s3Path]: '❌ ' + err.message }));
+    }
+  }
+
+  return (
+    <div className="rc-info-section">
+      <button className="rc-info-toggle" onClick={fetchArtifacts}>
+        {loading ? '⏳ Loading...' : expanded ? '📋 RC Info (Confluence) ▼' : '📋 RC Info (Confluence) ▶'}
+      </button>
+      {error && <p className="rc-info-error">{error}</p>}
+      {expanded && artifacts && (
+        <div className="rc-info-content">
+          <p className="rc-info-title">{artifacts.title}</p>
+          <table className="rc-info-table">
+            <thead>
+              <tr><th>Component</th><th>SP Ver</th><th>Version</th><th>Artifact(s)</th><th></th></tr>
+            </thead>
+            <tbody>
+              {(artifacts.components || []).map((c, i) => (
+                <tr key={i}>
+                  <td><strong>{c.component}</strong></td>
+                  <td>{c.spVersion}</td>
+                  <td>{c.version}</td>
+                  <td className="rc-artifact-cell">{c.s3Paths ? c.s3Paths.split('|').slice(0, 3).map((p, j) => (
+                    <div key={j} className="rc-artifact-path">{p.substring(p.lastIndexOf('/') + 1)}</div>
+                  )) : <em>—</em>}</td>
+                  <td>
+                    {c.s3Paths && c.s3Paths.includes('.apk') && c.s3Paths.split('|').filter(p => p.includes('.apk')).slice(0, 2).map((p, j) => (
+                      <button key={j} className="rc-download-btn" onClick={() => handleDownload(p)}
+                        disabled={downloading[p] === true}>
+                        {downloading[p] === true ? '⏳' : downloading[p] ? downloading[p] : '⬇'}
+                      </button>
+                    ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
