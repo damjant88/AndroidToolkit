@@ -238,7 +238,7 @@ function RcInfoSection({ projectName }) {
     }
   }
 
-  async function handleDownload(s3Path) {
+  async function handleDownload(s3Path, downloadKey) {
     const savedPaths = localStorage.getItem('projectLocalPaths');
     let targetFolder = 'apks';
     if (savedPaths) {
@@ -247,8 +247,8 @@ function RcInfoSection({ projectName }) {
         targetFolder = paths[projectName].localApkFolder;
       }
     }
-    setDownloading(prev => ({ ...prev, [s3Path]: true }));
-    setDownloadResult(prev => ({ ...prev, [s3Path]: null }));
+    setDownloading(prev => ({ ...prev, [downloadKey]: true }));
+    setDownloadResult(prev => ({ ...prev, [downloadKey]: null }));
     try {
       const res = await fetch('http://localhost:8081/api/agent/devices/download-s3', {
         method: 'POST',
@@ -257,15 +257,15 @@ function RcInfoSection({ projectName }) {
       });
       const data = await res.json();
       if (data.success) {
-        setDownloading(prev => ({ ...prev, [s3Path]: false }));
-        setDownloadResult(prev => ({ ...prev, [s3Path]: { success: true, message: '✅ Downloaded to: ' + data.localPath } }));
+        setDownloading(prev => ({ ...prev, [downloadKey]: false }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: '✅ ' + data.localPath } }));
       } else {
-        setDownloading(prev => ({ ...prev, [s3Path]: false }));
-        setDownloadResult(prev => ({ ...prev, [s3Path]: { success: false, message: '❌ ' + data.message } }));
+        setDownloading(prev => ({ ...prev, [downloadKey]: false }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + data.message } }));
       }
     } catch (err) {
-      setDownloading(prev => ({ ...prev, [s3Path]: false }));
-      setDownloadResult(prev => ({ ...prev, [s3Path]: { success: false, message: '❌ ' + err.message } }));
+      setDownloading(prev => ({ ...prev, [downloadKey]: false }));
+      setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + err.message } }));
     }
   }
 
@@ -293,10 +293,13 @@ function RcInfoSection({ projectName }) {
                       const s3Paths = c.s3Paths ? c.s3Paths.split('|').filter(p => p.length > 0) : [];
                       // Only show download button on lines starting with **Debug or **Release
                       const isDownloadLine = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
-                      const s3Match = isDownloadLine ? s3Paths.find(p => {
-                        const filename = p.substring(p.lastIndexOf('/') + 1);
-                        return line.includes(p) || line.includes(filename);
-                      }) : null;
+                      let s3Match = null;
+                      if (isDownloadLine) {
+                        // Extract the S3 path directly from this line
+                        const s3InLine = line.match(/s3:\/\/safepath-builds\/[^\s"&<]+/);
+                        s3Match = s3InLine ? s3InLine[0] : null;
+                      }
+                      const downloadKey = `${i}_${j}`;
 
                       // Format: remove S3 prefix, render bold markers
                       let displayLine = line.replace(/s3:\/\/safepath-builds\/att\/android\//g, '');
@@ -309,14 +312,14 @@ function RcInfoSection({ projectName }) {
                           </span>
                           {s3Match && (
                             <span className="rc-download-group">
-                              <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
-                                disabled={downloading[s3Match]}>
-                                {downloading[s3Match] ? '⏳' : '⬇'}
+                              <button className="rc-download-btn" onClick={(e) => { e.stopPropagation(); handleDownload(s3Match, downloadKey); }}
+                                disabled={downloading[downloadKey]}>
+                                {downloading[downloadKey] ? '⏳' : '⬇'}
                               </button>
-                              {downloading[s3Match] && <span className="rc-download-progress">Downloading...</span>}
-                              {downloadResult[s3Match] && !downloading[s3Match] && (
-                                <span className={`rc-download-result ${downloadResult[s3Match].success ? 'success' : 'error'}`}>
-                                  {downloadResult[s3Match].message}
+                              {downloading[downloadKey] && <span className="rc-download-progress">Downloading...</span>}
+                              {downloadResult[downloadKey] && !downloading[downloadKey] && (
+                                <span className={`rc-download-result ${downloadResult[downloadKey].success ? 'success' : 'error'}`}>
+                                  {downloadResult[downloadKey].message}
                                 </span>
                               )}
                             </span>
