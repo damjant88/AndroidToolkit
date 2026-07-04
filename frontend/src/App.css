@@ -639,6 +639,36 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   font-size: 10px;
   color: #1976D2;
   font-style: italic;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rc-progress-bar {
+  display: inline-block;
+  width: 60px;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.rc-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  background: #2196F3;
+  border-radius: 3px;
+  animation: rc-progress-slide 1.2s infinite ease-in-out;
+}
+
+@keyframes rc-progress-slide {
+  0% { left: -40%; }
+  100% { left: 100%; }
 }
 
 .rc-download-result {

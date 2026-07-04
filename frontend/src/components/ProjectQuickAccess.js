@@ -257,11 +257,18 @@ function RcInfoSection({ projectName }) {
       });
       const data = await res.json();
       if (data.success) {
+        // Show only the final completion line from output
+        const output = data.output || '';
+        const lastCompleted = output.split(/[\r\n]/).filter(l => l.includes('Completed')).pop() || '';
+        const finalMessage = lastCompleted ? '✅ ' + lastCompleted.trim() : '✅ Downloaded to: ' + data.localPath;
         setDownloading(prev => ({ ...prev, [downloadKey]: false }));
-        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: '✅ ' + (data.output || data.localPath) } }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: finalMessage } }));
       } else {
+        const output = data.output || data.message || 'Unknown error';
+        // Show just the first meaningful error line
+        const errorLine = output.split(/[\r\n]/).find(l => l.includes('fatal') || l.includes('error') || l.includes('denied')) || output.substring(0, 150);
         setDownloading(prev => ({ ...prev, [downloadKey]: false }));
-        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + (data.output || data.message) } }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + errorLine.trim() } }));
       }
     } catch (err) {
       setDownloading(prev => ({ ...prev, [downloadKey]: false }));
@@ -316,7 +323,7 @@ function RcInfoSection({ projectName }) {
                                 disabled={downloading[downloadKey]}>
                                 {downloading[downloadKey] ? '⏳' : '⬇'}
                               </button>
-                              {downloading[downloadKey] && <span className="rc-download-progress">Downloading...</span>}
+                              {downloading[downloadKey] && <span className="rc-download-progress"><span className="rc-progress-bar"></span> Downloading...</span>}
                               {downloadResult[downloadKey] && !downloading[downloadKey] && (
                                 <span className={`rc-download-result ${downloadResult[downloadKey].success ? 'success' : 'error'}`}>
                                   {downloadResult[downloadKey].message}
