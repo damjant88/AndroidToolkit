@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { projectApi } from '../api/projectApi';
 import { getStaticIcon } from '../api/projectIconImports';
 
@@ -37,17 +37,26 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
     }).catch(() => {});
   }, []);
 
-  // Auto-select project based on connected device's installed package
-  // Re-selects when device changes (hot-swap) and there's exactly 1 device
+  // Auto-select project only when a new device connects (serial changes)
+  // Does NOT override manual user selection on subsequent polls
+  const lastAutoSerial = useRef(null);
   useEffect(() => {
-    if (!devices || devices.length === 0) return;
-    // Only auto-select when there's a single connected device with an app
+    if (!devices || devices.length === 0) {
+      lastAutoSerial.current = null;
+      return;
+    }
     const devicesWithApp = devices.filter(d => d.deviceInfo?.safePathPackage && d.deviceInfo?.appInstalled);
     if (devicesWithApp.length === 1) {
-      const pkg = devicesWithApp[0].deviceInfo.safePathPackage;
-      const matched = PROJECTS.find(p => p.packages.includes(pkg));
-      if (matched && matched.name !== selectedProject?.name) {
-        setSelectedProject(matched);
+      const device = devicesWithApp[0];
+      const serial = device.deviceInfo.serialNumber;
+      // Only auto-select when a NEW device connects (different serial)
+      if (serial !== lastAutoSerial.current) {
+        const pkg = device.deviceInfo.safePathPackage;
+        const matched = PROJECTS.find(p => p.packages.includes(pkg));
+        if (matched) {
+          setSelectedProject(matched);
+          lastAutoSerial.current = serial;
+        }
       }
     }
   }, [devices]); // eslint-disable-line react-hooks/exhaustive-deps
