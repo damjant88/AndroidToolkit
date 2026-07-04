@@ -169,7 +169,37 @@ public class ConfluenceService {
                 String spVersion = cells.get(1).trim();
                 String version = cells.get(2).trim();
                 String gitRef = cells.get(3).trim();
-                String artifactText = cells.get(4).trim();
+                
+                // For artifact text, preserve line breaks from HTML
+                Matcher artifactCellMatcher = cellPattern.matcher(row);
+                String artifactRaw = "";
+                int cellCount = 0;
+                while (artifactCellMatcher.find()) {
+                    cellCount++;
+                    if (cellCount == 5) {
+                        artifactRaw = artifactCellMatcher.group(1);
+                        break;
+                    }
+                }
+                // Convert br and p tags to newlines, then strip remaining HTML
+                String artifactText = artifactRaw
+                        .replaceAll("<br\\s*/?>", "\n")
+                        .replaceAll("</p>\\s*<p[^>]*>", "\n")
+                        .replaceAll("</h[23]>\\s*<", "\n<")
+                        .replaceAll("<h[23][^>]*>", "\n")
+                        .replaceAll("</?p[^>]*>", "")
+                        .replaceAll("<strong>", "**")
+                        .replaceAll("</strong>", "**")
+                        .replaceAll("<u>", "")
+                        .replaceAll("</u>", "")
+                        .replaceAll("<code>", "")
+                        .replaceAll("</code>", "")
+                        .replaceAll("<[^>]+>", "")
+                        .replaceAll("&nbsp;", " ")
+                        .replaceAll("&quot;", "\"")
+                        .replaceAll("&amp;", "&")
+                        .replaceAll("\n{3,}", "\n\n")
+                        .trim();
 
                 // Extract S3 paths from the raw row HTML
                 List<String> s3Paths = new ArrayList<>();
@@ -178,18 +208,13 @@ public class ConfluenceService {
                     s3Paths.add(s3Matcher.group(1));
                 }
 
-                // Build artifact lines with S3 path markers for frontend
-                String artifactContent = artifactText
-                        .replaceAll("\\s{2,}", "\n")
-                        .trim();
-
                 Map<String, String> entry = new LinkedHashMap<>();
                 entry.put("component", component);
                 entry.put("spVersion", spVersion);
                 entry.put("version", version);
                 entry.put("gitRef", gitRef.length() > 12 ? gitRef.substring(0, 12) : gitRef);
                 entry.put("s3Paths", String.join("|", s3Paths));
-                entry.put("artifactText", artifactContent);
+                entry.put("artifactText", artifactText);
                 components.add(entry);
             }
         }
