@@ -191,16 +191,16 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
   );
 }
 
-// Confluence search terms per project
-const RC_SEARCH_MAP = {
-  'SafePath': { pageId: null, title: '12.2.0 Components Artifacts' },
-  'Secure Family': { pageId: '101875725', title: '12.2.0 Components Artifacts [AT&T] [Secure Family]' },
-  'Safe&Found': { pageId: null, title: '12.2.0 Components Artifacts' },
-  'Family Mode': { pageId: null, title: '12.2.0 Components Artifacts' },
-  'CCI': { pageId: null, title: '12.2.0 Components Artifacts' },
-  'Orange': { pageId: null, title: '12.2.0 Components Artifacts' },
-  'Dish': { pageId: null, title: '12.2.0 Components Artifacts' },
-  'SPC': { pageId: null, title: '12.2.0 Components Artifacts' },
+// Parent page IDs on Confluence — backend fetches latest child with "Components Artifacts" in title
+const RC_PARENT_PAGES = {
+  'SafePath': '40793397',
+  'Secure Family': '40803846',
+  'Safe&Found': '40802189',
+  'Family Mode': '40796086',
+  'CCI': '40795593',
+  'Orange': null,
+  'Dish': null,
+  'SPC': '87392329',
 };
 
 function RcInfoSection({ projectName }) {
@@ -215,18 +215,12 @@ function RcInfoSection({ projectName }) {
 
   async function fetchArtifacts() {
     if (artifacts) { setExpanded(!expanded); return; }
-    const config = RC_SEARCH_MAP[projectName];
-    if (!config) { setError('No Confluence mapping for ' + projectName); return; }
+    const parentId = RC_PARENT_PAGES[projectName];
+    if (!parentId) { setError('No Confluence page configured for ' + projectName); return; }
     setLoading(true);
     setError('');
     try {
-      let url;
-      if (config.pageId) {
-        url = `/api/confluence/artifacts?pageId=${config.pageId}`;
-      } else {
-        url = `/api/confluence/artifacts?search=${encodeURIComponent(config.title)}`;
-      }
-      const res = await projectApi.getConfluenceArtifacts(config.pageId || config.title);
+      const res = await projectApi.getConfluenceArtifacts(parentId);
       if (res.data.error) {
         setError(res.data.error);
       } else {

@@ -31,6 +31,48 @@ public class ConfluenceService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
+     * Fetches children of a parent page and finds the latest "Components Artifacts" child.
+     */
+    public Map<String, Object> getLatestChildArtifacts(String parentId) {
+        try {
+            // Get child pages of the parent, sorted by position (latest last) or title
+            String url = confluenceUrl + "/rest/api/content/" + parentId + "/child/page?limit=50&expand=version";
+            HttpHeaders headers = createHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+            Map body = response.getBody();
+            if (body == null) return Map.of("error", "No response from Confluence");
+
+            List<Map> results = (List<Map>) body.get("results");
+            if (results == null || results.isEmpty()) {
+                return Map.of("error", "No child pages found under parent " + parentId);
+            }
+
+            // Find the latest child page with "Components Artifacts" in title
+            Map latestPage = null;
+            for (int i = results.size() - 1; i >= 0; i--) {
+                String title = (String) results.get(i).get("title");
+                if (title != null && title.contains("Components Artifacts")) {
+                    latestPage = results.get(i);
+                    break;
+                }
+            }
+
+            if (latestPage == null) {
+                // Fallback: just use the last child page
+                latestPage = results.get(results.size() - 1);
+            }
+
+            String childId = String.valueOf(latestPage.get("id"));
+            return getArtifactsByPageId(childId);
+        } catch (Exception e) {
+            log.error("Failed to fetch children of page {}: {}", parentId, e.getMessage());
+            return Map.of("error", "Failed to fetch: " + e.getMessage());
+        }
+    }
+
+    /**
      * Fetches artifacts by direct page ID.
      */
     public Map<String, Object> getArtifactsByPageId(String pageId) {

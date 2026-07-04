@@ -22,13 +22,17 @@ public class ConfluenceController {
     @GetMapping("/artifacts")
     public Map<String, Object> getArtifacts(
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String pageId) {
+            @RequestParam(required = false) String pageId,
+            @RequestParam(required = false) String parentId) {
+        if (parentId != null && !parentId.isBlank()) {
+            return confluenceService.getLatestChildArtifacts(parentId);
+        }
         if (pageId != null && !pageId.isBlank()) {
             return confluenceService.getArtifactsByPageId(pageId);
         }
         if (search != null && !search.isBlank()) {
             return confluenceService.getLatestRcArtifacts(search);
         }
-        return Map.of("error", "Either 'search' or 'pageId' parameter is required");
+        return Map.of("error", "Either 'parentId', 'pageId', or 'search' parameter is required");
     }
 }
