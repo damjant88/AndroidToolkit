@@ -469,6 +469,7 @@ public class AgentDeviceController {
 
     /**
      * Download an APK from S3 using aws s3 cp into the target folder.
+     * Streams progress output back to the caller.
      */
     @PostMapping("/download-s3")
     public Map<String, Object> downloadFromS3(@RequestBody Map<String, String> body) {
@@ -484,13 +485,25 @@ public class AgentDeviceController {
             ProcessBuilder pb = new ProcessBuilder("aws", "s3", "cp", s3Path, localPath);
             pb.redirectErrorStream(true);
             Process process = pb.start();
-            String output = new String(process.getInputStream().readAllBytes()).trim();
-            boolean success = process.waitFor(60, TimeUnit.SECONDS) && process.exitValue() == 0;
+
+            // Read output line by line to capture progress
+            StringBuilder output = new StringBuilder();
+            java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            boolean success = process.waitFor(120, TimeUnit.SECONDS) && process.exitValue() == 0;
             if (!success && process.isAlive()) process.destroyForcibly();
+
+            String outputStr = output.toString().trim();
             return Map.of("success", success,
-                    "message", success ? "Downloaded: " + fileName : output,
+                    "message", success ? "Downloaded: " + fileName : outputStr,
                     "localPath", new File(localPath).getAbsolutePath(),
-                    "fileName", fileName);
+                    "fileName", fileName,
+                    "output", outputStr);
         } catch (Exception e) {
             return Map.of("success", false, "message", "Download failed: " + e.getMessage());
         }

@@ -258,10 +258,10 @@ function RcInfoSection({ projectName }) {
       const data = await res.json();
       if (data.success) {
         setDownloading(prev => ({ ...prev, [downloadKey]: false }));
-        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: '✅ ' + data.localPath } }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: '✅ ' + (data.output || data.localPath) } }));
       } else {
         setDownloading(prev => ({ ...prev, [downloadKey]: false }));
-        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + data.message } }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + (data.output || data.message) } }));
       }
     } catch (err) {
       setDownloading(prev => ({ ...prev, [downloadKey]: false }));
