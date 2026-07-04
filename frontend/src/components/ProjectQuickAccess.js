@@ -193,14 +193,14 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
 
 // Confluence search terms per project
 const RC_SEARCH_MAP = {
-  'SafePath': '12.2.0 Components Artifacts [SafePath] [Family]',
-  'Secure Family': '12.2.0 Components Artifacts [AT&T] [Secure Family]',
-  'Safe&Found': '12.2.0 Components Artifacts [Safe&Found]',
-  'Family Mode': '12.2.0 Components Artifacts [Family Mode]',
-  'CCI': '12.2.0 Components Artifacts [CCI]',
-  'Orange': '12.2.0 Components Artifacts [Orange]',
-  'Dish': '12.2.0 Components Artifacts [Dish]',
-  'SPC': '12.2.0 Components Artifacts [SPC]',
+  'SafePath': { pageId: null, title: '12.2.0 Components Artifacts' },
+  'Secure Family': { pageId: '101875725', title: '12.2.0 Components Artifacts [AT&T] [Secure Family]' },
+  'Safe&Found': { pageId: null, title: '12.2.0 Components Artifacts' },
+  'Family Mode': { pageId: null, title: '12.2.0 Components Artifacts' },
+  'CCI': { pageId: null, title: '12.2.0 Components Artifacts' },
+  'Orange': { pageId: null, title: '12.2.0 Components Artifacts' },
+  'Dish': { pageId: null, title: '12.2.0 Components Artifacts' },
+  'SPC': { pageId: null, title: '12.2.0 Components Artifacts' },
 };
 
 function RcInfoSection({ projectName }) {
@@ -212,12 +212,18 @@ function RcInfoSection({ projectName }) {
 
   async function fetchArtifacts() {
     if (artifacts) { setExpanded(!expanded); return; }
-    const search = RC_SEARCH_MAP[projectName];
-    if (!search) { setError('No Confluence mapping for ' + projectName); return; }
+    const config = RC_SEARCH_MAP[projectName];
+    if (!config) { setError('No Confluence mapping for ' + projectName); return; }
     setLoading(true);
     setError('');
     try {
-      const res = await projectApi.getConfluenceArtifacts(search);
+      let url;
+      if (config.pageId) {
+        url = `/api/confluence/artifacts?pageId=${config.pageId}`;
+      } else {
+        url = `/api/confluence/artifacts?search=${encodeURIComponent(config.title)}`;
+      }
+      const res = await projectApi.getConfluenceArtifacts(config.pageId || config.title);
       if (res.data.error) {
         setError(res.data.error);
       } else {

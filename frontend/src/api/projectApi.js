@@ -27,5 +27,11 @@ export const projectApi = {
   setMyOverride: (projectId, data) => api.put(`/api/projects/${projectId}/overrides/me`, data),
   deleteMyOverride: (projectId) => api.delete(`/api/projects/${projectId}/overrides/me`),
   getResolved: (projectId) => api.get(`/api/projects/${projectId}/resolved`),
-  getConfluenceArtifacts: (search) => api.get(`/api/confluence/artifacts?search=${encodeURIComponent(search)}`),
+  getConfluenceArtifacts: (searchOrId) => {
+    // If it looks like a numeric ID, use pageId param
+    if (/^\d+$/.test(searchOrId)) {
+      return api.get(`/api/confluence/artifacts?pageId=${searchOrId}`);
+    }
+    return api.get(`/api/confluence/artifacts?search=${encodeURIComponent(searchOrId)}`);
+  },
 };

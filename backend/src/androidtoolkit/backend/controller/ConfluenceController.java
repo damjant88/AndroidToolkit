@@ -20,7 +20,15 @@ public class ConfluenceController {
      * Example: /api/confluence/artifacts?search=12.2.0 Components Artifacts AT&T Secure Family
      */
     @GetMapping("/artifacts")
-    public Map<String, Object> getArtifacts(@RequestParam String search) {
-        return confluenceService.getLatestRcArtifacts(search);
+    public Map<String, Object> getArtifacts(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String pageId) {
+        if (pageId != null && !pageId.isBlank()) {
+            return confluenceService.getArtifactsByPageId(pageId);
+        }
+        if (search != null && !search.isBlank()) {
+            return confluenceService.getLatestRcArtifacts(search);
+        }
+        return Map.of("error", "Either 'search' or 'pageId' parameter is required");
     }
 }

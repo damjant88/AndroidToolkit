@@ -31,8 +31,39 @@ public class ConfluenceService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     /**
+     * Fetches artifacts by direct page ID.
+     */
+    public Map<String, Object> getArtifactsByPageId(String pageId) {
+        try {
+            String url = confluenceUrl + "/rest/api/content/" + pageId + "?expand=body.storage";
+            HttpHeaders headers = createHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+            Map page = response.getBody();
+            if (page == null) return Map.of("error", "No response from Confluence");
+
+            String title = (String) page.get("title");
+            Map bodyContent = (Map) page.get("body");
+            Map storage = (Map) bodyContent.get("storage");
+            String html = (String) storage.get("value");
+
+            List<Map<String, String>> components = parseMainTable(html);
+
+            return Map.of(
+                    "title", title,
+                    "pageId", pageId,
+                    "url", confluenceUrl + "/spaces/SP/pages/" + pageId,
+                    "components", components
+            );
+        } catch (Exception e) {
+            log.error("Failed to fetch Confluence page {}: {}", pageId, e.getMessage());
+            return Map.of("error", "Failed to fetch page: " + e.getMessage());
+        }
+    }
+
+    /**
      * Fetches the latest RC artifacts page for a given project search term.
-     * Returns parsed component artifacts from the "Main" table.
      */
     public Map<String, Object> getLatestRcArtifacts(String searchTerm) {
         try {
