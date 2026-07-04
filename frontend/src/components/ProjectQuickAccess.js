@@ -285,7 +285,7 @@ function RcInfoSection({ projectName }) {
                   <td>{c.version}</td>
                   <td className="rc-artifact-cell">
                     {c.artifactText && c.artifactText.split('\n').map((line, j) => {
-                      const s3Match = c.s3Paths && c.s3Paths.split('|').find(p => line.includes(p.substring(p.lastIndexOf('/') + 1)));
+                      const s3Match = c.s3Paths && c.s3Paths.split('|').find(p => line.includes(p));
                       return (
                         <div key={j} className="rc-artifact-row">
                           <span className="rc-artifact-path">{line}</span>
@@ -298,17 +298,6 @@ function RcInfoSection({ projectName }) {
                         </div>
                       );
                     })}
-                    {!c.artifactText && c.s3Paths && c.s3Paths.split('|').map((p, j) => (
-                      <div key={j} className="rc-artifact-row">
-                        <span className="rc-artifact-path">{p.substring(p.lastIndexOf('/') + 1)}</span>
-                        {p.endsWith('.apk') && (
-                          <button className="rc-download-btn" onClick={() => handleDownload(p)}
-                            disabled={downloading[p] === true}>
-                            {downloading[p] === true ? '⏳' : downloading[p] === '✅' ? '✅' : '⬇'}
-                          </button>
-                        )}
-                      </div>
-                    ))}
                     {!c.artifactText && !c.s3Paths && <em>—</em>}
                   </td>
                 </tr>
