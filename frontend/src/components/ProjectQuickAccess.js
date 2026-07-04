@@ -291,10 +291,12 @@ function RcInfoSection({ projectName }) {
                   <td className="rc-artifact-cell">
                     {c.artifactText && c.artifactText.split('\n').map((line, j) => {
                       const s3Paths = c.s3Paths ? c.s3Paths.split('|').filter(p => p.length > 0) : [];
-                      const s3Match = s3Paths.find(p => {
+                      // Only show download button on lines starting with **Debug or **Release
+                      const isDownloadLine = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
+                      const s3Match = isDownloadLine ? s3Paths.find(p => {
                         const filename = p.substring(p.lastIndexOf('/') + 1);
                         return line.includes(p) || line.includes(filename);
-                      });
+                      }) : null;
 
                       // Format: remove S3 prefix, render bold markers
                       let displayLine = line.replace(/s3:\/\/safepath-builds\/att\/android\//g, '');
