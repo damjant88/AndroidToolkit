@@ -36,10 +36,10 @@ public class ConfluenceService {
      */
     public Map<String, Object> getLatestRcArtifacts(String searchTerm) {
         try {
-            // Use simple text search (siteSearch) to find the page
-            String searchUrl = confluenceUrl + "/rest/api/content/search?cql=" +
-                    java.net.URLEncoder.encode("type=page AND space=SP AND title~\"" + searchTerm.replace("&", "and") + "\"", StandardCharsets.UTF_8) +
-                    "&limit=1&expand=body.storage";
+            // Use simple content search by title
+            String searchUrl = confluenceUrl + "/rest/api/content?spaceKey=SP&title=" +
+                    java.net.URLEncoder.encode(searchTerm, StandardCharsets.UTF_8) +
+                    "&expand=body.storage&limit=1";
 
             log.info("Confluence search URL: {}", searchUrl);
 

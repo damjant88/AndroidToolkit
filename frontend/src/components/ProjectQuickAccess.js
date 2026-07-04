@@ -193,14 +193,14 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
 
 // Confluence search terms per project
 const RC_SEARCH_MAP = {
-  'SafePath': '12.2.0 Components Artifacts SafePath Family',
-  'Secure Family': '12.2.0 Components Artifacts Secure Family',
-  'Safe&Found': '12.2.0 Components Artifacts Safe Found',
-  'Family Mode': '12.2.0 Components Artifacts Family Mode',
-  'CCI': '12.2.0 Components Artifacts CCI',
-  'Orange': '12.2.0 Components Artifacts Orange',
-  'Dish': '12.2.0 Components Artifacts Dish',
-  'SPC': '12.2.0 Components Artifacts SafePath Connect',
+  'SafePath': '12.2.0 Components Artifacts [SafePath] [Family]',
+  'Secure Family': '12.2.0 Components Artifacts [AT&T] [Secure Family]',
+  'Safe&Found': '12.2.0 Components Artifacts [Safe&Found]',
+  'Family Mode': '12.2.0 Components Artifacts [Family Mode]',
+  'CCI': '12.2.0 Components Artifacts [CCI]',
+  'Orange': '12.2.0 Components Artifacts [Orange]',
+  'Dish': '12.2.0 Components Artifacts [Dish]',
+  'SPC': '12.2.0 Components Artifacts [SPC]',
 };
 
 function RcInfoSection({ projectName }) {
