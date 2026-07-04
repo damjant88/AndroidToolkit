@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { projectApi } from '../api/projectApi';
+import { getStaticIcon } from '../api/projectIconImports';
 
 // Static project metadata (icons, packages, colors)
 const PROJECT_META = {
@@ -176,7 +177,7 @@ function AdminProjectsPanel() {
             onClick={() => setExpandedProject(expandedProject === p.id ? null : p.id)}
           >
             <div className="project-card-header">
-              <img src={`/icons/${p.icon}`} alt={p.name} className="project-card-icon" width="32" height="32" />
+              <img src={getStaticIcon(p.icon)} alt={p.name} className="project-card-icon" width="32" height="32" />
               <span className="project-card-name">{p.name}</span>
             </div>
             {expandedProject === p.id && (

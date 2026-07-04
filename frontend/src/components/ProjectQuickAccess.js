@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { projectApi } from '../api/projectApi';
+import { getStaticIcon } from '../api/projectIconImports';
 
 const PROJECTS = [
   { name: 'SafePath', icon: 'product.png', packages: ['com.smithmicro.safepath.family', 'com.smithmicro.safepath.family.child'], color: '#4CAF50' },
@@ -79,7 +80,7 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
           onClick={() => setSelectedProject(selectedProject?.name === project.name ? null : project)}
           title={project.name}
         >
-          <img src={`/icons/${project.icon}`} alt={project.name} className="project-quick-icon" width="32" height="32" />
+          <img src={getStaticIcon(project.icon)} alt={project.name} className="project-quick-icon" width="32" height="32" />
           <span className="project-quick-label">{project.name}</span>
         </button>
       ))}
@@ -93,7 +94,7 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
       {selectedProject && (
         <div className="project-detail-panel">
           <div className="project-detail-header">
-            <img src={`/icons/${selectedProject.icon}`} alt={selectedProject.name} className="project-detail-icon" />
+            <img src={getStaticIcon(selectedProject.icon)} alt={selectedProject.name} className="project-detail-icon" />
             <h3>{selectedProject.name}</h3>
             <button className="project-detail-close" onClick={() => setSelectedProject(null)}>✕</button>
           </div>
