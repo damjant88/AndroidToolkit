@@ -628,3 +628,22 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   background: #ccc;
   cursor: not-allowed;
 }
+
+.rc-download-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rc-download-result {
+  font-size: 11px;
+  padding: 1px 4px;
+}
+
+.rc-download-result.success {
+  color: #2E7D32;
+}
+
+.rc-download-result.error {
+  color: #C62828;
+}

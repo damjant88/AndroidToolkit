@@ -209,6 +209,7 @@ function RcInfoSection({ projectName }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState({});
+  const [downloadResult, setDownloadResult] = useState({});
 
   async function fetchArtifacts() {
     if (artifacts) { setExpanded(!expanded); return; }
@@ -247,6 +248,7 @@ function RcInfoSection({ projectName }) {
       }
     }
     setDownloading(prev => ({ ...prev, [s3Path]: true }));
+    setDownloadResult(prev => ({ ...prev, [s3Path]: null }));
     try {
       const res = await fetch('http://localhost:8081/api/agent/devices/download-s3', {
         method: 'POST',
@@ -255,12 +257,15 @@ function RcInfoSection({ projectName }) {
       });
       const data = await res.json();
       if (data.success) {
-        setDownloading(prev => ({ ...prev, [s3Path]: '✅' }));
+        setDownloading(prev => ({ ...prev, [s3Path]: false }));
+        setDownloadResult(prev => ({ ...prev, [s3Path]: { success: true, message: '✅ Downloaded to: ' + data.localPath } }));
       } else {
-        setDownloading(prev => ({ ...prev, [s3Path]: '❌ ' + data.message }));
+        setDownloading(prev => ({ ...prev, [s3Path]: false }));
+        setDownloadResult(prev => ({ ...prev, [s3Path]: { success: false, message: '❌ ' + data.message } }));
       }
     } catch (err) {
-      setDownloading(prev => ({ ...prev, [s3Path]: '❌ ' + err.message }));
+      setDownloading(prev => ({ ...prev, [s3Path]: false }));
+      setDownloadResult(prev => ({ ...prev, [s3Path]: { success: false, message: '❌ ' + err.message } }));
     }
   }
 
@@ -301,10 +306,17 @@ function RcInfoSection({ projectName }) {
                             {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part.replace(/\s*-\s*$/, '')} </strong> : <span key={k}>{part}</span>)}
                           </span>
                           {s3Match && (
-                            <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
-                              disabled={downloading[s3Match] === true}>
-                              {downloading[s3Match] === true ? '⏳' : downloading[s3Match] === '✅' ? '✅' : '⬇'}
-                            </button>
+                            <span className="rc-download-group">
+                              <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
+                                disabled={downloading[s3Match]}>
+                                {downloading[s3Match] ? '⏳ Downloading...' : '⬇'}
+                              </button>
+                              {downloadResult[s3Match] && (
+                                <span className={`rc-download-result ${downloadResult[s3Match].success ? 'success' : 'error'}`}>
+                                  {downloadResult[s3Match].message}
+                                </span>
+                              )}
+                            </span>
                           )}
                         </div>
                       ) : <div key={j} className="rc-artifact-spacer" />;
