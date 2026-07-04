@@ -115,14 +115,30 @@ public class ConfluenceService {
     private List<Map<String, String>> parseMainTable(String html) {
         List<Map<String, String>> components = new ArrayList<>();
 
-        // Find rows in the HTML tables
-        Pattern rowPattern = Pattern.compile("<tr>(.*?)</tr>", Pattern.DOTALL);
-        Pattern cellPattern = Pattern.compile("<t[dh][^>]*>(.*?)</t[dh]>", Pattern.DOTALL);
-        Pattern linkPattern = Pattern.compile("href=\"([^\"]+)\"");
-        Pattern s3Pattern = Pattern.compile("(s3://safepath-builds/[^\\s<\"]+)");
+        // Find the "Main" section — it's after <h1...>Main</h1>
+        int mainIdx = html.indexOf(">Main</");
+        if (mainIdx == -1) {
+            mainIdx = html.indexOf(">Main<");
+        }
+        if (mainIdx == -1) {
+            log.warn("Could not find 'Main' section in page HTML");
+            return components;
+        }
 
-        Matcher rowMatcher = rowPattern.matcher(html);
-        boolean inMainTable = false;
+        // Get the table after "Main"
+        String afterMain = html.substring(mainIdx);
+        int tableStart = afterMain.indexOf("<tbody>");
+        int tableEnd = afterMain.indexOf("</tbody>");
+        if (tableStart == -1 || tableEnd == -1) return components;
+
+        String tableBody = afterMain.substring(tableStart, tableEnd);
+
+        // Split into rows
+        Pattern rowPattern = Pattern.compile("<tr[^>]*>(.*?)</tr>", Pattern.DOTALL);
+        Pattern cellPattern = Pattern.compile("<t[dh][^>]*>(.*?)</t[dh]>", Pattern.DOTALL);
+        Pattern s3Pattern = Pattern.compile("(s3://safepath-builds/[^<\\s\"&]+)");
+
+        Matcher rowMatcher = rowPattern.matcher(tableBody);
         boolean headerSkipped = false;
 
         while (rowMatcher.find()) {
@@ -133,6 +149,8 @@ public class ConfluenceService {
                 String cell = cellMatcher.group(1)
                         .replaceAll("<[^>]+>", " ")
                         .replaceAll("&nbsp;", " ")
+                        .replaceAll("&quot;", "\"")
+                        .replaceAll("&amp;", "&")
                         .replaceAll("\\s+", " ")
                         .trim();
                 cells.add(cell);
@@ -140,21 +158,19 @@ public class ConfluenceService {
 
             if (cells.isEmpty()) continue;
 
-            // Detect "Main" section header
-            if (cells.size() >= 1 && cells.get(0).contains("Component") && row.contains("Artifact")) {
-                inMainTable = true;
+            // Skip header row
+            if (!headerSkipped && cells.get(0).contains("Component")) {
                 headerSkipped = true;
                 continue;
             }
 
-            if (inMainTable && cells.size() >= 5) {
+            if (headerSkipped && cells.size() >= 5) {
                 String component = cells.get(0).trim();
                 String spVersion = cells.get(1).trim();
                 String version = cells.get(2).trim();
                 String gitRef = cells.get(3).trim();
-                String artifacts = cells.get(4).trim();
 
-                // Extract S3 paths
+                // Extract S3 paths from the raw row HTML
                 List<String> s3Paths = new ArrayList<>();
                 Matcher s3Matcher = s3Pattern.matcher(row);
                 while (s3Matcher.find()) {
@@ -166,7 +182,6 @@ public class ConfluenceService {
                 entry.put("spVersion", spVersion);
                 entry.put("version", version);
                 entry.put("gitRef", gitRef.length() > 12 ? gitRef.substring(0, 12) : gitRef);
-                entry.put("artifacts", artifacts);
                 entry.put("s3Paths", String.join("|", s3Paths));
                 components.add(entry);
             }
