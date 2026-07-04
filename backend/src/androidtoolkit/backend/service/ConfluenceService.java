@@ -178,13 +178,18 @@ public class ConfluenceService {
                     s3Paths.add(s3Matcher.group(1));
                 }
 
+                // Build artifact lines with S3 path markers for frontend
+                String artifactContent = artifactText
+                        .replaceAll("\\s{2,}", "\n")
+                        .trim();
+
                 Map<String, String> entry = new LinkedHashMap<>();
                 entry.put("component", component);
                 entry.put("spVersion", spVersion);
                 entry.put("version", version);
                 entry.put("gitRef", gitRef.length() > 12 ? gitRef.substring(0, 12) : gitRef);
                 entry.put("s3Paths", String.join("|", s3Paths));
-                entry.put("artifactText", s3Paths.isEmpty() ? artifactText : "");
+                entry.put("artifactText", artifactContent);
                 components.add(entry);
             }
         }

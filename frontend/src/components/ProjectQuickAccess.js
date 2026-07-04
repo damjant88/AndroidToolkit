@@ -284,7 +284,21 @@ function RcInfoSection({ projectName }) {
                   <td>{c.spVersion}</td>
                   <td>{c.version}</td>
                   <td className="rc-artifact-cell">
-                    {c.s3Paths ? c.s3Paths.split('|').map((p, j) => (
+                    {c.artifactText && c.artifactText.split('\n').map((line, j) => {
+                      const s3Match = c.s3Paths && c.s3Paths.split('|').find(p => line.includes(p.substring(p.lastIndexOf('/') + 1)));
+                      return (
+                        <div key={j} className="rc-artifact-row">
+                          <span className="rc-artifact-path">{line}</span>
+                          {s3Match && s3Match.endsWith('.apk') && (
+                            <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
+                              disabled={downloading[s3Match] === true}>
+                              {downloading[s3Match] === true ? '⏳' : downloading[s3Match] === '✅' ? '✅' : '⬇'}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {!c.artifactText && c.s3Paths && c.s3Paths.split('|').map((p, j) => (
                       <div key={j} className="rc-artifact-row">
                         <span className="rc-artifact-path">{p.substring(p.lastIndexOf('/') + 1)}</span>
                         {p.endsWith('.apk') && (
@@ -294,12 +308,8 @@ function RcInfoSection({ projectName }) {
                           </button>
                         )}
                       </div>
-                    )) : (c.artifactText ? c.artifactText.split(/(Parent|Companion)/).reduce((acc, part, idx, arr) => {
-                      if (part === 'Parent' || part === 'Companion') {
-                        acc.push(<div key={idx} className="rc-artifact-path">{part} {arr[idx + 1] || ''}</div>);
-                      }
-                      return acc;
-                    }, []) : <em>—</em>)}
+                    ))}
+                    {!c.artifactText && !c.s3Paths && <em>—</em>}
                   </td>
                 </tr>
               ))}
