@@ -467,6 +467,8 @@ public class AgentDeviceController {
         }
     }
 
+    private final ConcurrentHashMap<String, Process> activeDownloads = new ConcurrentHashMap<>();
+
     /**
      * Download an APK from S3 using aws s3 cp into the target folder.
      * Streams progress output back to the caller.
@@ -475,6 +477,7 @@ public class AgentDeviceController {
     public Map<String, Object> downloadFromS3(@RequestBody Map<String, String> body) {
         String s3Path = body.getOrDefault("s3Path", "");
         String targetFolder = body.getOrDefault("targetFolder", "apks");
+        String downloadId = body.getOrDefault("downloadId", String.valueOf(System.currentTimeMillis()));
         if (s3Path.isEmpty()) {
             return Map.of("success", false, "message", "s3Path is required");
         }
@@ -485,6 +488,7 @@ public class AgentDeviceController {
             ProcessBuilder pb = new ProcessBuilder("aws", "s3", "cp", s3Path, localPath);
             pb.redirectErrorStream(true);
             Process process = pb.start();
+            activeDownloads.put(downloadId, process);
 
             // Read output line by line to capture progress
             StringBuilder output = new StringBuilder();
@@ -497,16 +501,33 @@ public class AgentDeviceController {
 
             boolean success = process.waitFor(120, TimeUnit.SECONDS) && process.exitValue() == 0;
             if (!success && process.isAlive()) process.destroyForcibly();
+            activeDownloads.remove(downloadId);
 
             String outputStr = output.toString().trim();
             return Map.of("success", success,
                     "message", success ? "Downloaded: " + fileName : outputStr,
                     "localPath", new File(localPath).getAbsolutePath(),
                     "fileName", fileName,
-                    "output", outputStr);
+                    "output", outputStr,
+                    "targetFolder", new File(targetFolder).getAbsolutePath());
         } catch (Exception e) {
+            activeDownloads.remove(downloadId);
             return Map.of("success", false, "message", "Download failed: " + e.getMessage());
         }
+    }
+
+    /**
+     * Cancel an active S3 download.
+     */
+    @PostMapping("/cancel-download")
+    public Map<String, Object> cancelDownload(@RequestBody Map<String, String> body) {
+        String downloadId = body.getOrDefault("downloadId", "");
+        Process process = activeDownloads.remove(downloadId);
+        if (process != null) {
+            process.destroyForcibly();
+            return Map.of("success", true, "message", "Download cancelled");
+        }
+        return Map.of("success", false, "message", "No active download found");
     }
 
     /**

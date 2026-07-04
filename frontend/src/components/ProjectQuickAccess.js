@@ -210,6 +210,8 @@ function RcInfoSection({ projectName }) {
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState({});
   const [downloadResult, setDownloadResult] = useState({});
+  const [downloadPopup, setDownloadPopup] = useState(null);
+  const [activeDownloadId, setActiveDownloadId] = useState({});
 
   async function fetchArtifacts() {
     if (artifacts) { setExpanded(!expanded); return; }
@@ -247,33 +249,58 @@ function RcInfoSection({ projectName }) {
         targetFolder = paths[projectName].localApkFolder;
       }
     }
+    const downloadId = 'dl_' + Date.now();
+    setActiveDownloadId(prev => ({ ...prev, [downloadKey]: downloadId }));
     setDownloading(prev => ({ ...prev, [downloadKey]: true }));
     setDownloadResult(prev => ({ ...prev, [downloadKey]: null }));
     try {
       const res = await fetch('http://localhost:8081/api/agent/devices/download-s3', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ s3Path, targetFolder })
+        body: JSON.stringify({ s3Path, targetFolder, downloadId })
       });
       const data = await res.json();
+      setDownloading(prev => ({ ...prev, [downloadKey]: false }));
       if (data.success) {
-        // Show only the final completion line from output
         const output = data.output || '';
         const lastCompleted = output.split(/[\r\n]/).filter(l => l.includes('Completed')).pop() || '';
-        const finalMessage = lastCompleted ? '✅ ' + lastCompleted.trim() : '✅ Downloaded to: ' + data.localPath;
-        setDownloading(prev => ({ ...prev, [downloadKey]: false }));
-        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: finalMessage } }));
+        setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: true, message: '✅ ' + (lastCompleted.trim() || 'Downloaded') } }));
+        // Show popup
+        setDownloadPopup({ fileName: data.fileName, localPath: data.localPath, targetFolder: data.targetFolder });
       } else {
         const output = data.output || data.message || 'Unknown error';
-        // Show just the first meaningful error line
         const errorLine = output.split(/[\r\n]/).find(l => l.includes('fatal') || l.includes('error') || l.includes('denied')) || output.substring(0, 150);
-        setDownloading(prev => ({ ...prev, [downloadKey]: false }));
         setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + errorLine.trim() } }));
       }
     } catch (err) {
       setDownloading(prev => ({ ...prev, [downloadKey]: false }));
       setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '❌ ' + err.message } }));
     }
+  }
+
+  async function handleCancelDownload(downloadKey) {
+    const downloadId = activeDownloadId[downloadKey];
+    if (!downloadId) return;
+    try {
+      await fetch('http://localhost:8081/api/agent/devices/cancel-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ downloadId })
+      });
+    } catch (e) { /* ignore */ }
+    setDownloading(prev => ({ ...prev, [downloadKey]: false }));
+    setDownloadResult(prev => ({ ...prev, [downloadKey]: { success: false, message: '⚠️ Cancelled' } }));
+  }
+
+  async function handleOpenFolder(folderPath) {
+    try {
+      await fetch('http://localhost:8081/api/agent/devices/open-folder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'path=' + encodeURIComponent(folderPath)
+      });
+    } catch (e) { /* ignore */ }
+    setDownloadPopup(null);
   }
 
   return (
@@ -323,7 +350,10 @@ function RcInfoSection({ projectName }) {
                                 disabled={downloading[downloadKey]}>
                                 {downloading[downloadKey] ? '⏳' : '⬇'}
                               </button>
-                              {downloading[downloadKey] && <span className="rc-download-progress"><span className="rc-progress-bar"></span> Downloading...</span>}
+                              {downloading[downloadKey] && <>
+                                <span className="rc-download-progress"><span className="rc-progress-bar"></span> Downloading...</span>
+                                <button className="rc-cancel-btn" onClick={(e) => { e.stopPropagation(); handleCancelDownload(downloadKey); }}>✕</button>
+                              </>}
                               {downloadResult[downloadKey] && !downloading[downloadKey] && (
                                 <span className={`rc-download-result ${downloadResult[downloadKey].success ? 'success' : 'error'}`}>
                                   {downloadResult[downloadKey].message}
@@ -340,6 +370,19 @@ function RcInfoSection({ projectName }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+      {downloadPopup && (
+        <div className="rc-download-popup-overlay">
+          <div className="rc-download-popup">
+            <h4>✅ Download Complete</h4>
+            <p><strong>{downloadPopup.fileName}</strong></p>
+            <p className="rc-popup-path">{downloadPopup.localPath}</p>
+            <div className="rc-popup-buttons">
+              <button className="rc-popup-open-btn" onClick={() => handleOpenFolder(downloadPopup.targetFolder)}>📂 Open Folder</button>
+              <button className="rc-popup-close-btn" onClick={() => setDownloadPopup(null)}>Close</button>
+            </div>
+          </div>
         </div>
       )}
     </div>
