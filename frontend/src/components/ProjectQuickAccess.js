@@ -291,19 +291,14 @@ function RcInfoSection({ projectName }) {
                         return line.includes(p) || line.includes(filename);
                       });
 
-                      // Format line: convert **text** to bold, remove redundant S3 prefix
-                      let displayLine = line
-                        .replace(/s3:\/\/safepath-builds\/att\/android\//g, '')
-                        .replace(/\s*-\s*$/, '')
-                        .replace(/^\s*-\s*/, '');
-
-                      // Split by ** markers for bold rendering
+                      // Format: remove S3 prefix, render bold markers
+                      let displayLine = line.replace(/s3:\/\/safepath-builds\/att\/android\//g, '');
                       const parts = displayLine.split(/\*\*/);
 
                       return line.trim() ? (
                         <div key={j} className="rc-artifact-row">
                           <span className="rc-artifact-path">
-                            {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part}</strong> : <span key={k}>{part}</span>)}
+                            {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part.replace(/\s*-\s*$/, '')} </strong> : <span key={k}>{part}</span>)}
                           </span>
                           {s3Match && (
                             <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
