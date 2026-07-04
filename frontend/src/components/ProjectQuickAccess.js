@@ -309,9 +309,10 @@ function RcInfoSection({ projectName }) {
                             <span className="rc-download-group">
                               <button className="rc-download-btn" onClick={() => handleDownload(s3Match)}
                                 disabled={downloading[s3Match]}>
-                                {downloading[s3Match] ? '⏳ Downloading...' : '⬇'}
+                                {downloading[s3Match] ? '⏳' : '⬇'}
                               </button>
-                              {downloadResult[s3Match] && (
+                              {downloading[s3Match] && <span className="rc-download-progress">Downloading...</span>}
+                              {downloadResult[s3Match] && !downloading[s3Match] && (
                                 <span className={`rc-download-result ${downloadResult[s3Match].success ? 'success' : 'error'}`}>
                                   {downloadResult[s3Match].message}
                                 </span>
