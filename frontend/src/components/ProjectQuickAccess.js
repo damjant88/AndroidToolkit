@@ -192,15 +192,16 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
 }
 
 // Parent page IDs on Confluence — backend fetches latest child with "Components Artifacts" in title
+// Use 'pageId' for direct page access, 'parentId' for auto-discovery of latest child
 const RC_PARENT_PAGES = {
-  'SafePath': '40793397',
-  'Secure Family': '40803846',
-  'Safe&Found': '40802189',
-  'Family Mode': '40796086',
-  'CCI': '40795593',
-  'Orange': '40785617',
-  'Dish': '40802884',
-  'SPC': '87392329',
+  'SafePath': { parentId: '40793397' },
+  'Secure Family': { pageId: '101875725' },
+  'Safe&Found': { parentId: '40802189' },
+  'Family Mode': { parentId: '40796086' },
+  'CCI': { parentId: '40795593' },
+  'Orange': { parentId: '40785617' },
+  'Dish': { parentId: '40802884' },
+  'SPC': { parentId: '87392329' },
 };
 
 function RcInfoSection({ projectName }) {
@@ -215,12 +216,17 @@ function RcInfoSection({ projectName }) {
 
   async function fetchArtifacts() {
     if (artifacts) { setExpanded(!expanded); return; }
-    const parentId = RC_PARENT_PAGES[projectName];
-    if (!parentId) { setError('No Confluence page configured for ' + projectName); return; }
+    const config = RC_PARENT_PAGES[projectName];
+    if (!config) { setError('No Confluence page configured for ' + projectName); return; }
     setLoading(true);
     setError('');
     try {
-      const res = await projectApi.getConfluenceArtifacts(parentId);
+      let res;
+      if (config.pageId) {
+        res = await projectApi.getConfluenceArtifacts('page:' + config.pageId);
+      } else {
+        res = await projectApi.getConfluenceArtifacts(config.parentId);
+      }
       if (res.data.error) {
         setError(res.data.error);
       } else {

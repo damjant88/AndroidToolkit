@@ -27,10 +27,10 @@ export const projectApi = {
   setMyOverride: (projectId, data) => api.put(`/api/projects/${projectId}/overrides/me`, data),
   deleteMyOverride: (projectId) => api.delete(`/api/projects/${projectId}/overrides/me`),
   getResolved: (projectId) => api.get(`/api/projects/${projectId}/resolved`),
-  getConfluenceArtifacts: (parentIdOrSearch) => {
-    if (/^\d+$/.test(parentIdOrSearch)) {
-      return api.get(`/api/confluence/artifacts?parentId=${parentIdOrSearch}`);
+  getConfluenceArtifacts: (idOrParam) => {
+    if (idOrParam.startsWith('page:')) {
+      return api.get(`/api/confluence/artifacts?pageId=${idOrParam.substring(5)}`);
     }
-    return api.get(`/api/confluence/artifacts?search=${encodeURIComponent(parentIdOrSearch)}`);
+    return api.get(`/api/confluence/artifacts?parentId=${idOrParam}`);
   },
 };
