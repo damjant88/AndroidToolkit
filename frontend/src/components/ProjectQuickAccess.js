@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { projectApi } from '../api/projectApi';
 import { getStaticIcon } from '../api/projectIconImports';
 
@@ -79,7 +79,7 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
     setTimeout(() => setSavedMessage(false), 2000);
   }
 
-  const projectButtons = useMemo(() => (
+  const projectButtons = (
     <div className="project-buttons-row">
       {PROJECTS.map((project) => (
         <button
@@ -89,12 +89,12 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
           onClick={() => setSelectedProject(selectedProject?.name === project.name ? null : project)}
           title={project.name}
         >
-          <img src={getStaticIcon(project.icon)} alt={project.name} className="project-quick-icon" width="32" height="32" />
+          <img src={getStaticIcon(project.icon)} alt={project.name} className="project-quick-icon" width="32" height="32" loading="eager" />
           <span className="project-quick-label">{project.name}</span>
         </button>
       ))}
     </div>
-  ), [selectedProject]); // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   return (
     <div className="project-quick-access-wrapper">
