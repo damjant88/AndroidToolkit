@@ -40,6 +40,12 @@ public class Project {
     @Column(length = 1024)
     private String figmaLinkIos;
 
+    @Column(length = 50)
+    private String confluenceParentPageId;
+
+    @Column(length = 50)
+    private String confluenceArtifactsPageId;
+
     public Project() {}
 
     public Project(String name, String remoteApkLocation, String localApkFolder, String localLogFolder) {
@@ -76,4 +82,10 @@ public class Project {
 
     public String getFigmaLinkIos() { return figmaLinkIos; }
     public void setFigmaLinkIos(String figmaLinkIos) { this.figmaLinkIos = figmaLinkIos; }
+
+    public String getConfluenceParentPageId() { return confluenceParentPageId; }
+    public void setConfluenceParentPageId(String confluenceParentPageId) { this.confluenceParentPageId = confluenceParentPageId; }
+
+    public String getConfluenceArtifactsPageId() { return confluenceArtifactsPageId; }
+    public void setConfluenceArtifactsPageId(String confluenceArtifactsPageId) { this.confluenceArtifactsPageId = confluenceArtifactsPageId; }
 }

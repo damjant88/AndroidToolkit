@@ -19,24 +19,24 @@ public class DataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
-    /** Project definitions with their associated packages */
+    /** Project definitions with their associated packages and Confluence page IDs */
     private static final List<Map<String, Object>> DEFAULT_PROJECTS = List.of(
-            Map.of("name", "SafePath", "packages", List.of(
-                    "com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child")),
-            Map.of("name", "Secure Family", "packages", List.of(
-                    "com.smithmicro.att.securefamily", "com.wavemarket.waplauncher", "com.att.securefamilycompanion")),
-            Map.of("name", "Safe&Found", "packages", List.of(
-                    "com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound")),
-            Map.of("name", "Family Mode", "packages", List.of(
-                    "com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols")),
-            Map.of("name", "CCI", "packages", List.of(
-                    "com.smithmicro.cci.test", "com.smithmicro.safepath.family.light", "com.smithmicro.safepath.family.speakeasy")),
-            Map.of("name", "Orange", "packages", List.of(
-                    "com.smithmicro.orangespain.test", "com.orange.es.TuYo")),
-            Map.of("name", "Dish", "packages", List.of(
-                    "com.smithmicro.safepath.dish.test", "com.smithmicro.safepath.dish.kid.test")),
-            Map.of("name", "SPC", "packages", List.of(
-                    "com.smithmicro.safepath.connect"))
+            Map.of("name", "SafePath", "confluenceParentPageId", "40793397",
+                    "packages", List.of("com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child")),
+            Map.of("name", "Secure Family", "confluenceParentPageId", "40803846", "confluenceArtifactsPageId", "101875725",
+                    "packages", List.of("com.smithmicro.att.securefamily", "com.wavemarket.waplauncher", "com.att.securefamilycompanion")),
+            Map.of("name", "Safe&Found", "confluenceParentPageId", "40802189",
+                    "packages", List.of("com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound")),
+            Map.of("name", "Family Mode", "confluenceParentPageId", "40796086",
+                    "packages", List.of("com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols")),
+            Map.of("name", "CCI", "confluenceParentPageId", "40795593",
+                    "packages", List.of("com.smithmicro.cci.test", "com.smithmicro.safepath.family.light", "com.smithmicro.safepath.family.speakeasy")),
+            Map.of("name", "Orange", "confluenceParentPageId", "40785617",
+                    "packages", List.of("com.smithmicro.orangespain.test", "com.orange.es.TuYo")),
+            Map.of("name", "Dish", "confluenceParentPageId", "40802884",
+                    "packages", List.of("com.smithmicro.safepath.dish.test", "com.smithmicro.safepath.dish.kid.test")),
+            Map.of("name", "SPC", "confluenceParentPageId", "87392329",
+                    "packages", List.of("com.smithmicro.safepath.connect"))
     );
 
     @Bean
@@ -71,8 +71,33 @@ public class DataInitializer {
                 String name = (String) def.get("name");
                 if (!projectRepository.existsByName(name)) {
                     Project project = new Project(name, "", "", "");
+                    String parentPageId = (String) def.getOrDefault("confluenceParentPageId", "");
+                    String artifactsPageId = (String) def.getOrDefault("confluenceArtifactsPageId", "");
+                    project.setConfluenceParentPageId(parentPageId);
+                    project.setConfluenceArtifactsPageId(artifactsPageId);
                     projectRepository.save(project);
-                    log.info("Created default project: {}", name);
+                    log.info("Created default project: {} (Confluence parentId={}, artifactsId={})", name, parentPageId, artifactsPageId);
+                } else {
+                    // Update Confluence page IDs for existing projects if they are empty
+                    projectRepository.findByName(name).ifPresent(project -> {
+                        boolean changed = false;
+                        String parentPageId = (String) def.getOrDefault("confluenceParentPageId", "");
+                        String artifactsPageId = (String) def.getOrDefault("confluenceArtifactsPageId", "");
+                        if ((project.getConfluenceParentPageId() == null || project.getConfluenceParentPageId().isBlank())
+                                && !parentPageId.isBlank()) {
+                            project.setConfluenceParentPageId(parentPageId);
+                            changed = true;
+                        }
+                        if ((project.getConfluenceArtifactsPageId() == null || project.getConfluenceArtifactsPageId().isBlank())
+                                && !artifactsPageId.isBlank()) {
+                            project.setConfluenceArtifactsPageId(artifactsPageId);
+                            changed = true;
+                        }
+                        if (changed) {
+                            projectRepository.save(project);
+                            log.info("Updated Confluence page IDs for project: {}", name);
+                        }
+                    });
                 }
             }
         };

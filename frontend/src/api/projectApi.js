@@ -28,6 +28,10 @@ export const projectApi = {
   deleteMyOverride: (projectId) => api.delete(`/api/projects/${projectId}/overrides/me`),
   getResolved: (projectId) => api.get(`/api/projects/${projectId}/resolved`),
   getConfluenceArtifacts: (idOrParam) => {
+    if (typeof idOrParam === 'number' || (typeof idOrParam === 'string' && idOrParam.startsWith('projectId:'))) {
+      const id = typeof idOrParam === 'number' ? idOrParam : idOrParam.substring(10);
+      return api.get(`/api/confluence/artifacts?projectId=${id}`);
+    }
     if (idOrParam.startsWith('page:')) {
       return api.get(`/api/confluence/artifacts?pageId=${idOrParam.substring(5)}`);
     }

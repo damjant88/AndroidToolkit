@@ -27,6 +27,8 @@ function AdminProjectsPanel() {
   const [inlineRemote, setInlineRemote] = useState({});
   const [inlineFigma, setInlineFigma] = useState({});
   const [inlineFigmaIos, setInlineFigmaIos] = useState({});
+  const [inlineConfluenceParent, setInlineConfluenceParent] = useState({});
+  const [inlineConfluenceArtifacts, setInlineConfluenceArtifacts] = useState({});
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -78,7 +80,9 @@ function AdminProjectsPanel() {
           figmaLink: newValue.trim(),
           figmaLinkIos: existing.figmaLinkIos || '',
           localApkFolder: existing.localApkFolder || '',
-          localLogFolder: existing.localLogFolder || ''
+          localLogFolder: existing.localLogFolder || '',
+          confluenceParentPageId: existing.confluenceParentPageId || '',
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
         });
         fetchProjects();
         setError('');
@@ -104,7 +108,69 @@ function AdminProjectsPanel() {
           figmaLink: existing.figmaLink || '',
           figmaLinkIos: newValue.trim(),
           localApkFolder: existing.localApkFolder || '',
-          localLogFolder: existing.localLogFolder || ''
+          localLogFolder: existing.localLogFolder || '',
+          confluenceParentPageId: existing.confluenceParentPageId || '',
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
+        });
+        fetchProjects();
+        setError('');
+      } else {
+        setError('Error: Project "' + project.name + '" not found in database.');
+      }
+    } catch (err) {
+      setError('Error: ' + (err.response?.data?.message || err.message));
+    }
+  }
+
+  async function handleConfluenceParentSave(project) {
+    const newValue = inlineConfluenceParent[project.id];
+    if (newValue === undefined) return;
+    const current = project.confluenceParentPageId || '';
+    if (newValue.trim() === current.trim()) return;
+    try {
+      const res = await projectApi.list();
+      const freshProjects = res.data;
+      const existing = freshProjects.find(p => p.name === project.name);
+      if (existing) {
+        await projectApi.update(existing.id, {
+          name: existing.name,
+          remoteApkLocation: existing.remoteApkLocation || '',
+          figmaLink: existing.figmaLink || '',
+          figmaLinkIos: existing.figmaLinkIos || '',
+          localApkFolder: existing.localApkFolder || '',
+          localLogFolder: existing.localLogFolder || '',
+          confluenceParentPageId: newValue.trim(),
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
+        });
+        fetchProjects();
+        setError('');
+      } else {
+        setError('Error: Project "' + project.name + '" not found in database.');
+      }
+    } catch (err) {
+      setError('Error: ' + (err.response?.data?.message || err.message));
+    }
+  }
+
+  async function handleConfluenceArtifactsSave(project) {
+    const newValue = inlineConfluenceArtifacts[project.id];
+    if (newValue === undefined) return;
+    const current = project.confluenceArtifactsPageId || '';
+    if (newValue.trim() === current.trim()) return;
+    try {
+      const res = await projectApi.list();
+      const freshProjects = res.data;
+      const existing = freshProjects.find(p => p.name === project.name);
+      if (existing) {
+        await projectApi.update(existing.id, {
+          name: existing.name,
+          remoteApkLocation: existing.remoteApkLocation || '',
+          figmaLink: existing.figmaLink || '',
+          figmaLinkIos: existing.figmaLinkIos || '',
+          localApkFolder: existing.localApkFolder || '',
+          localLogFolder: existing.localLogFolder || '',
+          confluenceParentPageId: existing.confluenceParentPageId || '',
+          confluenceArtifactsPageId: newValue.trim()
         });
         fetchProjects();
         setError('');
@@ -133,7 +199,9 @@ function AdminProjectsPanel() {
           figmaLink: existing.figmaLink || '',
           figmaLinkIos: existing.figmaLinkIos || '',
           localApkFolder: existing.localApkFolder || '',
-          localLogFolder: existing.localLogFolder || ''
+          localLogFolder: existing.localLogFolder || '',
+          confluenceParentPageId: existing.confluenceParentPageId || '',
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
         });
         fetchProjects();
         setError('');
@@ -223,6 +291,30 @@ function AdminProjectsPanel() {
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaIosSave(p); }}>Save</button>
                   {p.figmaLinkIos && <a href={p.figmaLinkIos} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
+                </div>
+                <div className="project-card-section">
+                  <strong>📋 Confluence Parent Page ID:</strong>
+                  <input
+                    type="text"
+                    className="project-local-input"
+                    placeholder="e.g. 40793397 (for auto-discovery of latest RC)"
+                    value={inlineConfluenceParent[p.id] !== undefined ? inlineConfluenceParent[p.id] : (p.confluenceParentPageId || '')}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => setInlineConfluenceParent(prev => ({ ...prev, [p.id]: e.target.value }))}
+                  />
+                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleConfluenceParentSave(p); }}>Save</button>
+                </div>
+                <div className="project-card-section">
+                  <strong>📋 Confluence Artifacts Page ID (direct):</strong>
+                  <input
+                    type="text"
+                    className="project-local-input"
+                    placeholder="e.g. 101875725 (overrides parent if set)"
+                    value={inlineConfluenceArtifacts[p.id] !== undefined ? inlineConfluenceArtifacts[p.id] : (p.confluenceArtifactsPageId || '')}
+                    onClick={e => e.stopPropagation()}
+                    onChange={e => setInlineConfluenceArtifacts(prev => ({ ...prev, [p.id]: e.target.value }))}
+                  />
+                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleConfluenceArtifactsSave(p); }}>Save</button>
                 </div>
                 {projects.length > 0 && (
                   <div className="project-card-actions">

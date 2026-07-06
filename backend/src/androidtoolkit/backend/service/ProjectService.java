@@ -59,6 +59,8 @@ public class ProjectService {
         project.setLocalLogFolder(request.localLogFolder() != null ? request.localLogFolder().trim() : "default");
         project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
         project.setFigmaLinkIos(request.figmaLinkIos() != null ? request.figmaLinkIos().trim() : "");
+        project.setConfluenceParentPageId(request.confluenceParentPageId() != null ? request.confluenceParentPageId().trim() : "");
+        project.setConfluenceArtifactsPageId(request.confluenceArtifactsPageId() != null ? request.confluenceArtifactsPageId().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -78,6 +80,8 @@ public class ProjectService {
         project.setLocalLogFolder(request.localLogFolder() != null ? request.localLogFolder().trim() : "default");
         project.setFigmaLink(request.figmaLink() != null ? request.figmaLink().trim() : "");
         project.setFigmaLinkIos(request.figmaLinkIos() != null ? request.figmaLinkIos().trim() : "");
+        project.setConfluenceParentPageId(request.confluenceParentPageId() != null ? request.confluenceParentPageId().trim() : "");
+        project.setConfluenceArtifactsPageId(request.confluenceArtifactsPageId() != null ? request.confluenceArtifactsPageId().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -142,7 +146,9 @@ public class ProjectService {
                 resolvedLocalPath, override.isPresent(),
                 resolvedLogFolder, overriddenLogFolder,
                 project.getFigmaLink(),
-                project.getFigmaLinkIos()
+                project.getFigmaLinkIos(),
+                project.getConfluenceParentPageId(),
+                project.getConfluenceArtifactsPageId()
         );
     }
 
@@ -161,6 +167,8 @@ public class ProjectService {
                 project.getLocalLogFolder(),
                 project.getFigmaLink(),
                 project.getFigmaLinkIos(),
+                project.getConfluenceParentPageId(),
+                project.getConfluenceArtifactsPageId(),
                 project.getCreatedAt()
         );
     }

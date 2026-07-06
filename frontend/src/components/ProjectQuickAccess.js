@@ -184,27 +184,17 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
           </div>
 
           {/* RC Info from Confluence - expandable */}
-          <RcInfoSection projectName={selectedProject.name} />
+          <RcInfoSection projectName={selectedProject.name} backendProject={backendProjects[selectedProject.name]} />
         </div>
       )}
     </div>
   );
 }
 
-// Parent page IDs on Confluence — backend fetches latest child with "Components Artifacts" in title
-// Use 'pageId' for direct page access, 'parentId' for auto-discovery of latest child
-const RC_PARENT_PAGES = {
-  'SafePath': { parentId: '40793397' },
-  'Secure Family': { pageId: '101875725' },
-  'Safe&Found': { parentId: '40802189' },
-  'Family Mode': { parentId: '40796086' },
-  'CCI': { parentId: '40795593' },
-  'Orange': { parentId: '40785617' },
-  'Dish': { parentId: '40802884' },
-  'SPC': { parentId: '87392329' },
-};
+// Parent page IDs are now read from the backend (admin-configurable per project)
+// Fallback to empty if not configured in the admin panel
 
-function RcInfoSection({ projectName }) {
+function RcInfoSection({ projectName, backendProject }) {
   const [expanded, setExpanded] = useState(false);
   const [artifacts, setArtifacts] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -213,29 +203,39 @@ function RcInfoSection({ projectName }) {
   const [downloadResult, setDownloadResult] = useState({});
   const [downloadPopup, setDownloadPopup] = useState(null);
   const [activeDownloadId, setActiveDownloadId] = useState({});
+  const wasExpanded = useRef(false);
 
-  // Reset when project changes
+  // Reset when project changes — auto-fetch if previously expanded
   useEffect(() => {
     setArtifacts(null);
-    setExpanded(false);
     setError('');
     setDownloading({});
     setDownloadResult({});
-  }, [projectName]);
+    if (wasExpanded.current) {
+      // Re-fetch for the new project since user had it expanded
+      setExpanded(true);
+      fetchArtifactsForProject(projectName, backendProject);
+    } else {
+      setExpanded(false);
+    }
+  }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function fetchArtifacts() {
-    if (artifacts) { setExpanded(!expanded); return; }
-    const config = RC_PARENT_PAGES[projectName];
-    if (!config) { setError('No Confluence page configured for ' + projectName); return; }
+  async function fetchArtifactsForProject(pName, bp) {
+    const proj = bp || backendProject;
+    if (!proj || !proj.id) {
+      setError('No Confluence page configured for ' + pName + ' (project not found in backend)');
+      return;
+    }
+    // Check if at least one Confluence ID is configured
+    if ((!proj.confluenceParentPageId || proj.confluenceParentPageId.trim() === '') &&
+        (!proj.confluenceArtifactsPageId || proj.confluenceArtifactsPageId.trim() === '')) {
+      setError('No Confluence page ID configured for ' + pName + '. Set it in Admin → Projects.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      let res;
-      if (config.pageId) {
-        res = await projectApi.getConfluenceArtifacts('page:' + config.pageId);
-      } else {
-        res = await projectApi.getConfluenceArtifacts(config.parentId);
-      }
+      const res = await projectApi.getConfluenceArtifacts(proj.id);
       if (res.data.error) {
         setError(res.data.error);
       } else {
@@ -247,6 +247,17 @@ function RcInfoSection({ projectName }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function fetchArtifacts() {
+    if (artifacts) {
+      const newExpanded = !expanded;
+      setExpanded(newExpanded);
+      wasExpanded.current = newExpanded;
+      return;
+    }
+    wasExpanded.current = true;
+    await fetchArtifactsForProject(projectName, backendProject);
   }
 
   async function handleDownload(s3Path, downloadKey) {
@@ -333,18 +344,16 @@ function RcInfoSection({ projectName }) {
                   <td>{c.version}</td>
                   <td className="rc-artifact-cell">
                     {c.artifactText && c.artifactText.split('\n').map((line, j) => {
-                      const s3Paths = c.s3Paths ? c.s3Paths.split('|').filter(p => p.length > 0) : [];
-                      // Only show download button on lines starting with **Debug or **Release
-                      const isDownloadLine = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
+                      // Show download button on lines with **Debug/**Release OR any line containing an S3 path
+                      const isLabeledDownload = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
+                      const s3InLine = line.match(/s3:\/\/safepath-builds\/[^\s"&<]+/);
                       let s3Match = null;
-                      if (isDownloadLine) {
-                        // Extract the S3 path directly from this line
-                        const s3InLine = line.match(/s3:\/\/safepath-builds\/[^\s"&<]+/);
+                      if (isLabeledDownload || s3InLine) {
                         s3Match = s3InLine ? s3InLine[0] : null;
                       }
                       const downloadKey = `${i}_${j}`;
 
-                      // Format: remove S3 prefix, render bold markers
+                      // Format: remove common S3 prefix for ATT, render bold markers
                       let displayLine = line.replace(/s3:\/\/safepath-builds\/att\/android\//g, '');
                       const parts = displayLine.split(/\*\*/);
 
