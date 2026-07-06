@@ -335,7 +335,8 @@ function RcInfoSection({ projectName, backendProject }) {
           <div className="rc-component-detail">
             <div className="rc-artifact-cell">
               {comp.artifactText && comp.artifactText.split('\n')
-                .filter(line => !line.trim().startsWith('*To stream') && !line.trim().startsWith('To stream'))
+                .filter(line => !line.trim().startsWith('*To stream') && !line.trim().startsWith('To stream')
+                  && !line.trim().startsWith('Quick Debug Download') && !line.trim().startsWith('aws s3 cp'))
                 .map((line, j) => {
                 const s3InLine = line.match(/s3:\/\/safepath-builds\/[^\s"&<]+/);
                 const isLabeledDownload = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
@@ -345,11 +346,12 @@ function RcInfoSection({ projectName, backendProject }) {
                   s3Match = s3InLine ? s3InLine[0] : null;
                 }
                 const downloadKey = `detail_${j}`;
-                let displayLine = line.replace(/s3:\/\/safepath-builds\/att\/android\//g, '');
+                let displayLine = line.replace(/s3:\/\/safepath-builds\/[^/]+\/android\/[^/]+\//g, '');
                 const parts = displayLine.split(/\*\*/);
                 return line.trim() ? (
                   <div key={j} className="rc-artifact-row">
-                    <span className="rc-artifact-path">
+                    <span className={`rc-artifact-path ${s3Match ? 'rc-artifact-downloadable' : ''}`}
+                      onClick={s3Match ? (e) => { e.stopPropagation(); handleDownload(s3Match, downloadKey); } : undefined}>
                       {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part.replace(/\s*-\s*$/, '')} </strong> : <span key={k}>{part}</span>)}
                     </span>
                     {s3Match && (

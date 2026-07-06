@@ -63,7 +63,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .screenshot-actions button:active { background: linear-gradient(to bottom, #d8d8d8, #e8e8e8); box-shadow: inset 0 2px 3px rgba(0,0,0,0.2); }
 
 /* ===== INSTALL PANEL ===== */
-.install-panel { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.install-panel { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); max-width: 100%; overflow: hidden; box-sizing: border-box; }
 .install-panel h3 { margin-bottom: 12px; }
 .install-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .install-controls button { padding: 8px 16px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; }
@@ -91,7 +91,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 /* ===== BUILD HISTORY ===== */
 .build-history { margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 .build-history label { font-size: 0.85rem; white-space: nowrap; }
-.build-history select { flex: 1; padding: 6px 10px; font-size: 0.85rem; border: 1px solid #bbb; border-radius: 4px; background: white; max-width: 430px; }
+.build-history select { flex: 1; padding: 6px 10px; font-size: 0.85rem; border: 1px solid #bbb; border-radius: 4px; background: white; max-width: 100%; min-width: 0; }
 
 /* ===== PERMISSIONS DIALOG ===== */
 .permissions-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -329,8 +329,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 
 .install-devices-left {
-  flex: 0 0 380px;
-  min-width: 320px;
+  flex: 0 0 520px;
+  min-width: 420px;
+  max-width: 520px;
+  overflow: hidden;
 }
 
 .install-devices-right {
@@ -563,7 +565,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   padding-top: 0;
   display: inline-flex;
   flex-direction: column;
-  min-width: 580px;
+  min-width: 700px;
 }
 
 .rc-info-title-row {
@@ -630,6 +632,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   margin-right: -1px;
   margin-bottom: -1px;
   position: relative;
+  flex: 1;
+  text-align: center;
 }
 
 .rc-version-badge:hover {
@@ -710,6 +714,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .rc-artifact-path {
   font-size: 11px;
   color: #555;
+}
+
+.rc-artifact-downloadable {
+  color: #1a73e8;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #90b8e8;
+}
+
+.rc-artifact-downloadable:hover {
+  color: #0d47a1;
+  text-decoration-color: #0d47a1;
 }
 
 .rc-download-btn {
