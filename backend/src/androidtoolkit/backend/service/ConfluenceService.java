@@ -32,6 +32,8 @@ public class ConfluenceService {
 
     /**
      * Fetches children of a parent page and finds the latest "Components Artifacts" child.
+     * Supports two-level hierarchy: if no direct child has "Components Artifacts" in the title,
+     * it takes the last child page and checks ITS children for a "Components Artifacts" page.
      */
     public Map<String, Object> getLatestChildArtifacts(String parentId) {
         try {
@@ -49,7 +51,7 @@ public class ConfluenceService {
                 return Map.of("error", "No child pages found under parent " + parentId);
             }
 
-            // Find the latest child page with "Components Artifacts" in title
+            // Find the latest child page with "Components Artifacts" in title (direct child)
             Map latestPage = null;
             for (int i = results.size() - 1; i >= 0; i--) {
                 String title = (String) results.get(i).get("title");
@@ -59,13 +61,36 @@ public class ConfluenceService {
                 }
             }
 
-            if (latestPage == null) {
-                // Fallback: just use the last child page
-                latestPage = results.get(results.size() - 1);
+            if (latestPage != null) {
+                String childId = String.valueOf(latestPage.get("id"));
+                return getArtifactsByPageId(childId);
             }
 
-            String childId = String.valueOf(latestPage.get("id"));
-            return getArtifactsByPageId(childId);
+            // No direct "Components Artifacts" child found — try two-level hierarchy:
+            // Take the last child page and look for "Components Artifacts" in its children
+            Map lastChild = results.get(results.size() - 1);
+            String lastChildId = String.valueOf(lastChild.get("id"));
+            log.info("No direct 'Components Artifacts' child found. Checking grandchildren of: {} ({})",
+                    lastChild.get("title"), lastChildId);
+
+            String grandchildUrl = confluenceUrl + "/rest/api/content/" + lastChildId + "/child/page?limit=20";
+            ResponseEntity<Map> grandchildResponse = restTemplate.exchange(grandchildUrl, HttpMethod.GET, entity, Map.class);
+            Map grandchildBody = grandchildResponse.getBody();
+            if (grandchildBody != null) {
+                List<Map> grandchildren = (List<Map>) grandchildBody.get("results");
+                if (grandchildren != null) {
+                    for (int i = grandchildren.size() - 1; i >= 0; i--) {
+                        String title = (String) grandchildren.get(i).get("title");
+                        if (title != null && title.contains("Components Artifacts")) {
+                            String grandchildId = String.valueOf(grandchildren.get(i).get("id"));
+                            return getArtifactsByPageId(grandchildId);
+                        }
+                    }
+                }
+            }
+
+            // Fallback: just use the last direct child page
+            return getArtifactsByPageId(lastChildId);
         } catch (Exception e) {
             log.error("Failed to fetch children of page {}: {}", parentId, e.getMessage());
             return Map.of("error", "Failed to fetch: " + e.getMessage());
@@ -200,13 +225,17 @@ public class ConfluenceService {
 
             if (cells.isEmpty()) continue;
 
-            // Skip header row
-            if (!headerSkipped && cells.get(0).contains("Component")) {
+            // Skip header row (may appear in tbody if no thead is used)
+            if (!headerSkipped) {
+                if (cells.get(0).contains("Component")) {
+                    headerSkipped = true;
+                    continue;
+                }
+                // If first row doesn't look like a header, the header was in <thead> — proceed with data
                 headerSkipped = true;
-                continue;
             }
 
-            if (headerSkipped && cells.size() >= 5) {
+            if (cells.size() >= 5) {
                 String component = cells.get(0).trim();
                 String spVersion = cells.get(1).trim();
                 String version = cells.get(2).trim();

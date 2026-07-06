@@ -251,10 +251,6 @@ function AdminProjectsPanel() {
             {expandedProject === p.id && (
               <div className="project-card-details">
                 <div className="project-card-section">
-                  <strong>📦 Packages:</strong>
-                  <ul>{p.packages.map(pkg => <li key={pkg}><code>{pkg}</code></li>)}</ul>
-                </div>
-                <div className="project-card-section">
                   <strong>📡 Remote APK Location:</strong>
                   <input
                     type="text"

@@ -199,25 +199,39 @@ function RcInfoSection({ projectName, backendProject }) {
   const [artifacts, setArtifacts] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [downloading, setDownloading] = useState({});
-  const [downloadResult, setDownloadResult] = useState({});
   const [downloadPopup, setDownloadPopup] = useState(null);
-  const [activeDownloadId, setActiveDownloadId] = useState({});
-  const wasExpanded = useRef(false);
 
-  // Reset when project changes — auto-fetch if previously expanded
+  // Persist download state across project switches using refs keyed by project
+  const allDownloads = useRef({});    // { projectName: { downloadKey: true/false } }
+  const allResults = useRef({});      // { projectName: { downloadKey: { success, message } } }
+  const allActiveIds = useRef({});    // { projectName: { downloadKey: downloadId } }
+  const [, forceUpdate] = useState(0); // trigger re-render when download state changes
+
+  const downloading = allDownloads.current[projectName] || {};
+  const downloadResult = allResults.current[projectName] || {};
+  const activeDownloadId = allActiveIds.current[projectName] || {};
+
+  function setDownloading(updater) {
+    const prev = allDownloads.current[projectName] || {};
+    allDownloads.current[projectName] = typeof updater === 'function' ? updater(prev) : updater;
+    forceUpdate(n => n + 1);
+  }
+  function setDownloadResult(updater) {
+    const prev = allResults.current[projectName] || {};
+    allResults.current[projectName] = typeof updater === 'function' ? updater(prev) : updater;
+    forceUpdate(n => n + 1);
+  }
+  function setActiveDownloadId(updater) {
+    const prev = allActiveIds.current[projectName] || {};
+    allActiveIds.current[projectName] = typeof updater === 'function' ? updater(prev) : updater;
+  }
+
+  // Reset artifacts/error when project changes — always fetch data but keep table collapsed
   useEffect(() => {
     setArtifacts(null);
     setError('');
-    setDownloading({});
-    setDownloadResult({});
-    if (wasExpanded.current) {
-      // Re-fetch for the new project since user had it expanded
-      setExpanded(true);
-      fetchArtifactsForProject(projectName, backendProject);
-    } else {
-      setExpanded(false);
-    }
+    setExpanded(false);
+    fetchArtifactsForProject(projectName, backendProject);
   }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchArtifactsForProject(pName, bp) {
@@ -240,7 +254,6 @@ function RcInfoSection({ projectName, backendProject }) {
         setError(res.data.error);
       } else {
         setArtifacts(res.data);
-        setExpanded(true);
       }
     } catch (err) {
       setError('Failed to fetch: ' + (err.response?.data?.message || err.message));
@@ -251,12 +264,9 @@ function RcInfoSection({ projectName, backendProject }) {
 
   async function fetchArtifacts() {
     if (artifacts) {
-      const newExpanded = !expanded;
-      setExpanded(newExpanded);
-      wasExpanded.current = newExpanded;
+      setExpanded(!expanded);
       return;
     }
-    wasExpanded.current = true;
     await fetchArtifactsForProject(projectName, backendProject);
   }
 
@@ -325,13 +335,27 @@ function RcInfoSection({ projectName, backendProject }) {
 
   return (
     <div className="rc-info-section">
+      <p className="rc-info-title">RC Info (Confluence)</p>
+      {artifacts && <p className="rc-info-subtitle">{artifacts.title}</p>}
+      {artifacts && (() => {
+        const components = artifacts.components || [];
+        const server = components.find(c => c.component === 'Server Core');
+        const android = components.find(c => c.component === 'Android');
+        const ios = components.find(c => c.component === 'iOS');
+        return (server || android || ios) ? (
+          <div className="rc-info-versions">
+            {server && <span className="rc-version-badge">🖥 Server: <strong>{server.version}</strong> (SP {server.spVersion})</span>}
+            {android && <span className="rc-version-badge">🤖 Android: <strong>{android.version}</strong> (SP {android.spVersion})</span>}
+            {ios && <span className="rc-version-badge">🍎 iOS: <strong>{ios.version}</strong> (SP {ios.spVersion})</span>}
+          </div>
+        ) : null;
+      })()}
       <button className="rc-info-toggle" onClick={fetchArtifacts}>
-        {loading ? '⏳ Loading...' : expanded ? '📋 RC Info (Confluence) ▼' : '📋 RC Info (Confluence) ▶'}
+        {loading ? '⏳ Loading...' : expanded ? '📦 Artifacts ▼' : '📦 Artifacts ▶'}
       </button>
       {error && <p className="rc-info-error">{error}</p>}
       {expanded && artifacts && (
         <div className="rc-info-content">
-          <p className="rc-info-title">{artifacts.title}</p>
           <table className="rc-info-table">
             <thead>
               <tr><th>Component</th><th>SP Ver</th><th>Version</th><th>Artifact(s)</th></tr>

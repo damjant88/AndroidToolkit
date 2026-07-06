@@ -131,19 +131,9 @@ function DeviceList() {
     setPermissionsTarget(null);
   }
 
-  if (loading && devices.length === 0 && !initialLoadDone.current) {
-    return (
-      <div>
-        <div className="top-panels-row">
-          <InstallPanel devices={[]} selectedDevices={[]} onRefresh={fetchDevices} selectedProjectName={activeProjectName} />
-          <ProjectQuickAccess devices={[]} onProjectChange={setActiveProjectName} />
-        </div>
-        <p className="status">Loading devices...</p>
-      </div>
-    );
-  }
+  const isInitialLoading = loading && devices.length === 0 && !initialLoadDone.current;
 
-  const visibleDevices = devices.slice(0, maxDevices);
+  const visibleDevices = isInitialLoading ? [] : devices.slice(0, maxDevices);
   const selectedDevices = visibleDevices.filter(d => selectedSerials.has(d.serial));
 
   // For BASIC tier, always show 1 connected / 1 selected
@@ -157,7 +147,9 @@ function DeviceList() {
         <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} selectedProjectName={activeProjectName} />
         <ProjectQuickAccess devices={visibleDevices} onProjectChange={setActiveProjectName} />
       </div>
-      {devices.length === 0 ? (
+      {isInitialLoading ? (
+        <p className="status">Loading devices...</p>
+      ) : devices.length === 0 ? (
         <p className="status">No devices connected.</p>
       ) : (
         <>
