@@ -1,0 +1,5 @@
+node_modules/
+dist/
+resources/agent/agent.jar
+resources/frontend/*
+!resources/frontend/.gitkeep

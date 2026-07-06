@@ -29,6 +29,7 @@ function AdminProjectsPanel() {
   const [inlineFigmaIos, setInlineFigmaIos] = useState({});
   const [inlineConfluenceParent, setInlineConfluenceParent] = useState({});
   const [inlineConfluenceArtifacts, setInlineConfluenceArtifacts] = useState({});
+  const [saveStatus, setSaveStatus] = useState({}); // { fieldKey: 'success' | 'error' }
 
   const fetchProjects = useCallback(async () => {
     try {
@@ -40,6 +41,11 @@ function AdminProjectsPanel() {
   }, []);
 
   useEffect(() => { fetchProjects(); }, [fetchProjects]);
+
+  function flashSaveStatus(key, status) {
+    setSaveStatus(prev => ({ ...prev, [key]: status }));
+    setTimeout(() => setSaveStatus(prev => ({ ...prev, [key]: null })), 2500);
+  }
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -86,11 +92,14 @@ function AdminProjectsPanel() {
         });
         fetchProjects();
         setError('');
+        flashSaveStatus(`figma_${project.id}`, 'success');
       } else {
         setError('Error: Project "' + project.name + '" not found in database.');
+        flashSaveStatus(`figma_${project.id}`, 'error');
       }
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
+      flashSaveStatus(`figma_${project.id}`, 'error');
     }
   }
 
@@ -114,11 +123,14 @@ function AdminProjectsPanel() {
         });
         fetchProjects();
         setError('');
+        flashSaveStatus(`figmaIos_${project.id}`, 'success');
       } else {
         setError('Error: Project "' + project.name + '" not found in database.');
+        flashSaveStatus(`figmaIos_${project.id}`, 'error');
       }
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
+      flashSaveStatus(`figmaIos_${project.id}`, 'error');
     }
   }
 
@@ -144,11 +156,14 @@ function AdminProjectsPanel() {
         });
         fetchProjects();
         setError('');
+        flashSaveStatus(`confParent_${project.id}`, 'success');
       } else {
         setError('Error: Project "' + project.name + '" not found in database.');
+        flashSaveStatus(`confParent_${project.id}`, 'error');
       }
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
+      flashSaveStatus(`confParent_${project.id}`, 'error');
     }
   }
 
@@ -174,11 +189,14 @@ function AdminProjectsPanel() {
         });
         fetchProjects();
         setError('');
+        flashSaveStatus(`confArtifacts_${project.id}`, 'success');
       } else {
         setError('Error: Project "' + project.name + '" not found in database.');
+        flashSaveStatus(`confArtifacts_${project.id}`, 'error');
       }
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
+      flashSaveStatus(`confArtifacts_${project.id}`, 'error');
     }
   }
 
@@ -205,12 +223,14 @@ function AdminProjectsPanel() {
         });
         fetchProjects();
         setError('');
+        flashSaveStatus(`remote_${project.id}`, 'success');
       } else {
         setError('Error: Project "' + project.name + '" not found in database.');
+        flashSaveStatus(`remote_${project.id}`, 'error');
       }
-      fetchProjects();
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
+      flashSaveStatus(`remote_${project.id}`, 'error');
     }
   }
 
@@ -261,6 +281,7 @@ function AdminProjectsPanel() {
                     onChange={e => handleInlineRemoteChange(p, e.target.value)}
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineRemoteSave(p); }}>Save</button>
+                  {saveStatus[`remote_${p.id}`] && <span className={`save-indicator ${saveStatus[`remote_${p.id}`]}`}>{saveStatus[`remote_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
                 </div>
                 <div className="project-card-section">
                   <strong>🎨 Latest {p.name} Android Figma:</strong>
@@ -273,6 +294,7 @@ function AdminProjectsPanel() {
                     onChange={e => handleInlineFigmaChange(p, e.target.value)}
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaSave(p); }}>Save</button>
+                  {saveStatus[`figma_${p.id}`] && <span className={`save-indicator ${saveStatus[`figma_${p.id}`]}`}>{saveStatus[`figma_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
                   {p.figmaLink && <a href={p.figmaLink} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
                 </div>
                 <div className="project-card-section">
@@ -286,6 +308,7 @@ function AdminProjectsPanel() {
                     onChange={e => handleInlineFigmaIosChange(p, e.target.value)}
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaIosSave(p); }}>Save</button>
+                  {saveStatus[`figmaIos_${p.id}`] && <span className={`save-indicator ${saveStatus[`figmaIos_${p.id}`]}`}>{saveStatus[`figmaIos_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
                   {p.figmaLinkIos && <a href={p.figmaLinkIos} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
                 </div>
                 <div className="project-card-section">
@@ -299,6 +322,7 @@ function AdminProjectsPanel() {
                     onChange={e => setInlineConfluenceParent(prev => ({ ...prev, [p.id]: e.target.value }))}
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleConfluenceParentSave(p); }}>Save</button>
+                  {saveStatus[`confParent_${p.id}`] && <span className={`save-indicator ${saveStatus[`confParent_${p.id}`]}`}>{saveStatus[`confParent_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
                 </div>
                 <div className="project-card-section">
                   <strong>📋 Confluence Artifacts Page ID (direct):</strong>
@@ -311,10 +335,11 @@ function AdminProjectsPanel() {
                     onChange={e => setInlineConfluenceArtifacts(prev => ({ ...prev, [p.id]: e.target.value }))}
                   />
                   <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleConfluenceArtifactsSave(p); }}>Save</button>
+                  {saveStatus[`confArtifacts_${p.id}`] && <span className={`save-indicator ${saveStatus[`confArtifacts_${p.id}`]}`}>{saveStatus[`confArtifacts_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
                 </div>
                 {projects.length > 0 && (
                   <div className="project-card-actions">
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(p); }}>Delete</button>
+                    <button className="project-delete-btn" onClick={(e) => { e.stopPropagation(); handleDelete(p); }}>Delete Project</button>
                   </div>
                 )}
               </div>

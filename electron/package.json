@@ -1,0 +1,49 @@
+{
+  "name": "android-toolkit",
+  "version": "1.0.0",
+  "description": "AndroidToolkit Desktop - Embedded agent + frontend",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "npm run build:frontend && npm run build:agent && electron-builder",
+    "build:frontend": "cd ../frontend && npm run build && xcopy /E /I /Y build ..\\electron\\resources\\frontend",
+    "build:agent": "cd .. && gradlew :agent:bootJar && copy agent\\build\\libs\\agent.jar electron\\resources\\agent\\agent.jar",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.smithmicro.androidtoolkit",
+    "productName": "AndroidToolkit",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "tray.js",
+      "resources/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/agent",
+        "to": "agent"
+      },
+      {
+        "from": "resources/frontend",
+        "to": "frontend"
+      }
+    ],
+    "win": {
+      "target": ["dir"],
+      "icon": "resources/icons/icon.ico",
+      "signAndEditExecutable": false
+    }
+  },
+  "dependencies": {
+    "electron-store": "^8.1.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}

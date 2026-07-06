@@ -21,7 +21,7 @@ public class DataInitializer {
 
     /** Project definitions with their associated packages and Confluence page IDs */
     private static final List<Map<String, Object>> DEFAULT_PROJECTS = List.of(
-            Map.of("name", "SafePath", "confluenceParentPageId", "40793397",
+            Map.of("name", "SafePath", "confluenceParentPageId", "40793397", "confluenceArtifactsPageId", "168919041",
                     "packages", List.of("com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child")),
             Map.of("name", "Secure Family", "confluenceParentPageId", "40803846", "confluenceArtifactsPageId", "101875725",
                     "packages", List.of("com.smithmicro.att.securefamily", "com.wavemarket.waplauncher", "com.att.securefamilycompanion")),

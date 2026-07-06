@@ -66,30 +66,36 @@ public class ConfluenceService {
                 return getArtifactsByPageId(childId);
             }
 
-            // No direct "Components Artifacts" child found — try two-level hierarchy:
-            // Take the last child page and look for "Components Artifacts" in its children
-            Map lastChild = results.get(results.size() - 1);
-            String lastChildId = String.valueOf(lastChild.get("id"));
-            log.info("No direct 'Components Artifacts' child found. Checking grandchildren of: {} ({})",
-                    lastChild.get("title"), lastChildId);
+            // No direct "Components Artifacts" child found — try deeper hierarchy:
+            // Walk backwards through children, check each for "Components Artifacts" sub-pages
+            log.info("No direct 'Components Artifacts' child found. Checking grandchildren...");
 
-            String grandchildUrl = confluenceUrl + "/rest/api/content/" + lastChildId + "/child/page?limit=20";
-            ResponseEntity<Map> grandchildResponse = restTemplate.exchange(grandchildUrl, HttpMethod.GET, entity, Map.class);
-            Map grandchildBody = grandchildResponse.getBody();
-            if (grandchildBody != null) {
-                List<Map> grandchildren = (List<Map>) grandchildBody.get("results");
-                if (grandchildren != null) {
-                    for (int i = grandchildren.size() - 1; i >= 0; i--) {
-                        String title = (String) grandchildren.get(i).get("title");
-                        if (title != null && title.contains("Components Artifacts")) {
-                            String grandchildId = String.valueOf(grandchildren.get(i).get("id"));
-                            return getArtifactsByPageId(grandchildId);
+            for (int i = results.size() - 1; i >= 0; i--) {
+                String childId = String.valueOf(results.get(i).get("id"));
+                String grandchildUrl = confluenceUrl + "/rest/api/content/" + childId + "/child/page?limit=25";
+                try {
+                    ResponseEntity<Map> grandchildResponse = restTemplate.exchange(grandchildUrl, HttpMethod.GET, entity, Map.class);
+                    Map grandchildBody = grandchildResponse.getBody();
+                    if (grandchildBody != null) {
+                        List<Map> grandchildren = (List<Map>) grandchildBody.get("results");
+                        if (grandchildren != null) {
+                            for (int j = grandchildren.size() - 1; j >= 0; j--) {
+                                String title = (String) grandchildren.get(j).get("title");
+                                if (title != null && title.contains("Components Artifacts")) {
+                                    String grandchildId = String.valueOf(grandchildren.get(j).get("id"));
+                                    log.info("Found artifacts page: {} ({})", title, grandchildId);
+                                    return getArtifactsByPageId(grandchildId);
+                                }
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    log.debug("Failed to fetch grandchildren of {}: {}", childId, e.getMessage());
                 }
             }
 
             // Fallback: just use the last direct child page
+            String lastChildId = String.valueOf(results.get(results.size() - 1).get("id"));
             return getArtifactsByPageId(lastChildId);
         } catch (Exception e) {
             log.error("Failed to fetch children of page {}: {}", parentId, e.getMessage());
@@ -235,11 +241,28 @@ public class ConfluenceService {
                 headerSkipped = true;
             }
 
-            if (cells.size() >= 5) {
-                String component = cells.get(0).trim();
-                String spVersion = cells.get(1).trim();
-                String version = cells.get(2).trim();
-                String gitRef = cells.get(3).trim();
+            if (cells.size() >= 4) {
+                String component;
+                String spVersion;
+                String version;
+                String gitRef;
+                int artifactCellIndex;
+
+                if (cells.size() >= 5) {
+                    // 5-column format: Component | SP Version | Version | Git Ref | Artifacts
+                    component = cells.get(0).trim();
+                    spVersion = cells.get(1).trim();
+                    version = cells.get(2).trim();
+                    gitRef = cells.get(3).trim();
+                    artifactCellIndex = 5;
+                } else {
+                    // 4-column format: Component | Version | Git Ref | Artifacts
+                    component = cells.get(0).trim();
+                    spVersion = "";
+                    version = cells.get(1).trim();
+                    gitRef = cells.get(2).trim();
+                    artifactCellIndex = 4;
+                }
                 
                 // For artifact text, preserve line breaks from HTML
                 Matcher artifactCellMatcher = cellPattern.matcher(row);
@@ -247,7 +270,7 @@ public class ConfluenceService {
                 int cellCount = 0;
                 while (artifactCellMatcher.find()) {
                     cellCount++;
-                    if (cellCount == 5) {
+                    if (cellCount == artifactCellIndex) {
                         artifactRaw = artifactCellMatcher.group(1);
                         break;
                     }
