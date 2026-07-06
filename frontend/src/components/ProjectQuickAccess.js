@@ -102,11 +102,6 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
 
       {selectedProject && (
         <div className="project-detail-panel">
-          <div className="project-detail-header">
-            <img src={getStaticIcon(selectedProject.icon)} alt={selectedProject.name} className="project-detail-icon" />
-            <h3>{selectedProject.name}</h3>
-            <button className="project-detail-close" onClick={() => setSelectedProject(null)}>✕</button>
-          </div>
           <div className="project-detail-layout">
             {/* Left: RC Info */}
             <div className="project-detail-left">
