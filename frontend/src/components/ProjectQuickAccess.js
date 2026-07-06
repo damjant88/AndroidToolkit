@@ -195,11 +195,10 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
 // Fallback to empty if not configured in the admin panel
 
 function RcInfoSection({ projectName, backendProject }) {
-  const [expanded, setExpanded] = useState(false);
   const [artifacts, setArtifacts] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [downloadPopup, setDownloadPopup] = useState(null);
+  const [selectedComponent, setSelectedComponent] = useState(null); // 'Server Core', 'Android', 'iOS'
 
   // Persist download state across project switches using refs keyed by project
   const allDownloads = useRef({});    // { projectName: { downloadKey: true/false } }
@@ -230,7 +229,7 @@ function RcInfoSection({ projectName, backendProject }) {
   useEffect(() => {
     setArtifacts(null);
     setError('');
-    setExpanded(false);
+    setSelectedComponent(null);
     fetchArtifactsForProject(projectName, backendProject);
   }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -246,7 +245,6 @@ function RcInfoSection({ projectName, backendProject }) {
       setError('No Confluence page ID configured for ' + pName + '. Set it in Admin → Projects.');
       return;
     }
-    setLoading(true);
     setError('');
     try {
       const res = await projectApi.getConfluenceArtifacts(proj.id);
@@ -257,17 +255,7 @@ function RcInfoSection({ projectName, backendProject }) {
       }
     } catch (err) {
       setError('Failed to fetch: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setLoading(false);
     }
-  }
-
-  async function fetchArtifacts() {
-    if (artifacts) {
-      setExpanded(!expanded);
-      return;
-    }
-    await fetchArtifactsForProject(projectName, backendProject);
   }
 
   async function handleDownload(s3Path, downloadKey) {
@@ -344,76 +332,61 @@ function RcInfoSection({ projectName, backendProject }) {
         const ios = components.find(c => c.component === 'iOS');
         return (server || android || ios) ? (
           <div className="rc-info-versions">
-            {server && <span className="rc-version-badge">🖥 Server: <strong>{server.version}</strong> (SP {server.spVersion})</span>}
-            {android && <span className="rc-version-badge">🤖 Android: <strong>{android.version}</strong> (SP {android.spVersion})</span>}
-            {ios && <span className="rc-version-badge">🍎 iOS: <strong>{ios.version}</strong> (SP {ios.spVersion})</span>}
+            {android && <span className={`rc-version-badge ${selectedComponent === 'Android' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Android' ? null : 'Android')}>🤖 Android: <strong>{android.version}</strong> {android.spVersion && `(SP ${android.spVersion})`}</span>}
+            {ios && <span className={`rc-version-badge ${selectedComponent === 'iOS' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'iOS' ? null : 'iOS')}>🍎 iOS: <strong>{ios.version}</strong> {ios.spVersion && `(SP ${ios.spVersion})`}</span>}
+            {server && <span className={`rc-version-badge ${selectedComponent === 'Server Core' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Server Core' ? null : 'Server Core')}>🖥 Server: <strong>{server.version}</strong> {server.spVersion && `(SP ${server.spVersion})`}</span>}
+            {artifacts && <a href={artifacts.url} target="_blank" rel="noopener noreferrer" className="rc-confluence-link">📋 Confluence ↗</a>}
           </div>
         ) : null;
       })()}
-      <button className="rc-info-toggle" onClick={fetchArtifacts}>
-        {loading ? '⏳ Loading...' : expanded ? '📦 Artifacts ▼' : '📦 Artifacts ▶'}
-      </button>
       {error && <p className="rc-info-error">{error}</p>}
-      {expanded && artifacts && (
-        <div className="rc-info-content">
-          <table className="rc-info-table">
-            <thead>
-              <tr><th>Component</th><th>SP Ver</th><th>Version</th><th>Artifact(s)</th></tr>
-            </thead>
-            <tbody>
-              {(artifacts.components || []).map((c, i) => (
-                <tr key={i}>
-                  <td><strong>{c.component}</strong></td>
-                  <td>{c.spVersion}</td>
-                  <td>{c.version}</td>
-                  <td className="rc-artifact-cell">
-                    {c.artifactText && c.artifactText.split('\n').map((line, j) => {
-                      // Show download button on lines with **Debug/**Release OR any line containing an S3 path
-                      const isLabeledDownload = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
-                      const s3InLine = line.match(/s3:\/\/safepath-builds\/[^\s"&<]+/);
-                      let s3Match = null;
-                      if (isLabeledDownload || s3InLine) {
-                        s3Match = s3InLine ? s3InLine[0] : null;
-                      }
-                      const downloadKey = `${i}_${j}`;
-
-                      // Format: remove common S3 prefix for ATT, render bold markers
-                      let displayLine = line.replace(/s3:\/\/safepath-builds\/att\/android\//g, '');
-                      const parts = displayLine.split(/\*\*/);
-
-                      return line.trim() ? (
-                        <div key={j} className="rc-artifact-row">
-                          <span className="rc-artifact-path">
-                            {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part.replace(/\s*-\s*$/, '')} </strong> : <span key={k}>{part}</span>)}
+      {selectedComponent && artifacts && (() => {
+        const comp = (artifacts.components || []).find(c => c.component === selectedComponent);
+        if (!comp) return null;
+        return (
+          <div className="rc-component-detail">
+            <div className="rc-artifact-cell">
+              {comp.artifactText && comp.artifactText.split('\n').map((line, j) => {
+                const s3InLine = line.match(/s3:\/\/safepath-builds\/[^\s"&<]+/);
+                const isLabeledDownload = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
+                const isAndroid = comp.component === 'Android';
+                let s3Match = null;
+                if (isAndroid && (isLabeledDownload || s3InLine)) {
+                  s3Match = s3InLine ? s3InLine[0] : null;
+                }
+                const downloadKey = `detail_${j}`;
+                let displayLine = line.replace(/s3:\/\/safepath-builds\/att\/android\//g, '');
+                const parts = displayLine.split(/\*\*/);
+                return line.trim() ? (
+                  <div key={j} className="rc-artifact-row">
+                    <span className="rc-artifact-path">
+                      {parts.map((part, k) => k % 2 === 1 ? <strong key={k}>{part.replace(/\s*-\s*$/, '')} </strong> : <span key={k}>{part}</span>)}
+                    </span>
+                    {s3Match && (
+                      <span className="rc-download-group">
+                        <button className="rc-download-btn" onClick={(e) => { e.stopPropagation(); handleDownload(s3Match, downloadKey); }}
+                          disabled={downloading[downloadKey]}>
+                          {downloading[downloadKey] ? '⏳' : '⬇'}
+                        </button>
+                        {downloading[downloadKey] && <>
+                          <span className="rc-download-progress"><span className="rc-progress-bar"></span> Downloading...</span>
+                          <button className="rc-cancel-btn" onClick={(e) => { e.stopPropagation(); handleCancelDownload(downloadKey); }}>✕</button>
+                        </>}
+                        {downloadResult[downloadKey] && !downloading[downloadKey] && (
+                          <span className={`rc-download-result ${downloadResult[downloadKey].success ? 'success' : 'error'}`}>
+                            {downloadResult[downloadKey].message}
                           </span>
-                          {s3Match && (
-                            <span className="rc-download-group">
-                              <button className="rc-download-btn" onClick={(e) => { e.stopPropagation(); handleDownload(s3Match, downloadKey); }}
-                                disabled={downloading[downloadKey]}>
-                                {downloading[downloadKey] ? '⏳' : '⬇'}
-                              </button>
-                              {downloading[downloadKey] && <>
-                                <span className="rc-download-progress"><span className="rc-progress-bar"></span> Downloading...</span>
-                                <button className="rc-cancel-btn" onClick={(e) => { e.stopPropagation(); handleCancelDownload(downloadKey); }}>✕</button>
-                              </>}
-                              {downloadResult[downloadKey] && !downloading[downloadKey] && (
-                                <span className={`rc-download-result ${downloadResult[downloadKey].success ? 'success' : 'error'}`}>
-                                  {downloadResult[downloadKey].message}
-                                </span>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      ) : <div key={j} className="rc-artifact-spacer" />;
-                    })}
-                    {!c.artifactText && !c.s3Paths && <em>—</em>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                        )}
+                      </span>
+                    )}
+                  </div>
+                ) : <div key={j} className="rc-artifact-spacer" />;
+              })}
+              {!comp.artifactText && <em>No artifact info available</em>}
+            </div>
+          </div>
+        );
+      })()}
       {downloadPopup && (
         <div className="rc-download-popup-overlay">
           <div className="rc-download-popup">
