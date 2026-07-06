@@ -143,38 +143,47 @@ function DeviceList() {
   return (
     <div>
       {error && <p className="status error">{error}</p>}
-      <div className="top-panels-row">
-        <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} selectedProjectName={activeProjectName} />
-        <ProjectQuickAccess devices={visibleDevices} onProjectChange={setActiveProjectName} />
-      </div>
+      <ProjectQuickAccess devices={visibleDevices} onProjectChange={setActiveProjectName} />
       {isInitialLoading ? (
         <p className="status">Loading devices...</p>
       ) : devices.length === 0 ? (
-        <p className="status">No devices connected.</p>
+        <>
+          <div className="install-devices-row">
+            <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} selectedProjectName={activeProjectName} />
+          </div>
+          <p className="status">No devices connected.</p>
+        </>
       ) : (
         <>
-          <div className="toolbar">
-            <span className={`connection-status ${connected || devices.length > 0 ? 'connected' : 'disconnected'}`}>
-              {connected || devices.length > 0 ? '🟢' : '🔴'}
-            </span>
-            <span>{displayCount} device(s) connected</span>
-            <span className="selection-info">{displaySelected} selected</span>
-            <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>
-            <button onClick={deselectAllDevices} className="toolbar-small-btn">Deselect All</button>
-            <button onClick={() => setShowBugTemplate(true)} className="toolbar-small-btn">🐛 Bug Template</button>
-          </div>
-          <div className="device-grid">
-            {visibleDevices.map((device) => (
-              <DeviceCard
-                key={device.deviceInfo.serialNumber}
-                device={device}
-                selected={selectedSerials.has(device.serial)}
-                onToggleSelect={() => toggleDeviceSelection(device.serial)}
-                onRefresh={fetchDevices}
-                onOpenPermissions={(serial, packageName) => openPermissions(serial, packageName, device.deviceName)}
-                tier={user?.tier}
-              />
-            ))}
+          <div className="install-devices-row">
+            <div className="install-devices-left">
+              <InstallPanel devices={visibleDevices} selectedDevices={selectedDevices} onRefresh={fetchDevices} selectedProjectName={activeProjectName} />
+            </div>
+            <div className="install-devices-right">
+              <div className="toolbar">
+                <span className={`connection-status ${connected || devices.length > 0 ? 'connected' : 'disconnected'}`}>
+                  {connected || devices.length > 0 ? '🟢' : '🔴'}
+                </span>
+                <span>{displayCount} device(s) connected</span>
+                <span className="selection-info">{displaySelected} selected</span>
+                <button onClick={selectAllDevices} className="toolbar-small-btn">Select All</button>
+                <button onClick={deselectAllDevices} className="toolbar-small-btn">Deselect All</button>
+                <button onClick={() => setShowBugTemplate(true)} className="toolbar-small-btn">🐛 Bug Template</button>
+              </div>
+              <div className="device-grid">
+                {visibleDevices.map((device) => (
+                  <DeviceCard
+                    key={device.deviceInfo.serialNumber}
+                    device={device}
+                    selected={selectedSerials.has(device.serial)}
+                    onToggleSelect={() => toggleDeviceSelection(device.serial)}
+                    onRefresh={fetchDevices}
+                    onOpenPermissions={(serial, packageName) => openPermissions(serial, packageName, device.deviceName)}
+                    tier={user?.tier}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
 
           {permissionsTarget && (

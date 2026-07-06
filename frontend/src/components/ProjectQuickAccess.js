@@ -107,12 +107,16 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
             <h3>{selectedProject.name}</h3>
             <button className="project-detail-close" onClick={() => setSelectedProject(null)}>✕</button>
           </div>
-          <div className="project-detail-content project-detail-grid">
-            {/* Column 1: Builds & Logs */}
-            <div className="project-detail-column">
-              <h4>📁 Builds & Logs</h4>
+          <div className="project-detail-layout">
+            {/* Left: RC Info */}
+            <div className="project-detail-left">
+              <RcInfoSection projectName={selectedProject.name} backendProject={backendProjects[selectedProject.name]} />
+            </div>
+
+            {/* Middle: Local paths */}
+            <div className="project-detail-middle">
               <div className="project-detail-field">
-                <label>Local APK Folder</label>
+                <label>📁 Local APK Folder</label>
                 <div className="project-local-row">
                   <input
                     type="text"
@@ -126,11 +130,11 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
                 </div>
               </div>
               <div className="project-detail-field">
-                <label>Remote APK Location</label>
-                <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured by admin</em>}</p>
+                <label>📡 Remote APK</label>
+                <p>{backendProjects[selectedProject.name]?.remoteApkLocation || <em className="not-configured">Not configured</em>}</p>
               </div>
               <div className="project-detail-field">
-                <label>Local Log Folder</label>
+                <label>📂 Local Log Folder</label>
                 <div className="project-local-row">
                   <input
                     type="text"
@@ -146,45 +150,28 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
               </div>
             </div>
 
-            {/* Column 2: Design */}
-            <div className="project-detail-column">
-              <h4>🎨 Design</h4>
+            {/* Right: Design + Packages */}
+            <div className="project-detail-right">
               <div className="project-detail-field">
-                <label>Android Figma (latest)</label>
+                <label>🎨 Android Figma</label>
                 {backendProjects[selectedProject.name]?.figmaLink
                   ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">Open Android Figma ↗</a>
-                  : <em className="not-configured">Not configured by admin</em>
+                  : <em className="not-configured">Not configured</em>
                 }
               </div>
               <div className="project-detail-field">
-                <label>iOS Figma (latest)</label>
+                <label>🎨 iOS Figma</label>
                 {backendProjects[selectedProject.name]?.figmaLinkIos
                   ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">Open iOS Figma ↗</a>
-                  : <em className="not-configured">Not configured by admin</em>
+                  : <em className="not-configured">Not configured</em>
                 }
               </div>
-            </div>
-
-            {/* Column 3: Project Info */}
-            <div className="project-detail-column">
-              <h4>📦 Project Info</h4>
               <div className="project-detail-field">
-                <label>Associated Packages</label>
-                <ul className="project-package-list">
-                  {selectedProject.packages.map(pkg => (
-                    <li key={pkg}><code>{pkg}</code></li>
-                  ))}
-                </ul>
-              </div>
-              <div className="project-detail-field">
-                <label>📊 Stats</label>
-                <p className="placeholder-text">Log collection stats will appear here</p>
+                <label>📦 Packages</label>
+                <span className="project-packages-inline">{selectedProject.packages.join(', ')}</span>
               </div>
             </div>
           </div>
-
-          {/* RC Info from Confluence - expandable */}
-          <RcInfoSection projectName={selectedProject.name} backendProject={backendProjects[selectedProject.name]} />
         </div>
       )}
     </div>
@@ -323,8 +310,10 @@ function RcInfoSection({ projectName, backendProject }) {
 
   return (
     <div className="rc-info-section">
-      <p className="rc-info-title">RC Info (Confluence)</p>
-      {artifacts && <p className="rc-info-subtitle">{artifacts.title}</p>}
+      <div className="rc-info-title-row">
+        <p className="rc-info-title">RC Info (Confluence)</p>
+        {artifacts && <a href={artifacts.url} target="_blank" rel="noopener noreferrer" className="rc-confluence-link">📋 {artifacts.title} ↗</a>}
+      </div>
       {artifacts && (() => {
         const components = artifacts.components || [];
         const server = components.find(c => c.component === 'Server Core');
@@ -335,7 +324,6 @@ function RcInfoSection({ projectName, backendProject }) {
             {android && <span className={`rc-version-badge ${selectedComponent === 'Android' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Android' ? null : 'Android')}>🤖 Android: <strong>{android.version}</strong> {android.spVersion && `(SP ${android.spVersion})`}</span>}
             {ios && <span className={`rc-version-badge ${selectedComponent === 'iOS' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'iOS' ? null : 'iOS')}>🍎 iOS: <strong>{ios.version}</strong> {ios.spVersion && `(SP ${ios.spVersion})`}</span>}
             {server && <span className={`rc-version-badge ${selectedComponent === 'Server Core' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Server Core' ? null : 'Server Core')}>🖥 Server: <strong>{server.version}</strong> {server.spVersion && `(SP ${server.spVersion})`}</span>}
-            {artifacts && <a href={artifacts.url} target="_blank" rel="noopener noreferrer" className="rc-confluence-link">📋 Confluence page ↗</a>}
           </div>
         ) : null;
       })()}
@@ -346,7 +334,9 @@ function RcInfoSection({ projectName, backendProject }) {
         return (
           <div className="rc-component-detail">
             <div className="rc-artifact-cell">
-              {comp.artifactText && comp.artifactText.split('\n').map((line, j) => {
+              {comp.artifactText && comp.artifactText.split('\n')
+                .filter(line => !line.trim().startsWith('*To stream') && !line.trim().startsWith('To stream'))
+                .map((line, j) => {
                 const s3InLine = line.match(/s3:\/\/safepath-builds\/[^\s"&<]+/);
                 const isLabeledDownload = line.trim().startsWith('**Debug') || line.trim().startsWith('**Release');
                 const isAndroid = comp.component === 'Android';
