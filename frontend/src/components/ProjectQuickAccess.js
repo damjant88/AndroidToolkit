@@ -335,7 +335,7 @@ function RcInfoSection({ projectName, backendProject }) {
             {android && <span className={`rc-version-badge ${selectedComponent === 'Android' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Android' ? null : 'Android')}>🤖 Android: <strong>{android.version}</strong> {android.spVersion && `(SP ${android.spVersion})`}</span>}
             {ios && <span className={`rc-version-badge ${selectedComponent === 'iOS' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'iOS' ? null : 'iOS')}>🍎 iOS: <strong>{ios.version}</strong> {ios.spVersion && `(SP ${ios.spVersion})`}</span>}
             {server && <span className={`rc-version-badge ${selectedComponent === 'Server Core' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Server Core' ? null : 'Server Core')}>🖥 Server: <strong>{server.version}</strong> {server.spVersion && `(SP ${server.spVersion})`}</span>}
-            {artifacts && <a href={artifacts.url} target="_blank" rel="noopener noreferrer" className="rc-confluence-link">📋 Confluence ↗</a>}
+            {artifacts && <a href={artifacts.url} target="_blank" rel="noopener noreferrer" className="rc-confluence-link">📋 Confluence page ↗</a>}
           </div>
         ) : null;
       })()}
