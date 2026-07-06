@@ -214,6 +214,15 @@ function RcInfoSection({ projectName }) {
   const [downloadPopup, setDownloadPopup] = useState(null);
   const [activeDownloadId, setActiveDownloadId] = useState({});
 
+  // Reset when project changes
+  useEffect(() => {
+    setArtifacts(null);
+    setExpanded(false);
+    setError('');
+    setDownloading({});
+    setDownloadResult({});
+  }, [projectName]);
+
   async function fetchArtifacts() {
     if (artifacts) { setExpanded(!expanded); return; }
     const config = RC_PARENT_PAGES[projectName];
