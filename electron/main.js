@@ -2,6 +2,7 @@ const { app, BrowserWindow, Tray, Menu, nativeImage, dialog } = require('electro
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
+const fs = require('fs');
 
 let mainWindow;
 let tray;
@@ -15,9 +16,9 @@ const resourcesPath = isDev
   : path.join(process.resourcesPath);
 
 const agentJarPath = path.join(resourcesPath, 'agent', 'agent.jar');
-const frontendPath = path.join(resourcesPath, 'frontend', 'index.html');
+const frontendPath = path.join(resourcesPath, 'frontend');
 
-// Backend URL (remote shared server)
+// Backend URL (remote shared server) — frontend API calls go here
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 const AGENT_PORT = 8081;
 
@@ -36,16 +37,14 @@ function createWindow() {
     show: false
   });
 
-  // In dev mode, load from webpack dev server; in production, load built files
+  // Always load from the backend which serves both frontend static files and API
+  // In dev mode with DEV_SERVER_URL, use the webpack dev server instead
   if (isDev && process.env.DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.DEV_SERVER_URL);
     mainWindow.webContents.openDevTools();
-  } else if (isDev) {
-    // Dev mode but no dev server — try the backend which serves frontend
-    mainWindow.loadURL(BACKEND_URL);
   } else {
-    // Production: load the bundled frontend
-    mainWindow.loadFile(frontendPath);
+    // Load from backend (serves React build + API)
+    mainWindow.loadURL(BACKEND_URL);
   }
 
   mainWindow.once('ready-to-show', () => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { projectApi } from '../api/projectApi';
 import { getStaticIcon } from '../api/projectIconImports';
 
@@ -21,6 +21,25 @@ function getLocalPaths() {
 function saveLocalPaths(paths) {
   localStorage.setItem('projectLocalPaths', JSON.stringify(paths));
 }
+
+// Memoized project buttons — never re-renders unless selectedProjectName changes
+const ProjectButtonsRow = memo(function ProjectButtonsRow({ selectedProjectName, setSelectedProject }) {
+  return (
+    <div className="project-buttons-row">
+      {PROJECTS.map((project) => (
+        <button
+          key={project.name}
+          className={`project-quick-btn ${selectedProjectName === project.name ? 'active' : ''}`}
+          onClick={() => setSelectedProject(prev => prev?.name === project.name ? null : project)}
+          title={project.name}
+        >
+          <img src={getStaticIcon(project.icon)} alt={project.name} className="project-quick-icon" width="32" height="32" loading="eager" />
+          <span className="project-quick-label">{project.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+});
 
 function ProjectQuickAccess({ devices, onProjectChange }) {
   const [selectedProject, setSelectedProject] = useState(null);
@@ -79,26 +98,12 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
     setTimeout(() => setSavedMessage(false), 2000);
   }
 
-  const projectButtons = (
-    <div className="project-buttons-row">
-      {PROJECTS.map((project) => (
-        <button
-          key={project.name}
-          className={`project-quick-btn ${selectedProject?.name === project.name ? 'active' : ''}`}
-          style={{ '--project-color': project.color }}
-          onClick={() => setSelectedProject(selectedProject?.name === project.name ? null : project)}
-          title={project.name}
-        >
-          <img src={getStaticIcon(project.icon)} alt={project.name} className="project-quick-icon" width="32" height="32" loading="eager" />
-          <span className="project-quick-label">{project.name}</span>
-        </button>
-      ))}
-    </div>
-  );
-
   return (
     <div className="project-quick-access-wrapper">
-      {projectButtons}
+      <ProjectButtonsRow
+        selectedProjectName={selectedProject?.name || null}
+        setSelectedProject={setSelectedProject}
+      />
 
       {selectedProject && (
         <div className="project-detail-panel">

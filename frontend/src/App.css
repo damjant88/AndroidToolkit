@@ -360,12 +360,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   border-radius: 8px 8px 0 0;
   background: #e8e8e8;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background 0.15s, border-color 0.15s;
   flex: 1;
-  min-width: 0;
+  min-width: 60px;
   margin-right: -1px;
   margin-bottom: -1px;
   position: relative;
+  overflow: visible;
 }
 
 .project-quick-btn:hover {
@@ -383,7 +384,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .project-quick-icon {
   width: 36px;
   height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .project-quick-label {
