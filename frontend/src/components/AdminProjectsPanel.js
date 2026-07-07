@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { projectApi } from '../api/projectApi';
 import { getStaticIcon } from '../api/projectIconImports';
 
@@ -17,6 +17,27 @@ const PROJECT_META = {
 function getMeta(name) {
   return PROJECT_META[name] || { icon: 'Android.png', packages: [], color: '#999' };
 }
+
+// Memoized admin project cards — only re-renders when expandedProjectId changes
+const AdminProjectCardsList = memo(function AdminProjectCardsList({ allProjects, expandedProjectId, setExpandedProject }) {
+  return (
+    <div className="project-cards-grid">
+      {allProjects.map(p => (
+        <div
+          key={p.id}
+          className={`project-card ${expandedProjectId === p.id ? 'expanded' : ''}`}
+          style={{ borderLeftColor: p.color }}
+          onClick={() => setExpandedProject(prev => prev === p.id ? null : p.id)}
+        >
+          <div className="project-card-header">
+            <img src={getStaticIcon(p.icon)} alt={p.name} className="project-card-icon" width="28" height="28" loading="eager" />
+            <span className="project-card-name">{p.name}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+});
 
 function AdminProjectsPanel() {
   const [projects, setProjects] = useState([]);
@@ -253,110 +274,104 @@ function AdminProjectsPanel() {
 
   return (
     <div className="admin-projects-panel">
-      <h4>Projects (Admin)</h4>
-
-      {/* Project cards with icons */}
-      <div className="project-cards-grid">
-        {allProjects.map(p => (
-          <div
-            key={p.id}
-            className={`project-card ${expandedProject === p.id ? 'expanded' : ''}`}
-            style={{ borderLeftColor: p.color }}
-            onClick={() => setExpandedProject(expandedProject === p.id ? null : p.id)}
-          >
-            <div className="project-card-header">
-              <img src={getStaticIcon(p.icon)} alt={p.name} className="project-card-icon" width="32" height="32" />
-              <span className="project-card-name">{p.name}</span>
-            </div>
-            {expandedProject === p.id && (
-              <div className="project-card-details">
-                <div className="project-card-section">
-                  <strong>📡 Remote APK Location:</strong>
-                  <input
-                    type="text"
-                    className="project-local-input"
-                    placeholder="e.g. \\\\server\\builds\\SafePath"
-                    value={inlineRemote[p.id] !== undefined ? inlineRemote[p.id] : (p.remoteApkLocation || '')}
-                    onClick={e => e.stopPropagation()}
-                    onChange={e => handleInlineRemoteChange(p, e.target.value)}
-                  />
-                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineRemoteSave(p); }}>Save</button>
-                  {saveStatus[`remote_${p.id}`] && <span className={`save-indicator ${saveStatus[`remote_${p.id}`]}`}>{saveStatus[`remote_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
-                </div>
-                <div className="project-card-section">
-                  <strong>🎨 Latest {p.name} Android Figma:</strong>
-                  <input
-                    type="text"
-                    className="project-local-input"
-                    placeholder="e.g. https://www.figma.com/design/..."
-                    value={inlineFigma[p.id] !== undefined ? inlineFigma[p.id] : (p.figmaLink || '')}
-                    onClick={e => e.stopPropagation()}
-                    onChange={e => handleInlineFigmaChange(p, e.target.value)}
-                  />
-                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaSave(p); }}>Save</button>
-                  {saveStatus[`figma_${p.id}`] && <span className={`save-indicator ${saveStatus[`figma_${p.id}`]}`}>{saveStatus[`figma_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
-                  {p.figmaLink && <a href={p.figmaLink} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
-                </div>
-                <div className="project-card-section">
-                  <strong>🎨 Latest {p.name} iOS Figma:</strong>
-                  <input
-                    type="text"
-                    className="project-local-input"
-                    placeholder="e.g. https://www.figma.com/design/..."
-                    value={inlineFigmaIos[p.id] !== undefined ? inlineFigmaIos[p.id] : (p.figmaLinkIos || '')}
-                    onClick={e => e.stopPropagation()}
-                    onChange={e => handleInlineFigmaIosChange(p, e.target.value)}
-                  />
-                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleInlineFigmaIosSave(p); }}>Save</button>
-                  {saveStatus[`figmaIos_${p.id}`] && <span className={`save-indicator ${saveStatus[`figmaIos_${p.id}`]}`}>{saveStatus[`figmaIos_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
-                  {p.figmaLinkIos && <a href={p.figmaLinkIos} target="_blank" rel="noopener noreferrer" className="project-figma-link" onClick={e => e.stopPropagation()}>Open ↗</a>}
-                </div>
-                <div className="project-card-section">
-                  <strong>📋 Confluence Parent Page ID:</strong>
-                  <input
-                    type="text"
-                    className="project-local-input"
-                    placeholder="e.g. 40793397 (for auto-discovery of latest RC)"
-                    value={inlineConfluenceParent[p.id] !== undefined ? inlineConfluenceParent[p.id] : (p.confluenceParentPageId || '')}
-                    onClick={e => e.stopPropagation()}
-                    onChange={e => setInlineConfluenceParent(prev => ({ ...prev, [p.id]: e.target.value }))}
-                  />
-                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleConfluenceParentSave(p); }}>Save</button>
-                  {saveStatus[`confParent_${p.id}`] && <span className={`save-indicator ${saveStatus[`confParent_${p.id}`]}`}>{saveStatus[`confParent_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
-                </div>
-                <div className="project-card-section">
-                  <strong>📋 Confluence Artifacts Page ID (direct):</strong>
-                  <input
-                    type="text"
-                    className="project-local-input"
-                    placeholder="e.g. 101875725 (overrides parent if set)"
-                    value={inlineConfluenceArtifacts[p.id] !== undefined ? inlineConfluenceArtifacts[p.id] : (p.confluenceArtifactsPageId || '')}
-                    onClick={e => e.stopPropagation()}
-                    onChange={e => setInlineConfluenceArtifacts(prev => ({ ...prev, [p.id]: e.target.value }))}
-                  />
-                  <button className="project-save-btn" onClick={(e) => { e.stopPropagation(); handleConfluenceArtifactsSave(p); }}>Save</button>
-                  {saveStatus[`confArtifacts_${p.id}`] && <span className={`save-indicator ${saveStatus[`confArtifacts_${p.id}`]}`}>{saveStatus[`confArtifacts_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
-                </div>
-                {projects.length > 0 && (
-                  <div className="project-card-actions">
-                    <button className="project-delete-btn" onClick={(e) => { e.stopPropagation(); handleDelete(p); }}>Delete Project</button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+      <div className="admin-projects-header">
+        <h4>Projects (Admin)</h4>
+        <details className="project-create-section">
+          <summary>+ Add New Project</summary>
+          <form onSubmit={handleCreate} className="project-form">
+            <input type="text" placeholder="Project name" value={name} onChange={e => setName(e.target.value)} />
+            <input type="text" placeholder="Remote APK Location" value={remoteApkLocation} onChange={e => setRemoteApkLocation(e.target.value)} />
+            <button type="submit">Create</button>
+          </form>
+        </details>
       </div>
 
-      {/* Create form */}
-      <details className="project-create-section" open={projects.length === 0}>
-        <summary>+ Add New Project</summary>
-        <form onSubmit={handleCreate} className="project-form">
-          <input type="text" placeholder="Project name" value={name} onChange={e => setName(e.target.value)} />
-          <input type="text" placeholder="Remote APK Location" value={remoteApkLocation} onChange={e => setRemoteApkLocation(e.target.value)} />
-          <button type="submit">Create</button>
-        </form>
-      </details>
+      <div className="admin-projects-layout">
+        {/* Left: Project cards list (memoized) */}
+        <AdminProjectCardsList
+          allProjects={allProjects}
+          expandedProjectId={expandedProject}
+          setExpandedProject={setExpandedProject}
+        />
+
+        {/* Right: Expanded project details */}
+        {expandedProject && (() => {
+          const p = allProjects.find(proj => proj.id === expandedProject);
+          if (!p) return null;
+          return (
+            <div className="project-expanded-panel">
+              <h4 style={{ margin: '0 0 12px 0' }}>{p.name} Settings</h4>
+              <div className="project-card-section">
+                <strong>📡 Remote APK Location:</strong>
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. \\\\server\\builds\\SafePath"
+                  value={inlineRemote[p.id] !== undefined ? inlineRemote[p.id] : (p.remoteApkLocation || '')}
+                  onChange={e => handleInlineRemoteChange(p, e.target.value)}
+                />
+                <button className="project-save-btn" onClick={() => handleInlineRemoteSave(p)}>Save</button>
+                {saveStatus[`remote_${p.id}`] && <span className={`save-indicator ${saveStatus[`remote_${p.id}`]}`}>{saveStatus[`remote_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
+              </div>
+              <div className="project-card-section">
+                <strong>🎨 Android Figma:</strong>
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. https://www.figma.com/design/..."
+                  value={inlineFigma[p.id] !== undefined ? inlineFigma[p.id] : (p.figmaLink || '')}
+                  onChange={e => handleInlineFigmaChange(p, e.target.value)}
+                />
+                <button className="project-save-btn" onClick={() => handleInlineFigmaSave(p)}>Save</button>
+                {saveStatus[`figma_${p.id}`] && <span className={`save-indicator ${saveStatus[`figma_${p.id}`]}`}>{saveStatus[`figma_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
+                {p.figmaLink && <a href={p.figmaLink} target="_blank" rel="noopener noreferrer" className="project-figma-link">Open ↗</a>}
+              </div>
+              <div className="project-card-section">
+                <strong>🎨 iOS Figma:</strong>
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. https://www.figma.com/design/..."
+                  value={inlineFigmaIos[p.id] !== undefined ? inlineFigmaIos[p.id] : (p.figmaLinkIos || '')}
+                  onChange={e => handleInlineFigmaIosChange(p, e.target.value)}
+                />
+                <button className="project-save-btn" onClick={() => handleInlineFigmaIosSave(p)}>Save</button>
+                {saveStatus[`figmaIos_${p.id}`] && <span className={`save-indicator ${saveStatus[`figmaIos_${p.id}`]}`}>{saveStatus[`figmaIos_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
+                {p.figmaLinkIos && <a href={p.figmaLinkIos} target="_blank" rel="noopener noreferrer" className="project-figma-link">Open ↗</a>}
+              </div>
+              <div className="project-card-section">
+                <strong>📋 Confluence Parent Page ID:</strong>
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. 40793397 (for auto-discovery of latest RC)"
+                  value={inlineConfluenceParent[p.id] !== undefined ? inlineConfluenceParent[p.id] : (p.confluenceParentPageId || '')}
+                  onChange={e => setInlineConfluenceParent(prev => ({ ...prev, [p.id]: e.target.value }))}
+                />
+                <button className="project-save-btn" onClick={() => handleConfluenceParentSave(p)}>Save</button>
+                {saveStatus[`confParent_${p.id}`] && <span className={`save-indicator ${saveStatus[`confParent_${p.id}`]}`}>{saveStatus[`confParent_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
+              </div>
+              <div className="project-card-section">
+                <strong>📋 Confluence Artifacts Page ID (direct):</strong>
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. 101875725 (overrides parent if set)"
+                  value={inlineConfluenceArtifacts[p.id] !== undefined ? inlineConfluenceArtifacts[p.id] : (p.confluenceArtifactsPageId || '')}
+                  onChange={e => setInlineConfluenceArtifacts(prev => ({ ...prev, [p.id]: e.target.value }))}
+                />
+                <button className="project-save-btn" onClick={() => handleConfluenceArtifactsSave(p)}>Save</button>
+                {saveStatus[`confArtifacts_${p.id}`] && <span className={`save-indicator ${saveStatus[`confArtifacts_${p.id}`]}`}>{saveStatus[`confArtifacts_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
+              </div>
+              {projects.length > 0 && (
+                <div className="project-card-actions">
+                  <button className="project-delete-btn" onClick={() => handleDelete(p)}>Delete Project</button>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+      </div>
 
       {error && <p className="project-error">{error}</p>}
     </div>

@@ -187,6 +187,9 @@ function RcInfoSection({ projectName, backendProject }) {
   const [downloadPopup, setDownloadPopup] = useState(null);
   const [selectedComponent, setSelectedComponent] = useState(null); // 'Server Core', 'Android', 'iOS'
 
+  // Persist artifacts data across project switches using a ref cache
+  const artifactsCache = useRef({}); // { projectName: artifactsData }
+
   // Persist download state across project switches using refs keyed by project
   const allDownloads = useRef({});    // { projectName: { downloadKey: true/false } }
   const allResults = useRef({});      // { projectName: { downloadKey: { success, message } } }
@@ -212,11 +215,18 @@ function RcInfoSection({ projectName, backendProject }) {
     allActiveIds.current[projectName] = typeof updater === 'function' ? updater(prev) : updater;
   }
 
-  // Reset artifacts/error when project changes — always fetch data but keep table collapsed
+  // When project changes, restore from cache or fetch fresh
   useEffect(() => {
-    setArtifacts(null);
     setError('');
     setSelectedComponent(null);
+    // Restore cached artifacts for this project (instant, no flicker)
+    const cached = artifactsCache.current[projectName];
+    if (cached) {
+      setArtifacts(cached);
+    } else {
+      setArtifacts(null);
+    }
+    // Always fetch fresh in background to detect changes
     fetchArtifactsForProject(projectName, backendProject);
   }, [projectName]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -239,6 +249,7 @@ function RcInfoSection({ projectName, backendProject }) {
         setError(res.data.error);
       } else {
         setArtifacts(res.data);
+        artifactsCache.current[pName] = res.data;
       }
     } catch (err) {
       setError('Failed to fetch: ' + (err.response?.data?.message || err.message));
