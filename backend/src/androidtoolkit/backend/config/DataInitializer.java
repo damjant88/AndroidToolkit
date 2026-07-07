@@ -25,17 +25,17 @@ public class DataInitializer {
                     "packages", List.of("com.smithmicro.safepath.family", "com.smithmicro.safepath.family.child")),
             Map.of("name", "Secure Family", "confluenceParentPageId", "40803846", "confluenceArtifactsPageId", "101875725",
                     "packages", List.of("com.smithmicro.att.securefamily", "com.wavemarket.waplauncher", "com.att.securefamilycompanion")),
-            Map.of("name", "Safe&Found", "confluenceParentPageId", "40802189",
+            Map.of("name", "Safe&Found", "confluenceParentPageId", "40802189", "confluenceArtifactsPageId", "40795173",
                     "packages", List.of("com.smithmicro.sprint.safeandfound.test", "com.sprint.safefound")),
-            Map.of("name", "Family Mode", "confluenceParentPageId", "40796086",
+            Map.of("name", "Family Mode", "confluenceParentPageId", "40796086", "confluenceArtifactsPageId", "67698812",
                     "packages", List.of("com.smithmicro.tmobile.familymode.test", "com.tmobile.familycontrols")),
-            Map.of("name", "CCI", "confluenceParentPageId", "40795593",
+            Map.of("name", "CCI", "confluenceParentPageId", "40795593", "confluenceArtifactsPageId", "169738286",
                     "packages", List.of("com.smithmicro.cci.test", "com.smithmicro.safepath.family.light", "com.smithmicro.safepath.family.speakeasy")),
-            Map.of("name", "Orange", "confluenceParentPageId", "40785617",
+            Map.of("name", "Orange", "confluenceParentPageId", "40785617", "confluenceArtifactsPageId", "40795708",
                     "packages", List.of("com.smithmicro.orangespain.test", "com.orange.es.TuYo")),
-            Map.of("name", "Dish", "confluenceParentPageId", "40802884",
+            Map.of("name", "Dish", "confluenceParentPageId", "40787434", "confluenceArtifactsPageId", "40789537",
                     "packages", List.of("com.smithmicro.safepath.dish.test", "com.smithmicro.safepath.dish.kid.test")),
-            Map.of("name", "SPC", "confluenceParentPageId", "87392329",
+            Map.of("name", "SPC", "confluenceParentPageId", "87392329", "confluenceArtifactsPageId", "180682769",
                     "packages", List.of("com.smithmicro.safepath.connect"))
     );
 
