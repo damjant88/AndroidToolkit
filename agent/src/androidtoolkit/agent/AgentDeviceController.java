@@ -370,6 +370,8 @@ public class AgentDeviceController {
             return Map.of("success", false, "message", "APK not found: " + apkPath + " (also checked apks/" + apkPath + ")");
         }
         Map<String, Object> result = runSimpleCommand(serial, "install", "adb", "-s", serial, "install", "-r", apkFile.getAbsolutePath());
+        // Clear stale logcat metadata from previous build
+        logcatService.clearMetadata(serial);
         // Trigger immediate device info refresh so the UI updates with new package info
         triggerDeviceRefresh();
         return result;

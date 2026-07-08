@@ -27,18 +27,23 @@ export function useLogcatWebSocket(serial, appInstalled) {
       if (!appInstalled) return;
       axios.get(`http://localhost:8081/api/agent/devices/${encodeURIComponent(serial)}/logcat-data`)
         .then(res => {
-          if (res.data && (res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken)) {
+          if (res.data) {
             setLogcatData(prev => {
+              // If all fields are empty, the metadata was cleared (new install) — reset to null-ish
+              const hasAnyData = res.data.environment || res.data.clientVersion || res.data.serverProductVersion || res.data.accessToken;
+              if (!hasAnyData) {
+                // Agent returned empty metadata — clear stale frontend state
+                return null;
+              }
               if (!prev) return res.data;
-              // Merge: only overwrite fields that have values (don't clear populated fields with empty)
+              // Merge: overwrite with fresh values from agent (agent clears on install, so trust it)
               return {
-                ...prev,
-                environment: res.data.environment || prev.environment,
-                clientVersion: res.data.clientVersion || prev.clientVersion,
-                serverProductVersion: res.data.serverProductVersion || prev.serverProductVersion,
-                serverProjectVersion: res.data.serverProjectVersion || prev.serverProjectVersion,
-                accessToken: res.data.accessToken || prev.accessToken,
-                tokenType: res.data.tokenType || prev.tokenType,
+                environment: res.data.environment || '',
+                clientVersion: res.data.clientVersion || '',
+                serverProductVersion: res.data.serverProductVersion || '',
+                serverProjectVersion: res.data.serverProjectVersion || '',
+                accessToken: res.data.accessToken || '',
+                tokenType: res.data.tokenType || '',
               };
             });
           }

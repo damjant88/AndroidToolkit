@@ -91,6 +91,13 @@ public class AgentLogcatService {
     }
 
     /**
+     * Clears parsed metadata for a device (e.g., after a new build is installed).
+     */
+    public void clearMetadata(String serial) {
+        deviceMetadata.put(serial, new LogcatMetadata(serial));
+    }
+
+    /**
      * Starts monitoring for all known devices (called when devices are discovered).
      */
     public void onDevicesChanged(Map<String, String> serialToPid) {
