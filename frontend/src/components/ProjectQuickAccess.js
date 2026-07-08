@@ -113,8 +113,28 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
               <RcInfoSection projectName={selectedProject.name} backendProject={backendProjects[selectedProject.name]} />
             </div>
 
+            {/* Figma links */}
+            <div className="project-detail-figma">
+              <h5 className="section-title">Design</h5>
+              <div className="project-detail-field">
+                <label>🎨 Android Figma</label>
+                {backendProjects[selectedProject.name]?.figmaLink
+                  ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">Open Android Figma ↗</a>
+                  : <em className="not-configured">Not configured</em>
+                }
+              </div>
+              <div className="project-detail-field">
+                <label>🎨 iOS Figma</label>
+                {backendProjects[selectedProject.name]?.figmaLinkIos
+                  ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">Open iOS Figma ↗</a>
+                  : <em className="not-configured">Not configured</em>
+                }
+              </div>
+            </div>
+
             {/* Middle: Local paths */}
             <div className="project-detail-middle">
+              <h5 className="section-title">Builds & Logs</h5>
               <div className="project-detail-field">
                 <label>📁 Local APK Folder</label>
                 <div className="project-local-row">
@@ -150,29 +170,16 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
               </div>
             </div>
 
-            {/* Right: Design + Stats + Packages */}
+            {/* Right: Stats + Packages */}
             <div className="project-detail-right">
-              <div className="project-detail-field">
-                <label>🎨 Android Figma</label>
-                {backendProjects[selectedProject.name]?.figmaLink
-                  ? <a href={backendProjects[selectedProject.name].figmaLink} target="_blank" rel="noopener noreferrer">Open Android Figma ↗</a>
-                  : <em className="not-configured">Not configured</em>
-                }
-              </div>
-              <div className="project-detail-field">
-                <label>🎨 iOS Figma</label>
-                {backendProjects[selectedProject.name]?.figmaLinkIos
-                  ? <a href={backendProjects[selectedProject.name].figmaLinkIos} target="_blank" rel="noopener noreferrer">Open iOS Figma ↗</a>
-                  : <em className="not-configured">Not configured</em>
-                }
-              </div>
+              <h5 className="section-title">Project Info</h5>
               <div className="project-detail-field">
                 <label>📊 Stats</label>
                 <ProjectStats project={selectedProject} devices={devices} backendProject={backendProjects[selectedProject.name]} />
               </div>
               <div className="project-detail-field">
                 <label>📦 Packages</label>
-                <span className="project-packages-inline">{selectedProject.packages.join(', ')}</span>
+                <span className="project-packages-inline">{selectedProject.packages.map((pkg, i) => <span key={i} className="project-package-item">{pkg}</span>)}</span>
               </div>
             </div>
           </div>
@@ -372,20 +379,19 @@ function RcInfoSection({ projectName, backendProject }) {
         const server = components.find(c => c.component === 'Server Core');
         const android = components.find(c => c.component === 'Android');
         const ios = components.find(c => c.component === 'iOS');
-        return (server || android || ios) ? (
-          <div className="rc-info-versions">
-            {android && <span className={`rc-version-badge ${selectedComponent === 'Android' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Android' ? null : 'Android')}>🤖 Android: <strong>{android.version}</strong> {android.spVersion && `(SP ${android.spVersion})`}</span>}
-            {ios && <span className={`rc-version-badge ${selectedComponent === 'iOS' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'iOS' ? null : 'iOS')}>🍎 iOS: <strong>{ios.version}</strong> {ios.spVersion && `(SP ${ios.spVersion})`}</span>}
-            {server && <span className={`rc-version-badge ${selectedComponent === 'Server Core' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Server Core' ? null : 'Server Core')}>🖥 Server: <strong>{server.version}</strong> {server.spVersion && `(SP ${server.spVersion})`}</span>}
-          </div>
-        ) : null;
-      })()}
-      {error && <p className="rc-info-error">{error}</p>}
-      {selectedComponent && artifacts && (() => {
-        const comp = (artifacts.components || []).find(c => c.component === selectedComponent);
-        if (!comp) return null;
-        return (
-          <div className="rc-component-detail">
+        const hasTabs = server || android || ios;
+        return hasTabs ? (
+          <div className="rc-tabs-wrapper">
+            <div className="rc-info-versions">
+              {android && <span className={`rc-version-badge ${selectedComponent === 'Android' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Android' ? null : 'Android')}>🤖 Android: <strong>{android.version}</strong> {android.spVersion && `(SP ${android.spVersion})`}</span>}
+              {ios && <span className={`rc-version-badge ${selectedComponent === 'iOS' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'iOS' ? null : 'iOS')}>🍎 iOS: <strong>{ios.version}</strong> {ios.spVersion && `(SP ${ios.spVersion})`}</span>}
+              {server && <span className={`rc-version-badge ${selectedComponent === 'Server Core' ? 'active' : ''}`} onClick={() => setSelectedComponent(selectedComponent === 'Server Core' ? null : 'Server Core')}>🖥 Server: <strong>{server.version}</strong> {server.spVersion && `(SP ${server.spVersion})`}</span>}
+            </div>
+            {selectedComponent && (() => {
+              const comp = (artifacts.components || []).find(c => c.component === selectedComponent);
+              if (!comp) return null;
+              return (
+                <div className="rc-component-detail">
             <div className="rc-artifact-cell">
               {comp.artifactText && comp.artifactText.split('\n')
                 .filter(line => !line.trim().startsWith('*To stream') && !line.trim().startsWith('To stream')
@@ -430,8 +436,12 @@ function RcInfoSection({ projectName, backendProject }) {
               {!comp.artifactText && <em>No artifact info available</em>}
             </div>
           </div>
-        );
+              );
+            })()}
+          </div>
+        ) : null;
       })()}
+      {error && <p className="rc-info-error">{error}</p>}
       {downloadPopup && (
         <div className="rc-download-popup-overlay">
           <div className="rc-download-popup">
