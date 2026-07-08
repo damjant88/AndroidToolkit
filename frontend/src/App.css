@@ -468,8 +468,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 .project-detail-left {
   flex: 0 0 auto;
-  min-width: 580px;
-  max-width: 580px;
+  min-width: 650px;
+  max-width: 650px;
   overflow: hidden;
   padding-right: 20px;
   margin-right: 20px;
@@ -741,7 +741,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   position: relative;
   text-align: center;
   white-space: nowrap;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   box-sizing: border-box;
 }
 
