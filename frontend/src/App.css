@@ -463,7 +463,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 }
 
 .project-detail-left {
+  flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .project-detail-middle {
@@ -480,6 +482,56 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   font-size: 11px;
   color: #555;
   word-break: break-all;
+}
+
+/* Project Stats */
+.project-stats-box {
+  font-size: 12px;
+}
+
+.project-stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3px;
+}
+
+.project-stats-label {
+  color: #666;
+}
+
+.project-stats-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.project-stats-text {
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
+}
+
+.project-stats-devices {
+  margin-top: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.project-stats-device-badge {
+  font-size: 10px;
+  background: #e8f0fe;
+  color: #1a73e8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.project-stats-remote-path {
+  font-size: 11px;
+  color: #555;
+  word-break: break-all;
+  margin-top: 2px;
 }
 
 .project-detail-field {

@@ -1,0 +1,44 @@
+Section,#,Test Case,Context Story,Expected Result
+Entry Point — Voucher Card Visibility,1.1,Voucher redemption enabled globally → user navigates to Subscription screen,,Voucher card is displayed
+Entry Point — Voucher Card Visibility,1.2,Voucher redemption disabled globally → user navigates to Subscription screen,,Voucher card is NOT displayed
+Entry Point — Voucher Card Visibility,1.3,User taps the Voucher card,,User is redirected to the Redeem Voucher screen
+Redeem Voucher Screen — UI & Layout,2.1,Redeem Voucher screen loads,,Screen matches SPFAM-30865 mockups
+Redeem Voucher Screen — UI & Layout,2.2,Screen displays input field for voucher code,,Input field is present and empty by default
+Redeem Voucher Screen — UI & Layout,2.3,Redeem button state on screen load,,Button is disabled
+Redeem Voucher Screen — UI & Layout,2.4,User enters any non-empty text,,Redeem button becomes enabled
+Redeem Voucher Screen — UI & Layout,2.5,User clears the input field after entering text,,Redeem button becomes disabled again
+Invalid Voucher Scenarios,3.1,User enters a code that does not exist → taps Redeem,,"Error: ""Invalid code."" — user stays on screen"
+Invalid Voucher Scenarios,3.2,User enters an expired voucher code (expiration date < today) → taps Redeem,,"Error: ""This code has expired."" — user stays on screen"
+Invalid Voucher Scenarios,3.3,User enters a code already redeemed by another user → taps Redeem,,"Error: ""This code has already been used."" — user stays on screen"
+Invalid Voucher Scenarios,3.4,User enters a code with leading/trailing whitespace,,System trims and validates correctly (or rejects gracefully)
+Invalid Voucher Scenarios,3.5,User enters special characters / SQL injection attempts,,"System rejects gracefully with ""Invalid code."""
+Valid Voucher Redemption,4.1,User enters a valid non-expired unused voucher code → taps Redeem,,Voucher is linked to user account
+Valid Voucher Redemption,4.2,(cont.),,Voucher activation date is set
+Valid Voucher Redemption,4.3,(cont.),,Associated price_plan_id from the voucher (created via SPC-33) is applied to the account
+Valid Voucher Redemption,4.4,(cont.),,Account status updated to ACTIVE
+Valid Voucher Redemption,4.5,(cont.),,account.subscribedAt is updated
+Valid Voucher Redemption,4.6,(cont.),,account.pricePlanExpiresAt is set based on the voucher's price plan billing period
+Valid Voucher Redemption,4.7,(cont.),,AccountEvent VoucherRedeemed is created with the voucher code
+Valid Voucher Redemption,4.8,After successful redemption,,User proceeds with the product flow → Congrats screen (SPC-11) is displayed
+Valid Voucher Redemption,4.9,Congrats screen shows price plan,,Plan displayed matches the voucher-associated price plan
+Valid Voucher Redemption,4.10,After redemption during onboarding (first activation from PENDING_REGISTRATION),,Welcome email is triggered (SPC-61)
+Idempotency & Edge Cases,5.1,User redeems the same voucher they already redeemed (retry/double tap),,"No duplicate activation; operation is idempotent"
+Idempotency & Edge Cases,5.2,Two users try to redeem the same voucher concurrently,,"Only one succeeds; second gets ""This code has already been used."""
+Idempotency & Edge Cases,5.3,User with EXPIRED account redeems a new voucher (renewal flow),SPC-37,"Account status returns to ACTIVE, expired state is cleared"
+Idempotency & Edge Cases,5.4,User with EXPIRED account redeems → post-renewal,SPC-37,"Congrats screen shown; after Continue → user goes to Hub (home)"
+Idempotency & Edge Cases,5.5,User with ACTIVE account tries to redeem another voucher,,Behavior defined by business rules (expected: blocked or ignored since already active)
+Navigation,6.1,User taps Back button on Redeem Voucher screen,,Returns to Subscription screen
+Navigation,6.2,User taps Back after entering text (without submitting),,"Returns to Subscription screen; no voucher is redeemed"
+Analytics Events,7.1,User taps Voucher card on Subscription screen,,Event SubscriptionVoucherBtn is sent
+Analytics Events,7.2,Redeem Voucher screen is displayed,,Screen view event VoucherRedeemPgView is sent
+Analytics Events,7.3,User taps Redeem CTA button,,Event VoucherRedeemBtn is sent
+Analytics Events,7.4,User taps Back button on Redeem Voucher screen,,Event VouncherBackBtn is sent
+Analytics Events,7.5,Voucher is successfully redeemed,,Event VoucherSuccess is sent
+Analytics Events,7.6,Voucher is invalid → error shown,,VoucherSuccess is NOT sent
+Integration with Related Stories,8.1,Voucher generated via SPC-33 (CSV format with price plan + expiration) is used for redemption,SPC-33,"Voucher code from CSV is accepted; price plan + expiration match"
+Integration with Related Stories,8.2,Voucher with no expiration (null) generated via SPC-33 is redeemed,SPC-33,"Redemption succeeds; no expiration check blocks it"
+Integration with Related Stories,8.3,After successful voucher redemption during onboarding,SPC-11,Congrats screen shown with correct plan features
+Integration with Related Stories,8.4,After successful voucher redemption (first activation),SPC-61,"Welcome email ""Welcome to SafePath Connect!"" sent to user's email"
+Integration with Related Stories,8.5,User renews via voucher after EXPIRED state (within 60-day window),SPC-37,"Account reactivated, Congrats screen shown, then Hub"
+Integration with Related Stories,8.6,Welcome email NOT sent when user renews via voucher after expiration,SPC-61,Email is NOT sent (only first activation triggers it)
+Integration with Related Stories,8.7,Voucher billing period defines pricePlanExpiresAt correctly for subsequent expiration tracking,SPC-37,"When voucher plan expires later, account goes to EXPIRED state correctly"

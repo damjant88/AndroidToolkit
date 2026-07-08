@@ -150,7 +150,7 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
               </div>
             </div>
 
-            {/* Right: Design + Packages */}
+            {/* Right: Design + Stats + Packages */}
             <div className="project-detail-right">
               <div className="project-detail-field">
                 <label>🎨 Android Figma</label>
@@ -167,6 +167,10 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
                 }
               </div>
               <div className="project-detail-field">
+                <label>📊 Stats</label>
+                <ProjectStats project={selectedProject} devices={devices} backendProject={backendProjects[selectedProject.name]} />
+              </div>
+              <div className="project-detail-field">
                 <label>📦 Packages</label>
                 <span className="project-packages-inline">{selectedProject.packages.join(', ')}</span>
               </div>
@@ -174,6 +178,44 @@ function ProjectQuickAccess({ devices, onProjectChange }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Stats component showing device info for the selected project
+function ProjectStats({ project, devices, backendProject }) {
+  const matchingDevices = (devices || []).filter(d => {
+    const pkg = d.deviceInfo?.safePathPackage;
+    return pkg && project.packages.includes(pkg);
+  });
+  const totalDevices = (devices || []).length;
+  const installedCount = matchingDevices.length;
+  const connectedNames = matchingDevices.map(d => d.deviceInfo?.model || d.deviceInfo?.serialNumber || 'Unknown');
+  const remoteLogPath = backendProject?.sharedLogStoragePath;
+
+  return (
+    <div className="project-stats-box">
+      <div className="project-stats-row">
+        <span className="project-stats-label">Connected devices:</span>
+        <span className="project-stats-value">{totalDevices}</span>
+      </div>
+      <div className="project-stats-row">
+        <span className="project-stats-label">With this project:</span>
+        <span className="project-stats-value">{installedCount}</span>
+      </div>
+      {connectedNames.length > 0 && (
+        <div className="project-stats-devices">
+          {connectedNames.map((name, i) => (
+            <span key={i} className="project-stats-device-badge">{name}</span>
+          ))}
+        </div>
+      )}
+      <div className="project-stats-row" style={{ marginTop: 6 }}>
+        <span className="project-stats-label">Remote Log Location:</span>
+      </div>
+      <div className="project-stats-remote-path">
+        {remoteLogPath ? <span>{remoteLogPath}</span> : <em className="not-configured">Not configured</em>}
+      </div>
     </div>
   );
 }

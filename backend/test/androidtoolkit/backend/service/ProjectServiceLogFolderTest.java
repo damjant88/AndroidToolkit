@@ -40,7 +40,7 @@ class ProjectServiceLogFolderTest {
     // ─── Helpers ─────────────────────────────────────────────────────────────────
 
     private ProjectRequest validRequest(String logFolder) {
-        return new ProjectRequest("TestProject", "/remote/apk", "/local/apk", logFolder);
+        return new ProjectRequest("TestProject", "/remote/apk", "/local/apk", logFolder, null, null, null, null, null);
     }
 
     private Project savedProject(Long id, String logFolder) {

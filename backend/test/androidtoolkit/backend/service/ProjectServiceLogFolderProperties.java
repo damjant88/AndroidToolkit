@@ -63,7 +63,7 @@ class ProjectServiceLogFolderProperties {
             return saved;
         });
 
-        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", logFolder);
+        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", logFolder, null, null, null, null, null);
         ProjectResponse response = projectService.create(request);
 
         assertEquals(logFolder.trim(), response.localLogFolder(),
@@ -92,7 +92,7 @@ class ProjectServiceLogFolderProperties {
         when(projectRepository.findByName(any())).thenReturn(Optional.of(existing));
         when(projectRepository.save(any(Project.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProjectRequest request = new ProjectRequest("ExistingProject", "/remote", "/local/apk", logFolder);
+        ProjectRequest request = new ProjectRequest("ExistingProject", "/remote", "/local/apk", logFolder, null, null, null, null, null);
         ProjectResponse response = projectService.update(1L, request);
 
         assertEquals(logFolder.trim(), response.localLogFolder(),
@@ -109,7 +109,7 @@ class ProjectServiceLogFolderProperties {
     ) {
         setupMocks();
 
-        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", blankInput);
+        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", blankInput, null, null, null, null, null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> projectService.create(request));
@@ -135,7 +135,7 @@ class ProjectServiceLogFolderProperties {
         }
         when(projectRepository.findById(1L)).thenReturn(Optional.of(existing));
 
-        ProjectRequest request = new ProjectRequest("ExistingProject", "/remote/apk", "/local/apk", blankInput);
+        ProjectRequest request = new ProjectRequest("ExistingProject", "/remote/apk", "/local/apk", blankInput, null, null, null, null, null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> projectService.update(1L, request));
@@ -166,7 +166,7 @@ class ProjectServiceLogFolderProperties {
     void nullInput_rejectedForLogFolder_create() {
         setupMocks();
 
-        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", null);
+        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", null, null, null, null, null, null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> projectService.create(request));
@@ -184,7 +184,7 @@ class ProjectServiceLogFolderProperties {
     ) {
         setupMocks();
 
-        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", longInput);
+        ProjectRequest request = new ProjectRequest("TestProject", "/remote/apk", "/local/apk", longInput, null, null, null, null, null);
 
         ResponseStatusException ex = assertThrows(ResponseStatusException.class,
                 () -> projectService.create(request));

@@ -105,7 +105,7 @@ class LogCollectionServiceLogFolderTest {
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 1L, "TestProject", "remote/path",
                 "/apk/folder", true,
-                "/custom/logs/override", true
+                "/custom/logs/override", true, null, null, null, null
         );
         when(projectService.getResolved(1L, user)).thenReturn(resolved);
 
@@ -125,7 +125,7 @@ class LogCollectionServiceLogFolderTest {
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 1L, "TestProject", "remote/path",
                 "/apk/folder", false,
-                "/custom/logs", false
+                "/custom/logs", false, null, null, null, null
         );
         when(projectService.getResolved(1L, user)).thenReturn(resolved);
 
@@ -171,7 +171,7 @@ class LogCollectionServiceLogFolderTest {
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 1L, "TestProject", "remote/path",
                 "/apk/folder", false,
-                "", false
+                "", false, null, null, null, null
         );
         when(projectService.getResolved(1L, user)).thenReturn(resolved);
 
@@ -191,7 +191,7 @@ class LogCollectionServiceLogFolderTest {
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 1L, "TestProject", "remote/path",
                 "/apk/folder", false,
-                "   ", false
+                "   ", false, null, null, null, null
         );
         when(projectService.getResolved(1L, user)).thenReturn(resolved);
 
@@ -211,7 +211,7 @@ class LogCollectionServiceLogFolderTest {
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 1L, "TestProject", "remote/path",
                 "/apk/folder", false,
-                null, false
+                null, false, null, null, null, null
         );
         when(projectService.getResolved(1L, user)).thenReturn(resolved);
 

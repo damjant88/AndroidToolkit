@@ -68,7 +68,7 @@ class LogCollectionPathProperties {
 
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 1L, projectName, "remote", "/apk", true,
-                overridePath, true
+                overridePath, true, null, null, null, null
         );
         when(projectService.getResolved(1L, user)).thenReturn(resolved);
 
@@ -91,7 +91,7 @@ class LogCollectionPathProperties {
 
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 2L, projectName, "remote", "/apk", false,
-                projectLogFolder, false
+                projectLogFolder, false, null, null, null, null
         );
         when(projectService.getResolved(2L, user)).thenReturn(resolved);
 
@@ -114,7 +114,7 @@ class LogCollectionPathProperties {
 
         ResolvedProjectResponse resolved = new ResolvedProjectResponse(
                 3L, projectName, "remote", "/apk", false,
-                emptyLogFolder, false
+                emptyLogFolder, false, null, null, null, null
         );
         when(projectService.getResolved(3L, user)).thenReturn(resolved);
 

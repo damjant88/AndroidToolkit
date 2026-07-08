@@ -61,6 +61,7 @@ public class ProjectService {
         project.setFigmaLinkIos(request.figmaLinkIos() != null ? request.figmaLinkIos().trim() : "");
         project.setConfluenceParentPageId(request.confluenceParentPageId() != null ? request.confluenceParentPageId().trim() : "");
         project.setConfluenceArtifactsPageId(request.confluenceArtifactsPageId() != null ? request.confluenceArtifactsPageId().trim() : "");
+        project.setSharedLogStoragePath(request.sharedLogStoragePath() != null ? request.sharedLogStoragePath().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -82,6 +83,7 @@ public class ProjectService {
         project.setFigmaLinkIos(request.figmaLinkIos() != null ? request.figmaLinkIos().trim() : "");
         project.setConfluenceParentPageId(request.confluenceParentPageId() != null ? request.confluenceParentPageId().trim() : "");
         project.setConfluenceArtifactsPageId(request.confluenceArtifactsPageId() != null ? request.confluenceArtifactsPageId().trim() : "");
+        project.setSharedLogStoragePath(request.sharedLogStoragePath() != null ? request.sharedLogStoragePath().trim() : "");
         return toResponse(projectRepository.save(project));
     }
 
@@ -169,6 +171,7 @@ public class ProjectService {
                 project.getFigmaLinkIos(),
                 project.getConfluenceParentPageId(),
                 project.getConfluenceArtifactsPageId(),
+                project.getSharedLogStoragePath(),
                 project.getCreatedAt()
         );
     }

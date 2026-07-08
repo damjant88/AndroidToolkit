@@ -50,6 +50,7 @@ function AdminProjectsPanel() {
   const [inlineFigmaIos, setInlineFigmaIos] = useState({});
   const [inlineConfluenceParent, setInlineConfluenceParent] = useState({});
   const [inlineConfluenceArtifacts, setInlineConfluenceArtifacts] = useState({});
+  const [inlineSharedLog, setInlineSharedLog] = useState({});
   const [saveStatus, setSaveStatus] = useState({}); // { fieldKey: 'success' | 'error' }
 
   const fetchProjects = useCallback(async () => {
@@ -109,7 +110,8 @@ function AdminProjectsPanel() {
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || '',
           confluenceParentPageId: existing.confluenceParentPageId || '',
-          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || '',
+          sharedLogStoragePath: existing.sharedLogStoragePath || ''
         });
         fetchProjects();
         setError('');
@@ -140,7 +142,8 @@ function AdminProjectsPanel() {
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || '',
           confluenceParentPageId: existing.confluenceParentPageId || '',
-          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || '',
+          sharedLogStoragePath: existing.sharedLogStoragePath || ''
         });
         fetchProjects();
         setError('');
@@ -173,7 +176,8 @@ function AdminProjectsPanel() {
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || '',
           confluenceParentPageId: newValue.trim(),
-          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || '',
+          sharedLogStoragePath: existing.sharedLogStoragePath || ''
         });
         fetchProjects();
         setError('');
@@ -206,7 +210,8 @@ function AdminProjectsPanel() {
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || '',
           confluenceParentPageId: existing.confluenceParentPageId || '',
-          confluenceArtifactsPageId: newValue.trim()
+          confluenceArtifactsPageId: newValue.trim(),
+          sharedLogStoragePath: existing.sharedLogStoragePath || ''
         });
         fetchProjects();
         setError('');
@@ -218,6 +223,40 @@ function AdminProjectsPanel() {
     } catch (err) {
       setError('Error: ' + (err.response?.data?.message || err.message));
       flashSaveStatus(`confArtifacts_${project.id}`, 'error');
+    }
+  }
+
+  async function handleSharedLogSave(project) {
+    const newValue = inlineSharedLog[project.id];
+    if (newValue === undefined) return;
+    const current = project.sharedLogStoragePath || '';
+    if (newValue.trim() === current.trim()) return;
+    try {
+      const res = await projectApi.list();
+      const freshProjects = res.data;
+      const existing = freshProjects.find(p => p.name === project.name);
+      if (existing) {
+        await projectApi.update(existing.id, {
+          name: existing.name,
+          remoteApkLocation: existing.remoteApkLocation || '',
+          figmaLink: existing.figmaLink || '',
+          figmaLinkIos: existing.figmaLinkIos || '',
+          localApkFolder: existing.localApkFolder || '',
+          localLogFolder: existing.localLogFolder || '',
+          confluenceParentPageId: existing.confluenceParentPageId || '',
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || '',
+          sharedLogStoragePath: newValue.trim()
+        });
+        fetchProjects();
+        setError('');
+        flashSaveStatus(`sharedLog_${project.id}`, 'success');
+      } else {
+        setError('Error: Project "' + project.name + '" not found in database.');
+        flashSaveStatus(`sharedLog_${project.id}`, 'error');
+      }
+    } catch (err) {
+      setError('Error: ' + (err.response?.data?.message || err.message));
+      flashSaveStatus(`sharedLog_${project.id}`, 'error');
     }
   }
 
@@ -240,7 +279,8 @@ function AdminProjectsPanel() {
           localApkFolder: existing.localApkFolder || '',
           localLogFolder: existing.localLogFolder || '',
           confluenceParentPageId: existing.confluenceParentPageId || '',
-          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || ''
+          confluenceArtifactsPageId: existing.confluenceArtifactsPageId || '',
+          sharedLogStoragePath: existing.sharedLogStoragePath || ''
         });
         fetchProjects();
         setError('');
@@ -362,6 +402,18 @@ function AdminProjectsPanel() {
                 />
                 <button className="project-save-btn" onClick={() => handleConfluenceArtifactsSave(p)}>Save</button>
                 {saveStatus[`confArtifacts_${p.id}`] && <span className={`save-indicator ${saveStatus[`confArtifacts_${p.id}`]}`}>{saveStatus[`confArtifacts_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
+              </div>
+              <div className="project-card-section">
+                <strong>📂 Remote Log Location (Shared Storage):</strong>
+                <input
+                  type="text"
+                  className="project-local-input"
+                  placeholder="e.g. \\\\server\\logs\\SafePath or s3://bucket/logs"
+                  value={inlineSharedLog[p.id] !== undefined ? inlineSharedLog[p.id] : (p.sharedLogStoragePath || '')}
+                  onChange={e => setInlineSharedLog(prev => ({ ...prev, [p.id]: e.target.value }))}
+                />
+                <button className="project-save-btn" onClick={() => handleSharedLogSave(p)}>Save</button>
+                {saveStatus[`sharedLog_${p.id}`] && <span className={`save-indicator ${saveStatus[`sharedLog_${p.id}`]}`}>{saveStatus[`sharedLog_${p.id}`] === 'success' ? '✓ Saved' : '✗ Failed'}</span>}
               </div>
               {projects.length > 0 && (
                 <div className="project-card-actions">
