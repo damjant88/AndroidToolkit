@@ -1,6 +1,6 @@
-# AndroidToolkit
+# SP Test Kit
 
-A multi-interface tool for managing Android devices through `adb`. Supports a desktop Swing app, a Spring Boot REST API, and a React web frontend — all sharing the same core business logic.
+A multi-tenant platform for managing Android devices, distributing builds, collecting logs, and detecting crashes across SafePath product lines. Supports standalone local use and cloud SaaS deployment.
 
 ## Architecture
 
@@ -10,46 +10,101 @@ A multi-interface tool for managing Android devices through `adb`. Supports a de
 │  Frontend   │     │  Desktop    │     │   / curl    │
 └──────┬──────┘     └──────┬──────┘     └──────┬──────┘
        │                   │                   │
-       │ HTTP/WebSocket    │ Direct Java       │ HTTP
+       │ HTTP/WS           │ Direct Java       │ HTTP
        ▼                   ▼                   ▼
 ┌──────────────────────────────────────────────────────┐
-│                  Spring Boot Backend                  │
-│         (REST API + WebSocket + Jobs)                 │
-└──────────────────────┬───────────────────────────────┘
-                       │
-                       ▼
+│               Spring Boot Backend                    │
+│    (REST API + WebSocket + Jobs + Crash Detection)   │
+│         Multi-tenant · JWT Auth · Swagger            │
+└────────────┬─────────────────────────┬───────────────┘
+             │                         │
+             │ WebSocket               │ DB + Storage
+             ▼                         ▼
+┌────────────────────────┐   ┌─────────────────────────┐
+│     Agent (local)      │   │  H2 / MySQL / PostgreSQL │
+│  ADB · Logcat · S3    │   │  + S3 / Local Filesystem │
+│  port 8081             │   └─────────────────────────┘
+└────────────┬───────────┘
+             │
+             ▼
 ┌──────────────────────────────────────────────────────┐
-│                    Core Library                       │
-│    (domain models, services, app managers)            │
-└──────────────────────┬───────────────────────────────┘
-                       │
-                       ▼
-┌──────────────────────────────────────────────────────┐
-│                   adb / devices                       │
+│              Android Devices (USB / WiFi)             │
 └──────────────────────────────────────────────────────┘
 ```
 
 ## Project Structure
 
 ```
-AndroidToolkit/
-├── core/               Shared business logic (no UI dependencies)
-│   ├── src/            domain, service, app layers
+SP-Test-Kit/
+├── core/               Shared domain models and services
+│   ├── src/            Tenant model, subscription tiers, roles
 │   └── test/           Unit tests
-├── desktop/            Swing desktop application
+├── desktop/            Swing desktop application (legacy)
 │   ├── src/            UI code
 │   └── Assets/         Icons and images
-├── backend/            Spring Boot REST API + WebSocket
-│   ├── src/            Controllers, config, jobs, validation
-│   └── resources/      application.properties
-├── frontend/           React web application
-│   ├── src/            Components, API layer, hooks
-│   └── public/         Static assets (icons)
+├── backend/            Spring Boot server (port 8080)
+│   ├── src/            Controllers, entities, services, crash detection
+│   ├── resources/      application.properties (standalone/dev/saas profiles)
+│   └── test/           Unit + property-based tests (jqwik)
+├── agent/              Spring Boot agent (port 8081)
+│   ├── src/            ADB operations, logcat streaming, device discovery
+│   └── resources/      Agent configuration
+├── frontend/           React 19 web application
+│   ├── src/            Components, API layer, WebSocket hooks
+│   └── public/         Static assets (project icons)
 ├── build.gradle        Root build config
-├── settings.gradle     Module declarations
-├── build.ps1           Build desktop jar
-└── run.ps1             Run desktop app
+└── settings.gradle     Module declarations (core, desktop, backend, agent)
 ```
+
+## Features
+
+### Device Management
+- Real-time device discovery and status monitoring
+- Install / uninstall APKs (drag-and-drop or S3 download)
+- Screenshot capture, screen mirroring (scrcpy), screen recording
+- WiFi debugging, device reboot, mock GPS location
+- Per-app permission management
+- Firebase Analytics debug mode
+
+### Project Quick Access
+- Per-project configuration: APK locations, log folders, Figma links
+- RC Info from Confluence (auto-discovery of latest release artifacts)
+- One-click S3 build download with progress and cancel
+- Project-specific device stats
+
+### Log Collection & Analysis
+- Pull app logs and logcat from devices
+- Shared storage upload (network drives / S3)
+- Real-time logcat streaming via WebSocket
+- AI-powered log analysis reports (scheduled nightly)
+
+### Crash Detection
+- Pattern-based logcat analysis (FATAL, ANR, WARNING)
+- Per-device deduplication (5s window)
+- Stack trace capture and package extraction
+- Alert configuration and notification service
+- Crash history with trend analysis
+
+### Confluence Integration
+- Fetch RC component artifacts (Android, iOS, Server versions)
+- Admin-configurable page IDs per project
+- Auto-discovery of latest child page from parent
+
+### Multi-Tenancy (SaaS Mode)
+- Tenant isolation with Hibernate filters
+- Subscription tiers: FREE, PRO, ENTERPRISE
+- Role-based access: OWNER, ADMIN, USER
+- User invitations via email
+- SSO support (Enterprise)
+- Audit logging
+
+## Deployment Modes
+
+| Mode | Database | Storage | Use Case |
+|------|----------|---------|----------|
+| **dev** | H2 (file-based) | Local filesystem | Local development |
+| **standalone** | MySQL | Local filesystem | Single team / on-premise |
+| **saas** | PostgreSQL | S3-compatible (MinIO) | Multi-tenant cloud |
 
 ## Quick Start
 
@@ -60,109 +115,103 @@ AndroidToolkit/
 - `adb` on PATH
 - `scrcpy` on PATH (optional, for screen mirror)
 
-### Run the Desktop App
-```powershell
-.\run.ps1
-```
-
-### Run the Web App
+### Run Locally (Dev Mode)
 
 Terminal 1 — Backend:
-```powershell
-.\gradlew.bat :backend:bootRun
+```bash
+SPRING_PROFILES_ACTIVE=dev CONFLUENCE_API_TOKEN=<token> ./gradlew :backend:bootRun
 ```
 
-Terminal 2 — Frontend:
-```powershell
+Terminal 2 — Agent:
+```bash
+./gradlew :agent:bootRun
+```
+
+Terminal 3 — Frontend:
+```bash
 cd frontend
 npm start
 ```
 
 Open http://localhost:3000 in your browser.
 
+### Run in Standalone Mode (MySQL)
+```bash
+SPRING_PROFILES_ACTIVE=standalone ./gradlew :backend:bootRun
+```
+
+### Run in SaaS Mode (PostgreSQL + S3)
+```bash
+SPRING_PROFILES_ACTIVE=saas \
+  DATABASE_URL=jdbc:postgresql://host:5432/db \
+  STORAGE_ENDPOINT=https://s3.example.com \
+  ./gradlew :backend:bootRun
+```
+
 ### Build Everything
-```powershell
-.\gradlew.bat build -x test
+```bash
+./gradlew build -x test
 ```
 
 ### Run Tests
-```powershell
-.\gradlew.bat :core:test
+```bash
+./gradlew :core:test :backend:test
 ```
 
-## API Endpoints
+## Supported Projects
 
-### Devices
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/devices | List connected devices |
-| POST | /api/devices/{serial}/reboot | Reboot device |
-| POST | /api/devices/{serial}/uninstall | Uninstall app |
-| POST | /api/devices/{serial}/wifi-debug | Toggle WiFi debugging |
-| POST | /api/devices/{serial}/firebase-debug | Enable Firebase debug |
-| POST | /api/devices/{serial}/pull-logs | Pull SP logs from device |
-| POST | /api/devices/{serial}/screenshot | Capture screenshot |
+| Project | Package(s) |
+|---------|-----------|
+| SafePath | `com.smithmicro.safepath.family`, `com.smithmicro.safepath.family.child` |
+| Secure Family (AT&T) | `com.smithmicro.att.securefamily`, `com.att.securefamilycompanion` |
+| Safe&Found (Sprint) | `com.smithmicro.sprint.safeandfound.test`, `com.sprint.safefound` |
+| Family Mode (T-Mobile) | `com.smithmicro.tmobile.familymode.test`, `com.tmobile.familycontrols` |
+| CCI / SpeakEasy | `com.smithmicro.cci.test`, `com.smithmicro.safepath.family.speakeasy` |
+| Orange / TuYo | `com.smithmicro.orangespain.test`, `com.orange.es.TuYo` |
+| Dish | `com.smithmicro.safepath.dish.test` |
+| SPC (SafePath Connect) | `com.smithmicro.safepath.connect` |
 
-### Recording
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | /api/devices/{serial}/screen-mirror | Start scrcpy mirror |
-| POST | /api/devices/{serial}/start-recording | Start screen recording |
-| POST | /api/devices/{serial}/stop-recording | Stop recording + save |
+## API Documentation
 
-### Permissions
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/devices/{serial}/permissions | Get permission states |
-| POST | /api/devices/{serial}/permissions/enable | Enable permissions |
-| POST | /api/devices/{serial}/permissions/disable | Disable permissions |
+Swagger UI available at: http://localhost:8080/swagger-ui.html
 
-### Builds
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | /api/builds/upload | Upload APK file |
-| POST | /api/builds/install/{serial} | Install APK on device |
+### Key Endpoints
 
-### Jobs (Background Operations)
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | /api/jobs/install | Start parallel install job |
-| POST | /api/jobs/uninstall | Start parallel uninstall job |
-| GET | /api/jobs/{id} | Get job status/progress |
-| GET | /api/jobs | List recent jobs |
+| Area | Method | Path | Description |
+|------|--------|------|-------------|
+| Devices | GET | /api/devices | List connected devices |
+| Devices | POST | /api/devices/{serial}/reboot | Reboot device |
+| Devices | POST | /api/devices/{serial}/uninstall | Uninstall app |
+| Devices | POST | /api/devices/{serial}/pull-logs | Pull SP logs |
+| Builds | POST | /api/builds/upload | Upload APK |
+| Builds | POST | /api/builds/install/{serial} | Install APK on device |
+| Projects | GET | /api/projects | List projects |
+| Projects | PUT | /api/projects/{id} | Update project config |
+| Confluence | GET | /api/confluence/artifacts | Fetch RC artifacts |
+| Jobs | POST | /api/jobs/install | Parallel install job |
+| Auth | POST | /api/auth/login | Login (JWT) |
+| Auth | POST | /api/auth/register | Register user |
 
-### Files
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | /api/files/screenshot/{name} | Get screenshot image |
-| GET | /api/files/recording/download | Download recording file |
-| POST | /api/files/open-folder | Open folder in Explorer |
+### WebSocket Topics
 
-### WebSocket
 | Endpoint | Topic | Description |
 |----------|-------|-------------|
-| /ws | /topic/devices | Real-time device list updates |
-| /ws | /topic/jobs/{id} | Real-time job progress |
-
-## Key Design Decisions
-
-See [docs/adr/](docs/adr/) for Architecture Decision Records.
-
-## Local Storage
-
-The app stores files at `C:/AdbToolkit/`:
-- `Logs/` — Pulled device logs
-- `Screenshots/` — Captured screenshots
-- `Screen_Recordings/` — Screen recordings + logs
-- `uploads/` — Uploaded APK files
+| /ws | /topic/devices | Real-time device updates |
+| /ws | /topic/logcat/{serial} | Live logcat data |
+| /ws | /topic/jobs/{id} | Job progress |
+| /ws/agent | — | Agent ↔ Server communication |
 
 ## Technology Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Core | Java 21, plain classes |
-| Desktop | Java Swing |
-| Backend | Spring Boot 3.4, Spring Security, Spring WebSocket |
-| Frontend | React 19, Axios, STOMP/SockJS |
-| Database | H2 (dev), PostgreSQL (planned) |
+| Core | Java 21, domain models |
+| Backend | Spring Boot 3.4, Spring Security, WebSocket, JPA |
+| Agent | Spring Boot 3.4, ADB process management |
+| Frontend | React 19, Axios, STOMP/SockJS, Leaflet |
+| Database | H2 (dev) / MySQL (standalone) / PostgreSQL (saas) |
+| Storage | Local filesystem / S3-compatible (MinIO) |
+| Auth | JWT + Refresh tokens |
+| Testing | JUnit 5, jqwik (property-based), Mockito |
 | Build | Gradle 9.4 (multi-module) |
+| API Docs | SpringDoc OpenAPI / Swagger UI |
